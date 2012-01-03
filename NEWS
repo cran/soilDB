@@ -1,0 +1,13 @@
+-------------------------- soilDB 0.3-2 (2011-12-30) --------------------------
+* NASIS/pedonPC queries synced
+* minor bug fixes and documentation updates
+* updated query structure, switching over to native NASIS/PedonPC IDs
+* extended summaries added: NASIS only
+
+-------------------------- soilDB 0.2 (2011-12-27) --------------------------
+* moved functions out of aqp package
+* basic query functionality from local NASIS DB (Jay)
+
+-------------------------- soilDB 0.1 (2011-12-23) --------------------------
+* initial version on r-forge
+* functions still exist in aqp package... need to move over completely
