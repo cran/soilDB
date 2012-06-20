@@ -1,5 +1,5 @@
 # results can be referenced via phiid (horizon-level ID)
-get_colors_from_NASIS_db <- function(dsn) {
+get_colors_from_NASIS_db <- function() {
 	# unique-ness enforced via peiid (pedon-level) and phiid (horizon-level)
 	q <- "SELECT dbo.pedon.peiid, phorizon.phiid as phiid, colormoistst, colorpct as pct, mh.ChoiceName AS colorhue, colorvalue, colorchroma
 FROM (
@@ -12,7 +12,6 @@ FROM (
 	channel <- odbcConnect('nasis_local', uid='NasisSqlRO', pwd='Re@d0n1y') 
 	
 	# exec query
-	cat(paste('fetching from', dsn, '...\n'))
 	d <- sqlQuery(channel, q, stringsAsFactors=FALSE)
 	
 	# close connection
@@ -31,15 +30,15 @@ FROM (
 	
 	# mix and clean colors
 	cat('mixing and cleaning colors ...\n')
-	dry.colors.final <- ddply(dry.colors, c('phiid'), mix_and_clean_colors, .progress='text')
-	moist.colors.final <- ddply(moist.colors, c('phiid'), mix_and_clean_colors, .progress='text')
+	dry.colors.final <- ddply(dry.colors, 'phiid', mix_and_clean_colors, .progress='text')
+	moist.colors.final <- ddply(moist.colors, 'phiid', mix_and_clean_colors, .progress='text')
 	
 	# rename columns
 	names(dry.colors.final) <- c('phiid','d_r','d_g','d_b')
 	names(moist.colors.final) <- c('phiid','m_r','m_g','m_b')
 	
 	# merge into single df
-	d.final <- join(dry.colors.final, moist.colors.final, type='full')
+	d.final <- join(dry.colors.final, moist.colors.final, by='phiid', type='full')
 	
 	# clean-up
 	rm(d, d.rgb, dry.colors, moist.colors, dry.colors.final, moist.colors.final)

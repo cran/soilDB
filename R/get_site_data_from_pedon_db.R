@@ -1,20 +1,19 @@
 get_site_data_from_pedon_db <- function(dsn) {
-  q <- "SELECT site.siteiid, pedon.peiid, site.usiteid as site_id, siteobs.obsdate as obs_date,
+  q <- "SELECT site.siteiid, pedon.peiid, upedonid as pedon_id, site.usiteid as site_id, siteobs.obsdate as obs_date,
   latdegrees + IIF(IsNull(latminutes), 0.0, latminutes/ 60.0) + IIF(IsNULL(latseconds), 0.0, latseconds / 60.0 / 60.0) as y,
   -(longdegrees + IIF(IsNull(longminutes), 0.0, longminutes / 60.0) + IIF(IsNull(longseconds), 0.0, longseconds / 60.0 / 60.0)) as x,
-  dm.choice as datum, descname as describer, pp.choice as pedon_purpose, soinmassamp as sampled_as, soinmascorr as correlated_as, pedlabsampnum, psctopdepth, pscbotdepth, ps.choice_label as part_size_class, ts.choice_label as tax_subgroup, elev, slope, aspect, plantassocnm, bedrckdepth, br.choice_label as bedrock_kind, hs.choice AS hillslope_pos 
-  FROM (
-  (
-  (
-  (
-  (
-  (
-  (site INNER JOIN siteobs ON site.siteiid = siteobs.siteiidref) LEFT OUTER JOIN pedon ON site.siteiid = pedon.siteiidref)
+  dm.choice as datum, descname as describer, pp.choice as pedon_purpose, pt.choice as pedon_type, tk.choice as taxon_kind, soinmassamp as sampled_as, soinmascorr as correlated_as, pedlabsampnum, psctopdepth, pscbotdepth, ps.choice_label as part_size_class, ts.choice_label as tax_subgroup, elev, slope, aspect, plantassocnm, bedrckdepth, br.choice_label as bedrock_kind, bh.choice_label as bedrock_hardness, hs.choice AS hillslope_pos 
+  FROM ((((((((((
+	site INNER JOIN siteobs ON site.siteiid = siteobs.siteiidref) 
+	LEFT OUTER JOIN pedon ON site.siteiid = pedon.siteiidref)
   LEFT OUTER JOIN (SELECT * FROM metadata_domain_detail WHERE domain_id = 1261) AS dm ON site.horizdatnm = dm.choice_id) 
   LEFT OUTER JOIN (SELECT * FROM metadata_domain_detail WHERE domain_id = 517) AS br ON site.bedrckkind = br.choice_id)
+  LEFT OUTER JOIN (SELECT * FROM metadata_domain_detail WHERE domain_id = 1247) AS bh ON site.bedrckhardness = bh.choice_id)
   LEFT OUTER JOIN (SELECT * FROM metadata_domain_detail WHERE domain_id = 127) AS ps ON pedon.taxpartsize = ps.choice_id)
   LEFT OUTER JOIN (SELECT * FROM metadata_domain_detail WHERE domain_id = 187) AS ts ON pedon.taxsubgrp = ts.choice_id)
   LEFT OUTER JOIN (SELECT * FROM metadata_domain_detail WHERE domain_id = 1271) AS pp ON pedon.pedonpurpose = pp.choice_id)
+	LEFT OUTER JOIN (SELECT * FROM metadata_domain_detail WHERE domain_id = 1273) AS pt ON pedon.pedontype = pt.choice_id)
+	LEFT OUTER JOIN (SELECT * FROM metadata_domain_detail WHERE domain_id = 102) AS tk ON pedon.pedontype = tk.choice_id)
   LEFT OUTER JOIN (SELECT * FROM metadata_domain_detail WHERE domain_id = 971) AS hs ON site.hillslopeprof = hs.choice_id
   ORDER BY site.usiteid;"
 
@@ -33,11 +32,20 @@ get_site_data_from_pedon_db <- function(dsn) {
   
   # warn if mixed datums
   if(length(unique(na.omit(d$datum))) > 1)
-    warning('multiple datums present')
+    message('multiple datums present')
   
   # are there any dupes?
-  if(any(table(d$pedon_id) > 1))
-    warning('duplicate site/pedon information in results')
+  t.pedon_id <- table(d$pedon_id)
+  if(any(t.pedon_id > 1)) {
+  	message('NOTICE: duplicate pedons:')
+  	print(t.pedon_id[which(t.pedon_id > 1)])
+  }
+  
+  # warn about sites without a matching pedon (records missing peiid)
+  missing.pedon <- which(is.na(d$peiid))
+  if(length(missing.pedon)> 0) {
+  	message(paste('NOTICE: sites without pedons:', paste(d$site_id[missing.pedon], collapse=', ')))
+  }
   
   # done
   return(d)
