@@ -10,7 +10,7 @@
 \arguments{
   \item{q}{a text string containing valid SQL}
 }
-\details{The SDA website can be found at \url{http://sdmdataaccess.nrcs.usda.gov}.}
+\details{The SDA website can be found at \url{http://sdmdataaccess.nrcs.usda.gov} and query examples can be found at \url{http://sdmdataaccess.nrcs.usda.gov/QueryHelp.aspx}}
 \value{A dataframe containing the results.}
 \references{http://casoilresource.lawr.ucdavis.edu/}
 \author{Dylan E. Beaudette}
@@ -26,7 +26,11 @@ recently_updated <- res$areasymbol[res$exportcertdate > as.Date('2011-01-01')]
 }
 
 # basic query:
-\dontrun{res <- SDA_query("select cokey, compname, comppct_r from component where compname = 'yolo' and majcompflag = 'Yes' ")}
+\dontrun{
+res <- SDA_query("select cokey, compname, comppct_r 
+from component 
+where compname = 'yolo' and majcompflag = 'Yes' ")
+}
 
 # get tabular data based on result from spatial query:
 \dontrun{
@@ -41,6 +45,18 @@ q <- paste("SELECT component.cokey, compname, comppct_r, hzdept_r, hzdepb_r, hzn
 FROM component JOIN chorizon ON component.cokey = chorizon.cokey
 WHERE majcompflag = 'Yes' AND mukey IN ", in.statement, "ORDER BY cokey, comppct_r DESC, hzdept_r ASC", sep="")
 # now get component and horizon-level data for these map unit keys
+res <- SDA_query(q)
+}
+
+# get component-level data for a specific soil survey area (Yolo county, CA)
+\dontrun{
+q <- "SELECT 
+component.mukey, cokey, comppct_r, compname, taxclname, taxorder, taxsuborder, taxgrtgroup, taxsubgrp
+FROM legend
+INNER JOIN mapunit ON mapunit.lkey = legend.lkey
+LEFT OUTER JOIN component ON component.mukey = mapunit.mukey
+WHERE legend.areasymbol = 'CA113'"
+
 res <- SDA_query(q)
 }
 

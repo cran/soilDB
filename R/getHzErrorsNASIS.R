@@ -1,8 +1,8 @@
-getHzErrorsPedonPC <- function(dsn, test.NA=FALSE, strict=TRUE) {
+getHzErrorsNASIS <- function(test.NA=FALSE, strict=TRUE) {
 	
 	# get data
-	site_data <- get_site_data_from_pedon_db(dsn)
-	hz_data <- get_hz_data_from_pedon_db(dsn)
+	site_data <- get_site_data_from_NASIS_db()
+	hz_data <- get_hz_data_from_NASIS_db()
 	
 	# combine pieces
 	f <- join(hz_data, site_data, by='peiid', type='inner')
