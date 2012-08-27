@@ -1,9 +1,9 @@
 Package: soilDB
 Type: Package
 Title: Soil Database Interface
-Version: 0.6-2
-Date: 2012-06-20
-Packaged: 2012-06-21 18:15:35 UTC; rforge
+Version: 0.8-1
+Date: 2012-08-22
+Packaged: 2012-08-23 22:20:17 UTC; rforge
 Author: D.E. Beaudette and J.M. Skovlin
 Maintainer: D.E. Beaudette <dylan.beaudette@ca.usda.gov>
 Description: A collection of functions for reading data from USDA-NCSS
@@ -15,5 +15,5 @@ Imports: methods, plyr, reshape, Hmisc
 Suggests: lattice, rgdal, RCurl, XML, SSOAP, XMLSchema
 Repository: CRAN
 Repository/R-Forge/Project: aqp
-Repository/R-Forge/Revision: 565
-Date/Publication: 2012-06-22 07:00:56
+Repository/R-Forge/Revision: 572
+Date/Publication: 2012-08-27 17:23:48
