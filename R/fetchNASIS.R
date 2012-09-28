@@ -1,4 +1,5 @@
 # updated to NASIS 6.2 -- needs testing
+# horizon checking may be too strict
 
 # convenience function for loading most commonly used information from local NASIS database
 fetchNASIS <- function() {
@@ -42,7 +43,7 @@ fetchNASIS <- function() {
 	depths(f) <- pedon_id ~ hzdept + hzdepb
 	
 	# move site data into @site
-	site(f) <- ~ peiid + site_id + siteiid + hillslope_pos + x + y + datum + elev + slope + aspect + plantassocnm + bedrckdepth + bedrock_kind + bedrock_hardness + describer + psctopdepth + pscbotdepth + obs_date + pedon_purpose + pedon_type + pedlabsampnum
+	site(f) <- ~ peiid + site_id + siteiid + hillslope_pos + x + y + datum + elev_field + slope_field + aspect_field + plantassocnm + bedrckdepth + bedrock_kind + bedrock_hardness + describer + psctopdepth + pscbotdepth + obs_date + pedon_purpose + pedon_type + pedlabsampnum
 	
 	# 5. convert colors... in the presence of missing color data
 	f$soil_color <- rep(NA, times=nrow(horizons(f)))

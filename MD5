@@ -1,10 +1,10 @@
-16ce1762715df60541d2c1bbc708897d *DESCRIPTION
+7acec6442e2ef36438810ff59dab4c18 *DESCRIPTION
 8fb901e082886307dd5034f719f0e264 *NAMESPACE
-bb46a9500f828001d9214605e1d9b56e *NEWS
+5fa675f90f01b574a421bbb148e52ebf *NEWS
 30b50577e4d58a2a5b6f240e9256e50d *R/MUKEYS_by_ll_bbox.R
 d9f3365d763e8603af54f2510996085b *R/SDA_query.R
-6da5de4867c56b327a0c375a815380fe *R/fetchNASIS.R
-100864e1e844a60345846b04de39a1f9 *R/fetchPedonPC.R
+eef47b845b2194039d156c5afc498e2e *R/fetchNASIS.R
+5f2e9c802ccf829f900cb86920a9b33c *R/fetchPedonPC.R
 ae55807ded194771b84866c1755931ca *R/getHzErrorsNASIS.R
 9c44ed945e0563ab6b348722dde22aa0 *R/getHzErrorsPedonPC.R
 0396825d371bc0d6064f39858bb8cb16 *R/get_colors_from_NASIS_db.R
@@ -13,8 +13,8 @@ d9fcfd819ea35a5a3e5c355c74939d30 *R/get_colors_from_pedon_db.R
 91b2e225a41d2ba068a10bffe9777d4d *R/get_extended_data_from_pedon_db.R
 6075b3362ce007469a5f3a4a3caef1f6 *R/get_hz_data_from_NASIS_db.R
 4bdf6fdde322d64b48204111a729a981 *R/get_hz_data_from_pedon_db.R
-8ad0910607bb3a8c5b42365ba92292e5 *R/get_site_data_from_NASIS_db.R
-41cab74211712fbbac73c0550da1d405 *R/get_site_data_from_pedon_db.R
+0c218202c97a96e4eae041ca355816f4 *R/get_site_data_from_NASIS_db.R
+dd4ab23f6c6e1e6473d7d97a6c95eb33 *R/get_site_data_from_pedon_db.R
 e87a6708e2183638346a54e14b1f9293 *R/get_veg_from_AK_Site.R
 c04d9545eb615439833dc98180341f72 *R/get_veg_from_MT_veg_db.R
 dc9888fd938a0e5ba7900c5ee30fdcd2 *R/get_veg_other_from_MT_veg_db.R
@@ -25,10 +25,10 @@ c36c39f7d80c785144cdc8c83b0f7fe8 *R/nasis_component_data.R
 ed93cf2427cc7ac78c586d530875295d *R/utils.R
 36c928d2a9ae7e6289bf859c00865dbe *TODO
 e45bab45b39be947bb91670585e2a6fd *data/andic.subset.rda
-a776900161d6a86e694fdc4c340a9248 *data/gopheridge.rda
+a84d241bdf8f67f701c4d2dd974ea531 *data/gopheridge.rda
 7cdbc58a89e3b22ff34e5f29dbd6322b *data/loafercreek.rda
 833db3b86734ac9732316c66fad57574 *man/MUKEYS_by_ll_bbox.Rd
-1079596a7db1f658216e6315aa366f1a *man/SDA_query.Rd
+008a97a97da5e84e290ef58928aa91c6 *man/SDA_query.Rd
 2f775333dc1639bff96aa1523f2f4290 *man/fetchNASIS.Rd
 2d191a7b730056acaca2f6ca2d22ad35 *man/fetchPedonPC.Rd
 cc59a1ac16822a1370bf42980bac08b4 *man/get_colors_from_NASIS_db.Rd
@@ -45,4 +45,4 @@ aa950d35d7cc74f2ca1491dead0ee961 *man/get_veg_from_AK_Site.Rd
 5ccada20ef64243b943b50a04bde91bb *man/get_veg_species_from_MT_veg_db.Rd
 496467930716c51f73530e032a1cc451 *man/loafercreek.Rd
 334fb5315d354a0c45d7bf54c018c98e *man/mapunit_geom_by_ll_bbox.Rd
-494d7c97add02be9a4753e7e56ec22ee *man/soilDB-package.Rd
+8bac3c0db88359ced5bd684cca28d619 *man/soilDB-package.Rd
