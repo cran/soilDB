@@ -8,13 +8,17 @@
   \item{series}{a soil series name}
   \item{bbox}{a bounding box in WGS84 geographic coordinates e.g. \code{c(-120, 37, -122, 38)}}
 }
-\details{This is an experimental interface to most of the KSSL data as of June 2012. Series-queries are case insensitive.}
+
+\details{This is an experimental interface to most of the KSSL data as of June 2013. Series-queries are case insensitive. Series name is based on the "correlated as" field (from KSSL snapshot) when present.  The "sampled as" classification was promoted to "correlated as" if the "correlated as" classification was missing.}
+
 \value{a \code{SoilProfileCollection} object}
+
+\author{D.E. Beaudette}
+\note{SoilWeb maintains a snapshot of the KSSL data. Please use the link below for the live data.}
+
 \references{
 \url{http://ncsslabdatamart.sc.egov.usda.gov/}
 }
-\author{D.E. Beaudette}
-\note{SoilWeb maintains a snapshot of the KSSL data. Please use the link below for the live data.}
 
 \seealso{\code{\link{fetchOSD}}}
 \examples{
@@ -31,7 +35,5 @@ length(s)
 par(mar=c(0,0,0,0))
 plot(s, name='hzn_desgn', max.depth=150)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+
+\keyword{utilities}

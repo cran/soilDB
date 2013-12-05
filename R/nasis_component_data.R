@@ -10,8 +10,8 @@
 
 
 get_component_data_from_NASIS_db <- function() {
-	q <- "SELECT dmudesc, coiid, compname, comppct_r, ck.ChoiceName as compkind, majcompflag, localphase, slope_r, tfact, wei, weg, dc.ChoiceName as drainage_class, elev_r, aspectrep, map_r, airtempa_r as maat_r, soiltempa_r as mast_r, reannualprecip_r, ffd_r, nirrcapcl, nirrcapscl, irrcapcl, irrcapscl, fa.ChoiceName as frost_action, hydgrp, crc.ChoiceName as corcon, crs.ChoiceName as corsteel, taxclname, txo.ChoiceName as taxorder, txs.ChoiceName as taxsuborder, txgg.ChoiceName as  taxgrtgroup, txsg.ChoiceName as taxsubgrp, txps.ChoiceName as taxpartsize, txpsm.ChoiceName as taxpartsizemod, txact.ChoiceName as taxceactcl, txr.ChoiceName as taxreaction, txtc.ChoiceName as taxtempcl, txmc.ChoiceName as taxmoistscl, txtr.ChoiceName as taxtempregime, txed.ChoiceName as soiltaxedition, nationalmusym, muname, mk.ChoiceName as mukind, musym, ms.ChoiceName as mustatus, fc.ChoiceLabel as farmlndcl, dmuiid, muiid, repdmu
-FROM (((((((((((((((((((((((
+	q <- "SELECT dmudesc, coiid, compname, comppct_r, ck.ChoiceName as compkind, majcompflag, localphase, slope_r, tfact, wei, weg, dc.ChoiceName as drainage_class, elev_r, aspectrep, map_r, airtempa_r as maat_r, soiltempa_r as mast_r, reannualprecip_r, ffd_r, nirrcapcl, nirrcapscl, irrcapcl, irrcapscl, fa.ChoiceName as frost_action, hg.ChoiceLabel as hydgrp, crc.ChoiceName as corcon, crs.ChoiceName as corsteel, taxclname, txo.ChoiceName as taxorder, txs.ChoiceName as taxsuborder, txgg.ChoiceName as  taxgrtgroup, txsg.ChoiceName as taxsubgrp, txps.ChoiceName as taxpartsize, txpsm.ChoiceName as taxpartsizemod, txact.ChoiceName as taxceactcl, txr.ChoiceName as taxreaction, txtc.ChoiceName as taxtempcl, txmc.ChoiceName as taxmoistscl, txtr.ChoiceName as taxtempregime, txed.ChoiceName as soiltaxedition, nationalmusym, muname, mk.ChoiceName as mukind, musym, ms.ChoiceName as mustatus, fc.ChoiceLabel as farmlndcl, dmuiid, muiid, repdmu
+FROM ((((((((((((((((((((((((
 component_View_1
 INNER JOIN datamapunit_View_1 ON datamapunit_View_1.dmuiid = component_View_1.dmuiidref)
 LEFT OUTER JOIN correlation_View_1 ON correlation_View_1.dmuiidref = datamapunit_View_1.dmuiid AND repdmu = 1)
@@ -36,7 +36,8 @@ LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 188) AS txt
 LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 2030) AS txed ON soiltaxedition = txed.ChoiceValue)
 LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 118) AS mk ON mukind = mk.ChoiceValue)
 LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 138) AS ms ON mustatus = ms.ChoiceValue)
-LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 151) AS fc ON farmlndcl = fc.ChoiceName
+LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 115) AS hg ON hydgrp = hg.ChoiceValue)
+LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 151) AS fc ON farmlndcl = fc.ChoiceValue
 WHERE ms.ChoiceName IS NULL OR ms.Choicename != 'additional'
 ORDER BY dmudesc, coiid, comppct_r DESC;"
 	
@@ -56,6 +57,29 @@ ORDER BY dmudesc, coiid, comppct_r DESC;"
 	# done
 	return(d)
 }
+
+
+# get linked pedons by peiid and user pedon ID
+# note that there may be >=1 pedons / coiid
+get_copedon_from_NASIS_db <- function() {
+  q <- "SELECT coiidref as coiid, peiidref as peiid, upedonid as pedon_id
+FROM copedon
+JOIN pedon ON peiidref = peiid
+WHERE rvindicator = 1;
+"
+  # setup connection to our local NASIS database
+  channel <- odbcConnect('nasis_local', uid='NasisSqlRO', pwd='nasisRe@d0n1y') 
+  
+  # exec query
+  d <- sqlQuery(channel, q, stringsAsFactors=FALSE)
+  
+  # close connection
+  odbcClose(channel)
+  
+  # done
+  return(d)
+}
+
 
 
 get_component_horizon_data_from_NASIS_db <- function() {
@@ -94,12 +118,13 @@ fetchNASIS_component_data <- function() {
 	bad.ids <- as.character(f.chorizon.test$coiid[which(f.chorizon.test$hz_logic_pass == FALSE)])
 	
 	# keep the good ones
-	f.chorizon <- subset(f.chorizon, coiid %in% good.ids)
+	f.chorizon <- f.chorizon[which(f.chorizon$coiid %in% good.ids), ]
 	
 	# upgrade to SoilProfilecollection
 	depths(f.chorizon) <- coiid ~ hzdept_r + hzdepb_r
 	
 	## TODO: this will fail in the presence of duplicates
+  ## TODO: make this error more informative
 	# add site data to object
 	site(f.chorizon) <- f.comp # left-join via coiid
 	

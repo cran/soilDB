@@ -2,7 +2,7 @@
 
 get_hz_data_from_NASIS_db <- function() {
 	q <- "SELECT peiid, phiid, upedonid as pedon_id,
-  hzname, hzdept, hzdepb,
+  hzname, dspcomplayerid as genhz, hzdept, hzdepb,
   claytotest as clay, CASE WHEN silttotest IS NULL THEN 100 - (claytotest + sandtotest) ELSE silttotest END as silt, sandtotest as sand, t.texture_class, phfield, phnaf, eff.ChoiceName AS effervescence, l.labsampnum, CASE WHEN f.total_frags_pct IS NULL THEN 0 ELSE f.total_frags_pct END AS total_frags_pct
   FROM ((((
 	pedon_View_1 
@@ -41,7 +41,7 @@ get_hz_data_from_NASIS_db <- function() {
 	dupe.hz.pedon.ids <- d$pedon_id[d$phiid %in% dupe.hz.phiid]
 	
 	if(length(dupe.hz) > 0) {
-		message(paste('notice: duplicate horizons in query results, matching pedons:\n', paste(unique(dupe.hz.pedon.ids), collapse=','), sep=''))
+		message(paste('NOTICE: duplicate horizons in query results, matching pedons:\n', paste(unique(dupe.hz.pedon.ids), collapse=','), sep=''))
 	}
 	
 	# close connection

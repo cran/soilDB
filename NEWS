@@ -1,3 +1,26 @@
+-------------------------- soilDB 1.2-6 (2013-12-05) ----------------------------
+* added new function contributed by J.M. Skovlin: get_veg_from_NPS_PLOTS_db()
+* bugfixes in get_extended_data_from_NASIS_db(): results from geomorph tables are now returned
+
+-------------------------- soilDB 1.2-3 (2013-10-25) ----------------------------
+* added new function fetchSCAN() for downloading soil/climate data from USDA-NRCS SCAN stations (still experimental!)
+
+-------------------------- soilDB 1.2-1 (2013-09-12) ----------------------------
+* bug fixing in fetchRaCA(): 
+  - "#" characters no longer cause errors
+  - duplicate IDs in source data have been fixed
+
+-------------------------- soilDB 1.2 (2013-08-13) ----------------------------
+* fetchRaCA() function now stable, ready for general usage
+* fixed bug in fetchRaCA() function where the presence of single-quote character in horizon designation would throw and error
+
+-------------------------- soilDB 1.1-3 (2013-07-30) ----------------------------
+* new function get_copedon_from_NASIS_db(): returns basic information associated with pedons linked to component data in NASIS
+* new function fetchRaCA(): gets data from the Rapid Carbon Assessment project [work in progress]
+
+-------------------------- soilDB 1.1 (2013-06-27) ----------------------------
+* get_site_data_from_NASIS_db() no longer has problems when more than 1 site bedrock kind is defined; only the shallowest row is returned
+
 -------------------------- soilDB 1.0 (2013-04-04) ----------------------------
 * fetchNASIS() is now much more efficient: faster / less memory used
 * new function! fetchKSSL(): experimental interface to (most of) the KSSL data

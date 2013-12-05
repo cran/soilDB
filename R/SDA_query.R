@@ -39,7 +39,7 @@ SDA_query <- function(q) {
 	if(!require(SSOAP) | !require(XMLSchema))
 		stop('please install the `SSOAP` and `XMLSchema` packages', call.=FALSE)
 	
-	# important: change the default behavior of data.frame and melt
+	# important: change the default behavior of data.frame
 	opt.original <- options(stringsAsFactors = FALSE)
 	
 	# setup server, action, and xmlns
@@ -65,7 +65,7 @@ SDA_query <- function(q) {
 	# write out to tempfile, and read back in
 	f <- tempfile()
 	write.table(df, file=f, col.names=TRUE, row.names=FALSE, quote=FALSE, sep='|')
-	df <- read.table(f, header=TRUE, sep='|')
+	df <- read.table(f, header=TRUE, sep='|', quote='', comment.char='')
 	
 	# reset options:
 	options(opt.original)

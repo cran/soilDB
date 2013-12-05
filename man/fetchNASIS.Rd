@@ -3,6 +3,7 @@
 \alias{fetchNASIS}
 \alias{fetchNASIS_component_data}
 \alias{get_component_data_from_NASIS_db}
+\alias{get_copedon_from_NASIS_db}
 \alias{get_component_horizon_data_from_NASIS_db}
 \alias{getHzErrorsNASIS}
 
@@ -12,11 +13,10 @@
 \usage{
 fetchNASIS()
 fetchNASIS_component_data()
-getHzErrorsNASIS(test.NA=FALSE, strict=TRUE)
+getHzErrorsNASIS(strict=TRUE)
 }
 
 \arguments{
-  \item{test.NA}{should missing lower boundaries result in an error? (FALSE)}
   \item{strict}{should horizonation by strictly enforced? (TRUE)}
 }
 
