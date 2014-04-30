@@ -1,5 +1,7 @@
 ## TODO: need to be careful about how {l, rv, h} are used here...
 
+## TODO: multiple records / site in siteobs are possible and will result in duplicate data
+
 get_extended_data_from_NASIS_db <- function() {
 	
   # photo links from PedonPC
@@ -43,6 +45,7 @@ FROM pediagfeatures_View_1
   
 	q.surf.rf.summary <- "SELECT pedon_View_1.peiid, 
 
+CASE WHEN f1_fgr.gravel IS NULL THEN 0.0 ELSE f1_fgr.gravel END as surface_fgravel, 
 CASE WHEN f1_gr.gravel IS NULL THEN 0.0 ELSE f1_gr.gravel END as surface_gravel, 
 CASE WHEN f2_cb.cobbles IS NULL THEN 0.0 ELSE f2_cb.cobbles END as surface_cobbles, 
 CASE WHEN f3.stones IS NULL THEN 0.0 ELSE f3.stones END as surface_stones, 
@@ -52,7 +55,7 @@ CASE WHEN f6.flagstones IS NULL THEN 0.0 ELSE f6.flagstones END as surface_flags
 CASE WHEN f1_pgr.gravel IS NULL THEN 0.0 ELSE f1_pgr.gravel END as surface_paragravel,
 CASE WHEN f2_pcb.cobbles IS NULL THEN 0.0 ELSE f2_pcb.cobbles END as surface_paracobbles
 
-FROM ((((((((((
+FROM (((((((((((
 
 pedon_View_1
 
@@ -63,6 +66,15 @@ LEFT OUTER JOIN
 (
 SELECT DISTINCT siteobsiidref FROM sitesurffrags_View_1
 ) as p ON p.siteobsiidref = siteobs_View_1.siteobsiid)
+
+LEFT OUTER JOIN (
+  	SELECT siteobsiidref, Sum(sfragcov) AS gravel
+		FROM sitesurffrags_View_1
+		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON sfraghard = m.ChoiceValue
+		WHERE (sfragsize_r <= 5 OR sfragsize_h <= 5) AND (sfragshp != 1 OR sfragshp IS NULL) 
+		AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
+		GROUP BY siteobsiidref
+	) as f1_fgr ON p.siteobsiidref = f1_fgr.siteobsiidref)
 
 LEFT OUTER JOIN (
 		SELECT siteobsiidref, Sum(sfragcov) AS gravel
@@ -140,7 +152,8 @@ LEFT OUTER JOIN (
 	# query rock-fragment summary by horizon
 	q.rf.summary <- "SELECT p.phiid, 
 
-CASE WHEN f1_gr.gravel IS NULL THEN 0.0 ELSE f1_gr.gravel END as gravel, 
+CASE WHEN f1_fgr.gravel IS NULL THEN 0.0 ELSE f1_fgr.gravel END as fine_gravel,
+	CASE WHEN f1_gr.gravel IS NULL THEN 0.0 ELSE f1_gr.gravel END as gravel, 
 	CASE WHEN f2_cb.cobbles IS NULL THEN 0.0 ELSE f2_cb.cobbles END as cobbles,
 	CASE WHEN f3.stones IS NULL THEN 0.0 ELSE f3.stones END as stones, 
 	CASE WHEN f4.boulders IS NULL THEN 0.0 ELSE f4.boulders END as boulders,
@@ -149,12 +162,21 @@ CASE WHEN f1_gr.gravel IS NULL THEN 0.0 ELSE f1_gr.gravel END as gravel,
 	CASE WHEN f5.channers IS NULL THEN 0.0 ELSE f5.channers END as channers, 
 	CASE WHEN f6.flagstones IS NULL THEN 0.0 ELSE f6.flagstones END as flagstones
 	
-	FROM ((((((((
+	FROM (((((((((
 	(
 	SELECT DISTINCT phiid FROM phorizon_View_1
 	) as p
 	
-	LEFT OUTER JOIN (
+  LEFT OUTER JOIN (
+	SELECT phiidref, Sum(fragvol) AS gravel
+	FROM phfrags_View_1
+  LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
+  WHERE (fragsize_r <= 5 OR fragsize_h <= 5) AND (fragshp != 1 OR fragshp IS NULL)
+  AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
+  GROUP BY phiidref
+  ) as f1_fgr ON p.phiid = f1_fgr.phiidref)
+
+  LEFT OUTER JOIN (
 	SELECT phiidref, Sum(fragvol) AS gravel
 	FROM phfrags_View_1
 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
@@ -246,7 +268,7 @@ FROM geomorfeattype
   ORDER BY peiid, geomfeatid ASC;"
 	
    
-q.taxhistory <- "SELECT peiidref as peiid, classdate, classifier, tk.ChoiceName as class_type, taxonname, tk.ChoiceName as taxon_kind, ss.ChoiceName as series_status, ps.ChoiceName as part_size_class, tord.ChoiceName as tax_order, tso.ChoiceName as tax_suborder, tgg.ChoiceName as tax_grtgroup, ts.ChoiceName as tax_subgroup, te.ChoiceName as tax_edition, psctopdepth, pscbotdepth, osdtypelocflag, mcl.ChoiceName as tax_moistureclass, txo.ChoiceName as tax_fam_other
+q.taxhistory <- "SELECT peiidref as peiid, classdate, classifier, tk.ChoiceName as class_type, taxonname, tk.ChoiceName as taxon_kind, ss.ChoiceName as series_status, ps.ChoiceName as part_size_class, tord.ChoiceName as tax_order, tso.ChoiceName as tax_suborder, tgg.ChoiceName as tax_grtgroup, ts.ChoiceName as tax_subgroup, te.ChoiceName as tax_edition, osdtypelocflag, mcl.ChoiceName as tax_moistureclass, txo.ChoiceName as tax_fam_other
   	FROM (((((((((((((petaxhistory_View_1 LEFT OUTER JOIN petaxhistmoistcl_View_1 ON petaxhistory_View_1.petaxhistoryiid = petaxhistmoistcl_View_1.pedtaxhistoryiidref) LEFT OUTER JOIN petxhistfmother_View_1 ON petaxhistory_View_1.petaxhistoryiid = petxhistfmother_View_1.pedtaxhistoryiidref)
 		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 127) AS ps ON petaxhistory_View_1.taxpartsize = ps.ChoiceValue)
 LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 187) AS ts ON petaxhistory_View_1.taxsubgrp = ts.ChoiceValue)
@@ -274,7 +296,7 @@ ORDER BY petaxhistory_View_1.peiidref;"
 	d.hz.texmod <- sqlQuery(channel, q.hz.texmod, stringsAsFactors=FALSE)
 	d.geomorph <- sqlQuery(channel, q.geomorph, stringsAsFactors=FALSE)
 	d.taxhistory <- sqlQuery(channel, q.taxhistory, stringsAsFactors=FALSE)
-  	d.photolink <- sqlQuery(channel, q.photolink, stringsAsFactors=FALSE)
+  d.photolink <- sqlQuery(channel, q.photolink, stringsAsFactors=FALSE)
 	
 	# close connection
 	odbcClose(channel)
