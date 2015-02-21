@@ -1,10 +1,14 @@
 # updated to NASIS 6.2
 
 # convenience function for loading most commonly used information from local NASIS database
-fetchNASIS <- function() {
+fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=FALSE) {
 	
+  # must have RODBC installed
+  if(!requireNamespace('RODBC'))
+    stop('please install the `RODBC` package', call.=FALSE)
+  
 	# test connection
-	if(! 'nasis_local' %in% names(odbcDataSources()))
+	if(! 'nasis_local' %in% names(RODBC::odbcDataSources()))
 			stop('Local NASIS ODBC connection has not been setup. Please see the `setup_ODBC_local_NASIS.pdf` document included with this package.')
 	
 	# 1. load data in pieces
@@ -13,6 +17,13 @@ fetchNASIS <- function() {
 	color_data <- get_colors_from_NASIS_db()
 	extended_data <- get_extended_data_from_NASIS_db()
 	
+  # optionally convert NA fragvol to 0
+  if(nullFragsAreZero) {
+    hz_data$total_frags_pct <- ifelse(is.na(hz_data$total_frags_pct), 0, hz_data$total_frags_pct)
+    hz_data$total_frags_pct_cal <- ifelse(is.na(hz_data$total_frags_pct_cal), 0, hz_data$total_frags_pct_cal)
+  }
+  
+  
 	# join horizon + hz color: all horizons
 	h <- join(hz_data, color_data, by='phiid', type='left')
 	
@@ -31,19 +42,35 @@ fetchNASIS <- function() {
 	h$soil_color[idx] <- with(h[idx, ], rgb(m_r, m_g, m_b)) # moist colors
 	
 	# join hz + fragment summary
-	h <- join(h, extended_data$frag_summary, by='phiid', type='left')
+  hfs <- extended_data$frag_summary
+  # optionally convert NA fragvol to 0
+  if(nullFragsAreZero) {
+    hfs <- as.data.frame(
+      cbind(hfs[, 1, drop=FALSE], 
+            lapply(hfs[, -1], function(i) ifelse(is.na(i), 0, i))
+      ), stringsAsFactors=FALSE)
+  }
+	h <- join(h, hfs, by='phiid', type='left')
 	
-	# test for bad horizonation... flag, and remove
-	message('finding horizonation errors ...')
-	h.test <- ddply(h, 'peiid', test_hz_logic, topcol='hzdept', bottomcol='hzdepb', strict=TRUE)
+	# optionally test for bad horizonation... flag, and remove
+  if(rmHzErrors) {
+    message('finding horizonation errors ...')
+    h.test <- ddply(h, 'peiid', test_hz_logic, topcol='hzdept', bottomcol='hzdepb', strict=TRUE)
+    
+    # which are the good (valid) ones?
+    good.ids <- as.character(h.test$peiid[which(h.test$hz_logic_pass)])
+    bad.ids <- as.character(h.test$peiid[which(!h.test$hz_logic_pass)])
+    bad.pedon.ids <- site_data$pedon_id[which(site_data$peiid %in% bad.ids)]
+    
+    # keep the good ones
+    h <- h[which(h$peiid %in% good.ids), ]
+    
+    # keep track of those pedons with horizonation errors
+    assign('bad.pedon.ids', value=bad.pedon.ids, envir=soilDB.env)
+    if(length(bad.pedon.ids) > 0)
+      message("horizon errors detected, use `get('bad.pedon.ids', envir=soilDB.env)` for a list of pedon IDs")
+  }
 	
-	# which are the good (valid) ones?
-	good.ids <- as.character(h.test$peiid[which(h.test$hz_logic_pass)])
-	bad.ids <- as.character(h.test$peiid[which(!h.test$hz_logic_pass)])
-  bad.pedon.ids <- site_data$pedon_id[which(site_data$peiid %in% bad.ids)]
-	
-	# keep the good ones
-	h <- h[which(h$peiid %in% good.ids), ]
 	
 	# upgrade to SoilProfilecollection
 	depths(h) <- peiid ~ hzdept + hzdepb
@@ -61,23 +88,37 @@ fetchNASIS <- function() {
 	### TODO: consider moving this into the extended data function ###
 	# load best-guess optimal records from taxhistory
 	# method is added to the new field called 'selection_method'
-	best.tax.data <- ddply(extended_data$taxhistory, 'peiid', pickBestTaxHistory)
+	best.tax.data <- ddply(extended_data$taxhistory, 'peiid', .pickBestTaxHistory)
 	site(h) <- best.tax.data
 	
 	# add diagnostic boolean data into @site
 	site(h) <- extended_data$diagHzBoolean
 	
 	# add surface frag summary
-	site(h) <- extended_data$surf_frag_summary
+  sfs <- extended_data$surf_frag_summary
+  # optionally convert NA fragvol to 0
+  if(nullFragsAreZero) {
+    sfs <- as.data.frame(
+      cbind(sfs[, 1, drop=FALSE], 
+            lapply(sfs[, -1], function(i) ifelse(is.na(i), 0, i))
+            ), stringsAsFactors=FALSE)
+  }
+  
+	site(h) <- sfs
 	
 	# load diagnostic horizons into @diagnostic:
-	diagnostic_hz(h) <- extended_data$diagnostic
-		
-	# 7. save and mention bad pedons
-	assign('bad.pedon.ids', value=bad.pedon.ids, envir=soilDB.env)
-	if(length(bad.pedon.ids) > 0)
-		message("horizon errors detected, use `get('bad.pedon.ids', envir=soilDB.env)` for a list of pedon IDs")
-	
+  diagnostic_hz(h) <- extended_data$diagnostic
+  
+  # join-in landform string
+  lf <- ddply(extended_data$geomorph, 'peiid', .formatLandformString, name.sep='|')
+  if(nrow(lf) > 0)
+    site(h) <- lf
+  
+  # join-in parent material strings
+  pm <- ddply(extended_data$pm, 'siteiid', .formatParentMaterialString, name.sep='|')
+  if(nrow(pm) > 0)
+    site(h) <- pm
+  
 	# done
 	return(h)
 }

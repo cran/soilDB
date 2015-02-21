@@ -1,6 +1,10 @@
 # 2013-01-08: now much faster since we only mix/clean data with > 1 color / horizon
 
 get_colors_from_pedon_db <- function(dsn) {
+  # must have RODBC installed
+  if(!requireNamespace('RODBC'))
+    stop('please install the `RODBC` package', call.=FALSE)
+  
 	# color data... check
 	q <- "SELECT phorizon.phiid as phiid, colormoistst, colorpct as pct, mh.choice AS colorhue, colorvalue, colorchroma
 FROM (
@@ -10,13 +14,13 @@ FROM (
 	ORDER BY phorizon.phiid, colormoistst;"
   
 	# setup connection to our pedon database
-	channel <- odbcConnectAccess2007(dsn, readOnlyOptimize=TRUE)
+	channel <- RODBC::odbcConnectAccess2007(dsn, readOnlyOptimize=TRUE)
 	
 	# exec query
-	d <- sqlQuery(channel, q, stringsAsFactors=FALSE)
+	d <- RODBC::sqlQuery(channel, q, stringsAsFactors=FALSE)
 	
 	# close connection
-	odbcClose(channel)
+	RODBC::odbcClose(channel)
 	
 	# convert Munsell to RGB
 	cat('converting Munsell to RGB ...\n')

@@ -1,15 +1,16 @@
 
+# TODO: SDM is being phased out
+# TODO: update to SDM replacement
+
 # http://sdmdataaccess.nrcs.usda.gov/Spatial/SDMNAD83Geographic.wfs?Service=WFS&Version=1.0.0&Request=GetFeature&OutputFormat=XmlMukeyList&Typename=MapunitPolyNoGeometry&BBOX=-120.950129388,37.7972571005,-120.677685495,37.9766971606
 
 MUKEYS_by_ll_bbox <- function(bbox) {
-	# check for required packages
-	if(!require(RCurl) | !require(XML))
-		stop('please install the `RCurl` and `XML` packages', call.=FALSE)
-	
+  # process BBOX	
 	bbox.text <- paste(bbox, collapse=',')
 	
 	u <- paste( 'http://sdmdataaccess.nrcs.usda.gov/Spatial/SDMNAD83Geographic.wfs?Service=WFS&Version=1.0.0&Request=GetFeature&OutputFormat=XmlMukeyList&Typename=MapunitPolyNoGeometry&BBOX=', bbox.text, sep='')
 	
+  # this function will hang if the website is unavailable
 	html <- getURL(u) 
 	html.tree <- htmlTreeParse(html, useInternalNodes=TRUE, error=function(...){}) 
 	

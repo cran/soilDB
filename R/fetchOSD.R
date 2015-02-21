@@ -1,4 +1,4 @@
-## TODO: update SoilWeb's snapshot of the SC database and check on subgroup_mod column
+## NOTE: this function assumes that the series name in osd.osd_colors exactly matches seriesname in osd.taxa
 
 # fetch basic OSD data from the SoilWeb snapshot of the SC database
 fetchOSD <- function(soils) {
@@ -8,6 +8,7 @@ fetchOSD <- function(soils) {
 	u.osd_hz <- 'http://casoilresource.lawr.ucdavis.edu/soil_web/reflector_api/soils.php?what=osd_query&q_string='
 	
 	# compile URL + requested soil series
+  # note: not affected by horizon names with prime (')
 	u.site <- paste(u.osd_site, paste(soils, collapse=','), sep='')
 	u.hz <- paste(u.osd_hz, paste(soils, collapse=','), sep='')
 	

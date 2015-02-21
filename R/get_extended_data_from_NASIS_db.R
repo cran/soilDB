@@ -3,13 +3,15 @@
 ## TODO: multiple records / site in siteobs are possible and will result in duplicate data
 
 get_extended_data_from_NASIS_db <- function() {
-	
-  # photo links from PedonPC
-  q.photolink <- "SELECT siteobs.siteiidref AS siteiid, siteobstext.recdate,siteobstext.textcat, siteobstext.textentry AS imagepath
-  FROM (
-  siteobs LEFT OUTER JOIN siteobstext ON siteobs.siteobsiid = siteobstext.siteobsiidref) 
-  WHERE siteobstext.textcat LIKE 'Photo%' ORDER BY siteobstext.siteobstextkind;"
+  # must have RODBC installed
+  if(!requireNamespace('RODBC'))
+    stop('please install the `RODBC` package', call.=FALSE)
   
+  # photo links from PedonPC
+  q.photolink <- "SELECT siteobs_View_1.siteiidref AS siteiid, siteobstext_View_1.recdate, siteobstext_View_1.textcat, siteobstext_View_1.textentry AS imagepath
+  FROM (
+  siteobs_View_1 LEFT OUTER JOIN siteobstext_View_1 ON siteobs_View_1.siteobsiid = siteobstext_View_1.siteobsiidref) 
+  WHERE siteobstext_View_1.textcat LIKE 'Photo%' ORDER BY siteobstext_View_1.siteobstextkind;"
   
 	## TODO: adapt this for SQL server syntax!
 	# returns the first structure defined per horizon
@@ -44,16 +46,15 @@ FROM pediagfeatures_View_1
 	ORDER BY pediagfeatures_View_1.peiidref, pediagfeatures_View_1.featdept;"
   
 	q.surf.rf.summary <- "SELECT pedon_View_1.peiid, 
-
-CASE WHEN f1_fgr.gravel IS NULL THEN 0.0 ELSE f1_fgr.gravel END as surface_fgravel, 
-CASE WHEN f1_gr.gravel IS NULL THEN 0.0 ELSE f1_gr.gravel END as surface_gravel, 
-CASE WHEN f2_cb.cobbles IS NULL THEN 0.0 ELSE f2_cb.cobbles END as surface_cobbles, 
-CASE WHEN f3.stones IS NULL THEN 0.0 ELSE f3.stones END as surface_stones, 
-CASE WHEN f4.boulders IS NULL THEN 0.0 ELSE f4.boulders END as surface_boulders,
-CASE WHEN f5.channers IS NULL THEN 0.0 ELSE f5.channers END as surface_channers, 
-CASE WHEN f6.flagstones IS NULL THEN 0.0 ELSE f6.flagstones END as surface_flagstones,
-CASE WHEN f1_pgr.gravel IS NULL THEN 0.0 ELSE f1_pgr.gravel END as surface_paragravel,
-CASE WHEN f2_pcb.cobbles IS NULL THEN 0.0 ELSE f2_pcb.cobbles END as surface_paracobbles
+f1_fgr.gravel as surface_fgravel, 
+f1_gr.gravel as surface_gravel, 
+f2_cb.cobbles as surface_cobbles, 
+f3.stones as surface_stones, 
+f4.boulders as surface_boulders,
+f5.channers as surface_channers, 
+f6.flagstones as surface_flagstones,
+f1_pgr.gravel as surface_paragravel,
+f2_pcb.cobbles as surface_paracobbles
 
 FROM (((((((((((
 
@@ -152,15 +153,15 @@ LEFT OUTER JOIN (
 	# query rock-fragment summary by horizon
 	q.rf.summary <- "SELECT p.phiid, 
 
-CASE WHEN f1_fgr.gravel IS NULL THEN 0.0 ELSE f1_fgr.gravel END as fine_gravel,
-	CASE WHEN f1_gr.gravel IS NULL THEN 0.0 ELSE f1_gr.gravel END as gravel, 
-	CASE WHEN f2_cb.cobbles IS NULL THEN 0.0 ELSE f2_cb.cobbles END as cobbles,
-	CASE WHEN f3.stones IS NULL THEN 0.0 ELSE f3.stones END as stones, 
-	CASE WHEN f4.boulders IS NULL THEN 0.0 ELSE f4.boulders END as boulders,
-	CASE WHEN f1_pgr.gravel IS NULL THEN 0.0 ELSE f1_pgr.gravel END as paragravel,
-	CASE WHEN f2_pcb.cobbles IS NULL THEN 0.0 ELSE f2_pcb.cobbles END as paracobbles,
-	CASE WHEN f5.channers IS NULL THEN 0.0 ELSE f5.channers END as channers, 
-	CASE WHEN f6.flagstones IS NULL THEN 0.0 ELSE f6.flagstones END as flagstones
+  f1_fgr.gravel as fine_gravel,
+  f1_gr.gravel as gravel, 
+	f2_cb.cobbles as cobbles,
+	f3.stones as stones, 
+	f4.boulders as boulders,
+	f1_pgr.gravel as paragravel,
+	f2_pcb.cobbles as paracobbles,
+	f5.channers as channers, 
+	f6.flagstones as flagstones
 	
 	FROM (((((((((
 	(
@@ -268,7 +269,7 @@ FROM geomorfeattype
   ORDER BY peiid, geomfeatid ASC;"
 	
    
-q.taxhistory <- "SELECT peiidref as peiid, classdate, classifier, tk.ChoiceName as class_type, taxonname, tk.ChoiceName as taxon_kind, ss.ChoiceName as series_status, ps.ChoiceName as part_size_class, tord.ChoiceName as tax_order, tso.ChoiceName as tax_suborder, tgg.ChoiceName as tax_grtgroup, ts.ChoiceName as tax_subgroup, te.ChoiceName as tax_edition, osdtypelocflag, mcl.ChoiceName as tax_moistureclass, txo.ChoiceName as tax_fam_other
+q.taxhistory <- "SELECT peiidref as peiid, classdate, classifier, tk.ChoiceName as class_type, taxonname, tk.ChoiceName as taxon_kind, ss.ChoiceName as series_status, ps.ChoiceName as part_size_class, tord.ChoiceName as tax_order, tso.ChoiceName as tax_suborder, tgg.ChoiceName as tax_grtgroup, ts.ChoiceName as tax_subgroup, te.ChoiceName as tax_edition, osdtypelocflag, mcl.ChoiceName as tax_moistureclass, txo.ChoiceName as tax_fam_other, psctopdepth, pscbotdepth
   	FROM (((((((((((((petaxhistory_View_1 LEFT OUTER JOIN petaxhistmoistcl_View_1 ON petaxhistory_View_1.petaxhistoryiid = petaxhistmoistcl_View_1.pedtaxhistoryiidref) LEFT OUTER JOIN petxhistfmother_View_1 ON petaxhistory_View_1.petaxhistoryiid = petxhistfmother_View_1.pedtaxhistoryiidref)
 		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 127) AS ps ON petaxhistory_View_1.taxpartsize = ps.ChoiceValue)
 LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 187) AS ts ON petaxhistory_View_1.taxsubgrp = ts.ChoiceValue)
@@ -283,26 +284,36 @@ LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 186) AS mcl
 LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 184) AS txo ON petxhistfmother_View_1.taxfamother = txo.ChoiceValue)
 ORDER BY petaxhistory_View_1.peiidref;"
 
+
+q.sitepm <- "SELECT siteiidref as siteiid, seqnum, pmorder, pmdept, pmdepb, pmm.ChoiceName as pm_modifier, pmgenmod, pmk.ChoiceName as pm_kind, pmo.ChoiceName as pm_origin, pmw.ChoiceName as pm_weathering 
+FROM (((((sitepm_View_1 INNER JOIN site_View_1 on sitepm_View_1.siteiidref = site_View_1.siteiid) 
+LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 516 ) AS pmm ON sitepm_View_1.pmmodifier = pmm.ChoiceValue)
+LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 515) AS pmk ON sitepm_View_1.pmkind = pmk.ChoiceValue)
+LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 2587) AS pmo ON sitepm_View_1.pmorigin = pmo.ChoiceValue)
+LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 1309) AS pmw ON sitepm_View_1.pmweathering = pmw.ChoiceValue);"
+
+
 	
 	
 	# setup connection to our local NASIS database
-	channel <- odbcConnect('nasis_local', uid='NasisSqlRO', pwd='nasisRe@d0n1y') 
+	channel <- RODBC::odbcConnect('nasis_local', uid='NasisSqlRO', pwd='nasisRe@d0n1y') 
 	
 	# exec queries
-	d.veg <- sqlQuery(channel, q.veg, stringsAsFactors=FALSE)
-	d.diagnostic <- sqlQuery(channel, q.diagnostic, stringsAsFactors=FALSE)
-	d.rf.summary <- sqlQuery(channel, q.rf.summary, stringsAsFactors=FALSE)
-	d.surf.rf.summary <- sqlQuery(channel, q.surf.rf.summary, stringsAsFactors=FALSE)
-	d.hz.texmod <- sqlQuery(channel, q.hz.texmod, stringsAsFactors=FALSE)
-	d.geomorph <- sqlQuery(channel, q.geomorph, stringsAsFactors=FALSE)
-	d.taxhistory <- sqlQuery(channel, q.taxhistory, stringsAsFactors=FALSE)
-  d.photolink <- sqlQuery(channel, q.photolink, stringsAsFactors=FALSE)
+	d.veg <- RODBC::sqlQuery(channel, q.veg, stringsAsFactors=FALSE)
+	d.diagnostic <- RODBC::sqlQuery(channel, q.diagnostic, stringsAsFactors=FALSE)
+	d.rf.summary <- RODBC::sqlQuery(channel, q.rf.summary, stringsAsFactors=FALSE)
+	d.surf.rf.summary <- RODBC::sqlQuery(channel, q.surf.rf.summary, stringsAsFactors=FALSE)
+	d.hz.texmod <- RODBC::sqlQuery(channel, q.hz.texmod, stringsAsFactors=FALSE)
+	d.geomorph <- RODBC::sqlQuery(channel, q.geomorph, stringsAsFactors=FALSE)
+	d.taxhistory <- RODBC::sqlQuery(channel, q.taxhistory, stringsAsFactors=FALSE)
+  d.photolink <- RODBC::sqlQuery(channel, q.photolink, stringsAsFactors=FALSE)
+	d.sitepm <- RODBC::sqlQuery(channel, q.sitepm, stringsAsFactors=FALSE)
 	
 	# close connection
-	odbcClose(channel)
+	RODBC::odbcClose(channel)
 	
 	# generate wide-formatted, diagnostic boolean summary
-	d.diag.boolean <- diagHzLongtoWide(d.diagnostic)
+	d.diag.boolean <- .diagHzLongtoWide(d.diagnostic)
 	
 	# return a list of results
 	return(list(veg=d.veg,
@@ -313,6 +324,7 @@ ORDER BY petaxhistory_View_1.peiidref;"
 							texmodifier=d.hz.texmod, 
 							geomorph=d.geomorph, 
 							taxhistory=d.taxhistory,
-              photo=d.photolink))
+						  photo=d.photolink,
+							pm=d.sitepm))
 }
 

@@ -1,4 +1,8 @@
 get_extended_data_from_pedon_db <- function(dsn) {
+  # must have RODBC installed
+  if(!requireNamespace('RODBC'))
+    stop('please install the `RODBC` package', call.=FALSE)
+  
 	# query diagnostic horizons, usually a 1:many relationship with pedons
 	q.diagnostic <- "SELECT peiidref as peiid, dfk.choice as diag_kind, featdept, featdepb
 FROM pediagfeatures
@@ -112,20 +116,20 @@ FROM geomorfeattype RIGHT JOIN (geomorfeat RIGHT JOIN ((site INNER JOIN sitegeom
 	ORDER BY petaxhistory.peiidref;"	
 	
 	# setup connection to our pedon database
-	channel <- odbcConnectAccess2007(dsn, readOnlyOptimize=TRUE)
+	channel <- RODBC::odbcConnectAccess2007(dsn, readOnlyOptimize=TRUE)
 	
 	# exec queries
-	d.diagnostic <- sqlQuery(channel, q.diagnostic, stringsAsFactors=FALSE)
-	d.rf.summary <- sqlQuery(channel, q.rf.summary, stringsAsFactors=FALSE)
-	d.hz.texmod <- sqlQuery(channel, q.hz.texmod, stringsAsFactors=FALSE)
-	d.geomorph <- sqlQuery(channel, q.geomorph, stringsAsFactors=FALSE)
-	d.taxhistory <- sqlQuery(channel, q.taxhistory, stringsAsFactors=FALSE)
+	d.diagnostic <- RODBC::sqlQuery(channel, q.diagnostic, stringsAsFactors=FALSE)
+	d.rf.summary <- RODBC::sqlQuery(channel, q.rf.summary, stringsAsFactors=FALSE)
+	d.hz.texmod <- RODBC::sqlQuery(channel, q.hz.texmod, stringsAsFactors=FALSE)
+	d.geomorph <- RODBC::sqlQuery(channel, q.geomorph, stringsAsFactors=FALSE)
+	d.taxhistory <- RODBC::sqlQuery(channel, q.taxhistory, stringsAsFactors=FALSE)
 	
 	# close connection
-	odbcClose(channel)
+	RODBC::odbcClose(channel)
 	
 	# generate wide-formatted, diagnostic boolean summary
-	d.diag.boolean <- diagHzLongtoWide(d.diagnostic)
+	d.diag.boolean <- .diagHzLongtoWide(d.diagnostic)
 	
 	# return a list of results
 	return(list(diagnostic=d.diagnostic, diagHzBoolean=d.diag.boolean, frag_summary=d.rf.summary, texmodifier=d.hz.texmod, geomorph=d.geomorph, taxhistory=d.taxhistory))

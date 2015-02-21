@@ -6,12 +6,27 @@ importFrom(plyr,
   join
 )
 
-importFrom(RODBC, 
-  odbcDataSources,
-  odbcConnect,
-  sqlQuery,
-  odbcClose
+importFrom(RCurl,
+  getURL,
+  curlOptions,
+  postForm
 )
+
+
+importFrom(sp,
+  spTransform,
+  CRS,
+  "coordinates<-",
+  "proj4string<-"  
+)
+
+
+importFrom(XML,
+  htmlTreeParse,
+  getNodeSet,
+  xmlValue
+)
+
 
 importFrom(Hmisc, 
   wtd.mean, 
@@ -26,7 +41,8 @@ importFrom(aqp,
   "site<-",
   diagnostic_hz,
   "diagnostic_hz<-",
-  test_hz_logic
+  test_hz_logic,
+  rgb2munsell
 )
 
 exportPattern("^[^\\.]")

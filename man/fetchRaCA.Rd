@@ -1,13 +1,14 @@
 \name{fetchRaCA}
 \alias{fetchRaCA}
 \title{Fetch KSSL Data (EXPERIMENTAL)}
-\description{Get Rapid Carbon Assessment (RaCA) data via state, geographic bounding-box, or series query from the SoilWeb system.}
-\usage{fetchRaCA(series = NULL, bbox = NULL, state = NULL, get.vnir = FALSE)}
+\description{Get Rapid Carbon Assessment (RaCA) data via state, geographic bounding-box, RaCA site ID, or series query from the SoilWeb system.}
+\usage{fetchRaCA(series = NULL, bbox = NULL, state = NULL, rcasiteid = NULL, get.vnir = FALSE)}
 
 \arguments{
   \item{series}{a soil series name, case insensitive}
   \item{bbox}{a bounding box in WGS84 geographic coordinates e.g. \code{c(-120, 37, -122, 38)}, constrained to a 5-degree block}
   \item{state}{a two-letter US state abbreviation, case insensitive}
+  \item{rcasiteid}{an RaCA site id (e.g. 'C1609C01')}
   \item{get.vnir}{boolean, should associated VNIR spectra be downloaded? (see details)}
 }
 
@@ -25,7 +26,7 @@
 \details{The VNIR spectra associated with RaCA data are quite large [each gzip-compressed VNIR spectra record is about 6.6kb], so requests for these data are disabled by default. Note that VNIR spectra can only be queried by soil series or geographic BBOX.}
 
 \references{
-  \url{http://soils.usda.gov/survey/raca/index.html}
+  \url{http://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/survey/?cid=nrcs142p2_054164}
   \href{https://r-forge.r-project.org/scm/viewvc.php/*checkout*/docs/soilDB/RaCA-demo.html?root=aqp}{fetchRaCA() Tutorial}
 }
 \author{D.E. Beaudette, USDA-NRCS staff}

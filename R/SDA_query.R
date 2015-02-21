@@ -35,15 +35,15 @@ cleanSDA <- function(i) {
 
 # TODO: figure out how to inspect the results and set column classes
 SDA_query <- function(q) {
-	# check for required packages
-	if(!require(SSOAP) | !require(XMLSchema))
-		stop('please install the `SSOAP` and `XMLSchema` packages', call.=FALSE)
-	
-	# important: change the default behavior of data.frame
+  # check for required packages
+  if(!requireNamespace('SSOAP') | !requireNamespace('XMLSchema'))
+    stop('please install the `SSOAP` and `XMLSchema` packages', call.=FALSE)
+    
+  # important: change the default behavior of data.frame
 	opt.original <- options(stringsAsFactors = FALSE)
 	
 	# setup server, action, and xmlns
-	s <- SOAPServer('SDMDataAccess.nrcs.usda.gov', '/Tabular/SDMTabularService.asmx')
+	s <- SSOAP::SOAPServer('SDMDataAccess.nrcs.usda.gov', '/Tabular/SDMTabularService.asmx')
 	a <- I('http://SDMDataAccess.nrcs.usda.gov/Tabular/SDMTabularService.asmx/RunQuery')
 	x <- c(I("http://SDMDataAccess.nrcs.usda.gov/Tabular/SDMTabularService.asmx"))
 	
@@ -51,7 +51,7 @@ SDA_query <- function(q) {
 	cat('sending SOAP request...\n')
 	
 	# submit and process the query
-	res <- .SOAP(s, "RunQuery", Query=q, action=a, xmlns=x)
+	res <- SSOAP::.SOAP(s, "RunQuery", Query=q, action=a, xmlns=x)
 	
 	# results are stored in: res$diffgram$NewDataSet
 	

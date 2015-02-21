@@ -1,4 +1,8 @@
 get_veg_other_from_MT_veg_db <- function(dsn) {
+  
+  # must have RODBC installed
+  if(!requireNamespace('RODBC'))
+    stop('please install the `RODBC` package', call.=FALSE)
 	
 	#pull site and plot data and total production value
 	q <- "SELECT tblESD_DK.PlotKey, tblESD_DK.DKKey, tblSites.SiteID AS site_id, tblESD_DK.SpeciesSymbol, tblESD_DK.LPIPercentBasal, tblESD_DK.CanopyCoverPercent
@@ -7,13 +11,13 @@ FROM tblSites LEFT JOIN ((tblPlots LEFT JOIN tblESD_DK ON tblPlots.PlotKey = tbl
 	ORDER BY tblESD_DK.PlotKey, tblESD_DK.SpeciesSymbol;"
 
 	# setup connection to our pedon database
-	channel <- odbcConnectAccess(dsn, readOnlyOptimize=TRUE)
+	channel <- RODBC::odbcConnectAccess(dsn, readOnlyOptimize=TRUE)
 	
 	# exec query
-	d <- sqlQuery(channel, q, stringsAsFactors=FALSE)
+	d <- RODBC::sqlQuery(channel, q, stringsAsFactors=FALSE)
 	
 	# close connection
-	odbcClose(channel)
+	RODBC::odbcClose(channel)
 	
 	# done
 	return(d)
