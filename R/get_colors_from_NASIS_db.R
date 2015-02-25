@@ -17,8 +17,8 @@ pedon_View_1 INNER JOIN phorizon_View_1 ON pedon_View_1.peiid = phorizon_View_1.
 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 1242) AS mh ON phcolor_View_1.colorhue = mh.ChoiceValue
 	ORDER BY phiid, phcolor_View_1.colormoistst;"
   
-	# setup connection to our local NASIS database
-	channel <- RODBC::odbcConnect('nasis_local', uid='NasisSqlRO', pwd='nasisRe@d0n1y') 
+	# setup connection local NASIS
+	channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
 	
 	# exec query
 	d <- RODBC::sqlQuery(channel, q, stringsAsFactors=FALSE)

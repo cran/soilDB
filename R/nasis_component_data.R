@@ -45,8 +45,8 @@ LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 151) AS fc 
 WHERE ms.ChoiceName IS NULL OR ms.ChoiceName != 'additional'
 ORDER BY dmudesc, coiid, comppct_r DESC;"
 	
-	# setup connection to our pedon database
-	channel <- RODBC::odbcConnect('nasis_local', uid='NasisSqlRO', pwd='nasisRe@d0n1y')
+  # setup connection local NASIS
+  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
 	
 	# exec query
 	d <- RODBC::sqlQuery(channel, q, stringsAsFactors=FALSE)
@@ -85,8 +85,8 @@ FROM copedon
 JOIN pedon ON peiidref = peiid
 WHERE rvindicator = 1;
 "
-  # setup connection to our local NASIS database
-  channel <- RODBC::odbcConnect('nasis_local', uid='NasisSqlRO', pwd='nasisRe@d0n1y') 
+  # setup connection local NASIS
+  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
   
   # exec query
   d <- RODBC::sqlQuery(channel, q, stringsAsFactors=FALSE)
@@ -109,8 +109,8 @@ get_component_horizon_data_from_NASIS_db <- function() {
 	FROM chorizon_View_1 
 	ORDER BY coiidref, hzdept_r ASC;"
 	
-	# setup connection to our pedon database
-	channel <- RODBC::odbcConnect('nasis_local', uid='NasisSqlRO', pwd='nasisRe@d0n1y')
+	# setup connection local NASIS
+	channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
 	
 	# exec query
 	d <- RODBC::sqlQuery(channel, q, stringsAsFactors=FALSE)

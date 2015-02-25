@@ -295,8 +295,8 @@ LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 1309) AS pm
 
 	
 	
-	# setup connection to our local NASIS database
-	channel <- RODBC::odbcConnect('nasis_local', uid='NasisSqlRO', pwd='nasisRe@d0n1y') 
+	# setup connection local NASIS
+	channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
 	
 	# exec queries
 	d.veg <- RODBC::sqlQuery(channel, q.veg, stringsAsFactors=FALSE)
