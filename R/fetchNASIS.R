@@ -1,14 +1,14 @@
 # updated to NASIS 6.2
 
 # convenience function for loading most commonly used information from local NASIS database
-fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=FALSE) {
+fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=TRUE) {
 	
 	# test connection
 	if(! 'nasis_local' %in% names(RODBC::odbcDataSources()))
-			stop('Local NASIS ODBC connection has not been setup. Please see the `setup_ODBC_local_NASIS.pdf` document included with this package.')
+			stop('Local NASIS ODBC connection has not been setup. Please see `https://r-forge.r-project.org/scm/viewvc.php/*checkout*/docs/soilDB/setup_local_nasis.html?root=aqp`.')
 	
 	# 1. load data in pieces
-	site_data <- get_site_data_from_NASIS_db()
+	suppressMessages(site_data <- get_site_data_from_NASIS_db())
 	hz_data <- get_hz_data_from_NASIS_db()
 	color_data <- get_colors_from_NASIS_db()
 	extended_data <- get_extended_data_from_NASIS_db()
@@ -50,7 +50,6 @@ fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=FALSE) {
 	
 	# optionally test for bad horizonation... flag, and remove
   if(rmHzErrors) {
-    message('finding horizonation errors ...')
     h.test <- ddply(h, 'peiid', test_hz_logic, topcol='hzdept', bottomcol='hzdepb', strict=TRUE)
     
     # which are the good (valid) ones?
@@ -62,9 +61,8 @@ fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=FALSE) {
     h <- h[which(h$peiid %in% good.ids), ]
     
     # keep track of those pedons with horizonation errors
-    assign('bad.pedon.ids', value=bad.pedon.ids, envir=soilDB.env)
     if(length(bad.pedon.ids) > 0)
-      message("horizon errors detected, use `get('bad.pedon.ids', envir=soilDB.env)` for a list of pedon IDs")
+      assign('bad.pedon.ids', value=bad.pedon.ids, envir=soilDB.env)
   }
 	
 	
@@ -100,10 +98,12 @@ fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=FALSE) {
             ), stringsAsFactors=FALSE)
   }
   
+  # add surf. frag summary to @site
 	site(h) <- sfs
 	
 	# load diagnostic horizons into @diagnostic:
-  diagnostic_hz(h) <- extended_data$diagnostic
+  # supress warnings, usually associated with site/pedon data that have been removed due to lack of horizon data
+  suppressWarnings(diagnostic_hz(h) <- extended_data$diagnostic)
   
   # join-in landform string
   lf <- ddply(extended_data$geomorph, 'peiid', .formatLandformString, name.sep='|')
@@ -114,6 +114,16 @@ fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=FALSE) {
   pm <- ddply(extended_data$pm, 'siteiid', .formatParentMaterialString, name.sep='|')
   if(nrow(pm) > 0)
     site(h) <- pm
+  
+  # print any messages on possible data quality problems:
+	if(exists('sites.missing.pedons', envir=soilDB.env))
+	  message("-> QC: sites without pedons: use `get('sites.missing.pedons', envir=soilDB.env)` for related usersiteid values")
+  
+	if(exists('dup.pedon.ids', envir=soilDB.env))
+	  message("-> QC: duplicate pedons: use `get('dup.pedon.ids', envir=soilDB.env)` for related peiid values")
+  
+  if(exists('bad.pedon.ids', envir=soilDB.env))
+	  message("-> QC: horizon errors detected, use `get('bad.pedon.ids', envir=soilDB.env)` for related userpedonid values")
   
 	# done
 	return(h)
