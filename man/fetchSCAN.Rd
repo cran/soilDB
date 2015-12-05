@@ -1,12 +1,11 @@
 \name{fetchSCAN}
 \alias{fetchSCAN}
-\alias{fetchHenry}
 \title{Fetch SCAN Data}
 \description{Query soil/climate data from USDA-NRCS SCAN Stations (experimental)}
 \usage{fetchSCAN(req)}
 
 \arguments{
-  \item{req}{a vector of named characters, e.g. 
+  \item{req}{a vector of named characters or list of named characters, e.g. 
   c(intervalType=' View Historic ', report='STO', timeseries='Daily', 
 format='copy', sitenum='2072', interval='YEAR', year='2011', month='CY')}
 }

@@ -24,14 +24,15 @@ get_extended_data_from_NASIS_db <- function() {
 	ORDER BY phstructure.phiidref, structid ASC;"
 	
 	# existing veg
-	q.veg <- "SELECT siteiid, siteexistveg_View_1.seqnum, plantsym, plantsciname, plantnatvernm, vegetationstratalevel, orderofdominance
-	FROM
-	(((
-	site_View_1 INNER JOIN siteobs_View_1 ON site_View_1.siteiid = siteobs_View_1.siteiidref) 
-	INNER JOIN siteexistveg_View_1 ON siteexistveg_View_1.siteobsiidref = siteobs_View_1.siteobsiid)
-	INNER JOIN localplant ON siteexistveg_View_1.lplantiidref = localplant.lplantiid)
-	INNER JOIN plant ON localplant.plantiidref = plant.plantiid
-	ORDER BY site_View_1.siteiid;"
+  q.veg <- "SELECT siteiid, vegplotid, vegplotname, obsdate, primarydatacollector, datacollectionpurpose, assocuserpedonid, plotplantinventory.seqnum, plantsym, plantsciname, plantnatvernm, orderofdominance, speciescancovpct, speciescancovclass
+
+  FROM site_View_1 AS s
+  INNER JOIN siteobs ON siteobs.siteiidref=s.siteiid
+  LEFT JOIN vegplot_View_1 AS v on v.siteobsiidref=siteobs.siteobsiid
+  LEFT JOIN plotplantinventory ON plotplantinventory.vegplotiidref=v.vegplotiid
+  INNER JOIN plant ON plant.plantiid=plotplantinventory.plantiidref;"
+  
+  
 	
 	# query diagnostic horizons, usually a 1:many relationship with pedons
 	q.diagnostic <- "SELECT peiidref as peiid, dfk.ChoiceName as diag_kind, featdept, featdepb
