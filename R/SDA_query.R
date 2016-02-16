@@ -1,4 +1,43 @@
 
+
+
+# helper function for processing WKT returned by SDA_query()
+# result is an SPDF
+# d: data frame
+# g: column containing WKT
+# p4s: PROJ4 CRS defs
+## TODO: test with geom appearing in different positions within query results
+processSDA_WKT <- function(d, g='geom', p4s='+proj=longlat +datum=WGS84') {
+  # iterate over features (rows) and convert into list of SPDF
+  p <- list()
+  n <- nrow(d)
+  # pb <- txtProgressBar(style = 3)
+  for(i in seq(1, n)) {
+    # extract the current row in the DF
+    d.i <- d[i, ] 
+    # extract the current feature from WKT
+    p.i <- rgeos::readWKT(d.i[[g]], id = i, p4s = p4s)
+    # remove geom from current row of DF
+    d.i[[g]] <- NULL
+    # compose SPDF, with other attributes
+    s.i <- SpatialPolygonsDataFrame(p.i, data=cbind(data.frame(gid=i, stringsAsFactors = FALSE), d.i), match.ID = FALSE)
+    # fix column names
+    names(s.i) <- c('gid', names(d.i))
+    # save to list
+    p[[i]] <- s.i
+    # setTxtProgressBar(pb, i/n)
+  }
+  # close(pb)
+  
+  # reduce list to single SPDF
+  spdf <- do.call('rbind', p)
+  
+  return(spdf)
+}
+
+
+
+
 # i is a single Spatial* object with CRS: WGS84 GCS
 SDA_make_spatial_query <- function(i) {
   
@@ -69,6 +108,8 @@ format_SQL_in_statement <- function(x) {
 	return(i)
 }
 
+## TODO: parse multiple record sets, return as list... currently results are combined into a single DF
+##         SDA_query("select top 3 areasymbol from mupoint; select top 2 lkey from mapunit")
 ## TODO: doesn't close all connections
 ## TODO: requires more testing and error-trapping
 SDA_query <- function(q) {
@@ -92,12 +133,23 @@ SDA_query <- function(q) {
   r <- httr::POST(url="http://sdmdataaccess.sc.egov.usda.gov/tabular/post.rest", body=httr::upload_file(tf.1))
   httr::stop_for_status(r)
   
+  ## httr 1.1.0: content now returns an xml_document
+  # bug fix suggested by Kyle Bocinsky, thanks!
   # extract content as XML
-  r.content <- httr::content(r)
+  r.content <- httr::content(r, as = 'text', encoding = 'UTF-8')
   d <- xmlToDataFrame(r.content, stringsAsFactors = FALSE)
   
-  # first line is garbage
-  d <- d[-1, ]
+  # how many lines of output
+  lines.of.data <- nrow(d)
+  
+  # the first line is garbage, unless there is an error
+  if(lines.of.data > 1)
+    d <- d[-1, ]
+  
+  # error condition
+  if(lines.of.data == 1) {
+    stop(paste0('SDA returned an error: ', unlist(d)), call. = FALSE)
+  }
   
   # check for no returned data, 'd' will be a character object with 0 elements
   if(class(d) == 'character') {
