@@ -21,7 +21,7 @@ get_site_data_from_NASIS_db <- function() {
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
   
-	q <- "SELECT siteiid as siteiid, peiid, usiteid as site_id, upedonid as pedon_id, obsdate as obs_date, utmzone, utmeasting, utmnorthing, -(longdegrees + CASE WHEN longminutes IS NULL THEN 0.0 ELSE longminutes / 60.0 END + CASE WHEN longseconds IS NULL THEN 0.0 ELSE longseconds / 60.0 / 60.0 END) as x, latdegrees + CASE WHEN latminutes IS NULL THEN 0.0 ELSE latminutes / 60.0 END + CASE WHEN latseconds IS NULL THEN 0.0 ELSE latseconds / 60.0 / 60.0 END as y, dm.ChoiceName as datum, longstddecimaldegrees as x_std, latstddecimaldegrees as y_std, gpspositionalerror, descname as describer, pp.ChoiceName as pedon_purpose, pt.ChoiceName as pedon_type, pedlabsampnum, labdatadescflag, elev as elev_field, slope as slope_field, aspect as aspect_field, plantassocnm, se.ChoiceLabel as coverkind_1, bedrckdepth, br.ChoiceLabel as bedrock_kind, bh.ChoiceLabel as bedrock_hardness, hs.ChoiceLabel as hillslope_pos, sp.ChoiceLabel as slope_position, sa.ChoiceLabel as shapeacross, sd.ChoiceLabel as shapedown, sc.ChoiceLabel as slopecomplex, dc.ChoiceLabel as drainagecl
+	q <- "SELECT siteiid as siteiid, peiid, usiteid as site_id, upedonid as pedon_id, obsdate as obs_date, utmzone, utmeasting, utmnorthing, -(longdegrees + CASE WHEN longminutes IS NULL THEN 0.0 ELSE longminutes / 60.0 END + CASE WHEN longseconds IS NULL THEN 0.0 ELSE longseconds / 60.0 / 60.0 END) as x, latdegrees + CASE WHEN latminutes IS NULL THEN 0.0 ELSE latminutes / 60.0 END + CASE WHEN latseconds IS NULL THEN 0.0 ELSE latseconds / 60.0 / 60.0 END as y, dm.ChoiceName as datum, longstddecimaldegrees as x_std, latstddecimaldegrees as y_std, gpspositionalerror, descname as describer, pp.ChoiceName as pedon_purpose, pt.ChoiceName as pedon_type, pedlabsampnum, labdatadescflag, elev as elev_field, slope as slope_field, aspect as aspect_field, plantassocnm, se.ChoiceLabel as coverkind_1, bedrckdepth, br.ChoiceLabel as bedrock_kind, bh.ChoiceLabel as bedrock_hardness, hs.ChoiceLabel as hillslope_pos, sp.ChoiceLabel as slope_position, sa.ChoiceLabel as shapeacross, sd.ChoiceLabel as shapedown, sc.ChoiceLabel as slopecomplex, dc.ChoiceLabel as drainagecl, ghill.ChoiceLabel as geompos_hill, gmtn.ChoiceLabel as geompos_mntn, gflat.ChoiceLabel as geompos_flats
 
 FROM
 	
@@ -56,6 +56,12 @@ FROM
 	
 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 971) AS hs ON site_View_1.hillslopeprof = hs.ChoiceValue
 
+  LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 968) AS ghill ON site_View_1.geomposhill = ghill.ChoiceValue
+
+  LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 969) AS gmtn ON site_View_1.geomposmntn = gmtn.ChoiceValue
+
+  LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 1092) AS gflat ON site_View_1.geomposflats = gflat.ChoiceValue
+
   WHERE sb.rn IS NULL OR sb.rn = 1
 
 	ORDER BY pedon_View_1.peiid ;"
@@ -69,9 +75,13 @@ FROM
 	# close connection
 	RODBC::odbcClose(channel)
 	
+	# test for an error
+	if(class(d) == 'character')
+	  stop('error in SQL', call. = FALSE)
+	
 	# test for no data
 	if(nrow(d) == 0)
-		stop('there are no pedons in your selected set!')
+		stop('there are no pedons in your selected set!', call. = FALSE)
 	
   ## TODO: this should be removed once we switch to WGS84 coordinates
 	# warn if mixed datums
@@ -90,8 +100,32 @@ FROM
 	if(length(missing.pedon)> 0)
 		assign('sites.missing.pedons', value=unique(d$site_id[missing.pedon]), envir=soilDB.env)
 	
-  # set factor levels, when it makes sense
+  ## set factor levels, when it makes sense
+	# hill slope position
   d$hillslope_pos <- factor(d$hillslope_pos, c('Toeslope', 'Footslope', 'Backslope', 'Shoulder', 'Summit'))
+  
+  # surface shape
+  d$shapeacross <- factor(d$shapeacross, levels=c('Concave', 'Linear', 'Convex'))
+  d$shapedown <- factor(d$shapedown, levels=c('Concave', 'Linear', 'Convex'))
+  
+  # create 3D surface shape
+  d$slope_shape <- paste0(d$shapeacross, ' / ', d$shapedown)
+  # make reasonable levels for 3D slope shape
+  ss.grid <- expand.grid(levels(d$shapeacross), levels(d$shapedown))
+  ss.levels <- apply(ss.grid, 1, function(i) { paste(rev(i), collapse = ' / ')})
+  d$slope_shape <- factor(d$slope_shape, levels=ss.levels)
+  
+  # geomcomponent, hills
+  d$geompos_hill <- factor(d$geompos_hill, levels=c('Base Slope', 'Head Slope', 'Side Slope', 'Nose Slope', 'Crest', 'Interfluve', 'Free Face'))
+  
+  # geomcomponent, mountains
+  d$geompos_mntn <- factor(d$geompos_mntn, levels=c('Mountainbase', 'Lower third of mountainflank', 'Center third of mountainflank', 'Mountainflank', 'Upper third of mountainflank', 'Mountaintop', 'Free face'))
+  
+  # geomcomponent, flats
+  d$geompos_flats <- factor(d$geompos_flats, levels=c('Dip', 'Talf', 'Rise'))
+  
+  # drainage class
+  d$drainagecl <- factor(d$drainagecl, levels=c("Very poorly drained", "Poorly drained", "Somewhat poorly drained", "Moderately well drained", "Well drained", "Somewhat excessively drained", "Excessively drained"))
   
 	# done
 	return(d)

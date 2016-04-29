@@ -2,7 +2,7 @@
 
 ## TODO: multiple records / site in siteobs are possible and will result in duplicate data
 
-get_extended_data_from_NASIS_db <- function() {
+get_extended_data_from_NASIS_db <- function(nullFragsAreZero=TRUE) {
   # must have RODBC installed
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
@@ -32,7 +32,12 @@ get_extended_data_from_NASIS_db <- function() {
   LEFT JOIN plotplantinventory ON plotplantinventory.vegplotiidref=v.vegplotiid
   INNER JOIN plant ON plant.plantiid=plotplantinventory.plantiidref;"
   
-  
+  	# ecological site
+  q.ecosite <- "SELECT siteiidref AS siteiid, ecositeid, ecositenm, ecositecorrdate, classifier As es_classifier
+  FROM siteecositehistory_View_1 AS seh
+  INNER JOIN ecologicalsite AS es ON es.ecositeiid=seh.ecositeiidref
+  ORDER BY 'siteiid';"
+
 	
 	# query diagnostic horizons, usually a 1:many relationship with pedons
 	q.diagnostic <- "SELECT peiidref as peiid, dfk.ChoiceName as diag_kind, featdept, featdepb
@@ -40,6 +45,8 @@ FROM pediagfeatures_View_1
 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 147) AS dfk ON pediagfeatures_View_1.featkind = dfk.ChoiceValue
 	ORDER BY pediagfeatures_View_1.peiidref, pediagfeatures_View_1.featdept;"
   
+  
+  ### TODO: convert this to simplifyFragmentData
 	q.surf.rf.summary <- "SELECT pedon_View_1.peiid, 
 f1_fgr.gravel as surface_fgravel, 
 f1_gr.gravel as surface_gravel, 
@@ -144,106 +151,118 @@ LEFT OUTER JOIN (
 	
 	ORDER BY pedon_View_1.peiid;"
 	
-	
-	# query rock-fragment summary by horizon
-	q.rf.summary <- "SELECT p.phiid, 
-
-  f1_fgr.gravel as fine_gravel,
-  f1_gr.gravel as gravel, 
-	f2_cb.cobbles as cobbles,
-	f3.stones as stones, 
-	f4.boulders as boulders,
-	f1_pgr.gravel as paragravel,
-	f2_pcb.cobbles as paracobbles,
-	f5.channers as channers, 
-	f6.flagstones as flagstones
-	
-	FROM
-	(
-	SELECT DISTINCT phiid FROM phorizon_View_1
-	) as p
-	
-  LEFT OUTER JOIN (
-	SELECT phiidref, Sum(fragvol) AS gravel
-	FROM phfrags_View_1
-  LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
-  WHERE (fragsize_r <= 5 OR fragsize_h <= 5) AND (fragshp != 1 OR fragshp IS NULL)
-  AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
-  GROUP BY phiidref
-  ) as f1_fgr ON p.phiid = f1_fgr.phiidref
-
-  LEFT OUTER JOIN (
-	SELECT phiidref, Sum(fragvol) AS gravel
-	FROM phfrags_View_1
-	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
-	WHERE (fragsize_r <= 76 OR fragsize_h <= 76) AND (fragshp != 1 OR fragshp IS NULL)
-	AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
-	GROUP BY phiidref
-	) as f1_gr ON p.phiid = f1_gr.phiidref
-	
-	LEFT OUTER JOIN (
-	SELECT phiidref, Sum(fragvol) AS gravel
-	FROM phfrags_View_1
-	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
-	WHERE (fragsize_r <= 76 OR fragsize_h <= 76) AND (fragshp != 1 OR fragshp IS NULL)
-	AND m.ChoiceName NOT IN ('strongly', 'very strongly', 'indurated')
-	GROUP BY phiidref
-	) as f1_pgr ON p.phiid = f1_pgr.phiidref
-	
-	LEFT OUTER JOIN (
-	SELECT phiidref, Sum(fragvol) AS cobbles
-	FROM phfrags_View_1
-	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
-	WHERE (fragsize_r >= 76 OR fragsize_l >= 76) AND (fragsize_r <= 250 OR fragsize_h <= 250) AND (fragshp != 1 OR fragshp IS NULL)
-	AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
-	GROUP BY phiidref
-	) as f2_cb ON p.phiid = f2_cb.phiidref
-	
-	LEFT OUTER JOIN (
-	SELECT phiidref, Sum(fragvol) AS cobbles
-	FROM phfrags_View_1
-	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
-	WHERE (fragsize_r >= 76 OR fragsize_l >= 76) AND (fragsize_r <= 250 OR fragsize_h <= 250) AND (fragshp != 1 OR fragshp IS NULL)
-	AND m.ChoiceName NOT IN ('strongly', 'very strongly', 'indurated')
-	GROUP BY phiidref
-	) as f2_pcb ON p.phiid = f2_pcb.phiidref
-	
-	LEFT OUTER JOIN (
-	SELECT phiidref, Sum(fragvol) AS stones
-	FROM phfrags_View_1
-	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
-	WHERE (fragsize_r >= 250 OR fragsize_l >= 250) AND (fragsize_r <= 600 OR fragsize_h <= 600) AND (fragshp != 1 OR fragshp IS NULL)
-	GROUP BY phiidref
-	) as f3 ON p.phiid = f3.phiidref
-	
-	LEFT OUTER JOIN (
-	SELECT phiidref, Sum(fragvol) AS boulders
-	FROM phfrags_View_1
-	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
-	WHERE fragsize_r >= 600 OR fragsize_l >= 600
-	GROUP BY phiidref
-	) as f4 ON p.phiid = f4.phiidref
-	
-	LEFT OUTER JOIN (
-	SELECT phiidref, Sum(fragvol) AS channers
-	FROM phfrags_View_1
-	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
-	WHERE (fragsize_r <= 76 OR fragsize_h <= 76) AND fragshp = 1
-	AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
-	GROUP BY phiidref
-	) as f5 ON p.phiid = f5.phiidref
-	
-	LEFT OUTER JOIN (
-	SELECT phiidref, Sum(fragvol) AS flagstones
-	FROM phfrags_View_1
-	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
-	WHERE (fragsize_r >= 150 OR fragsize_l >= 150) AND (fragsize_r <= 380 OR fragsize_h <= 380) AND fragshp = 1
-	AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
-	GROUP BY phiidref
-	) as f6 ON p.phiid = f6.phiidref
-	
-	ORDER BY p.phiid;"
   
+  # base table is phorizon so that NULL data can be converted to 0s later
+  q.rf.data <- "SELECT p.phiid, fragvol, fragsize_l, fragsize_r, fragsize_h, fs.ChoiceLabel AS fragshp, fh.ChoiceLabel AS fraghard
+  FROM 
+  (
+ 	SELECT DISTINCT phiid FROM phorizon_View_1
+ 	) as p  
+  LEFT OUTER JOIN phfrags_View_1 ON p.phiid = phfrags_View_1.phiidref
+  LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 154) AS fs ON fragshp = fs.ChoiceValue
+  LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS fh ON fraghard = fh.ChoiceValue
+;"
+
+# 	## not using this anymore
+# 	# query rock-fragment summary by horizon
+# 	q.rf.summary <- "SELECT p.phiid, 
+# 
+#   f1_fgr.gravel as fine_gravel,
+#   f1_gr.gravel as gravel, 
+# 	f2_cb.cobbles as cobbles,
+# 	f3.stones as stones, 
+# 	f4.boulders as boulders,
+# 	f1_pgr.gravel as paragravel,
+# 	f2_pcb.cobbles as paracobbles,
+# 	f5.channers as channers, 
+# 	f6.flagstones as flagstones
+# 	
+# 	FROM
+# 	(
+# 	SELECT DISTINCT phiid FROM phorizon_View_1
+# 	) as p
+# 	
+#   LEFT OUTER JOIN (
+# 	SELECT phiidref, Sum(fragvol) AS gravel
+# 	FROM phfrags_View_1
+#   LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
+#   WHERE (fragsize_r <= 5 OR fragsize_h <= 5) AND (fragshp != 1 OR fragshp IS NULL)
+#   AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
+#   GROUP BY phiidref
+#   ) as f1_fgr ON p.phiid = f1_fgr.phiidref
+# 
+#   LEFT OUTER JOIN (
+# 	SELECT phiidref, Sum(fragvol) AS gravel
+# 	FROM phfrags_View_1
+# 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
+# 	WHERE (fragsize_r <= 76 OR fragsize_h <= 76) AND (fragshp != 1 OR fragshp IS NULL)
+# 	AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
+# 	GROUP BY phiidref
+# 	) as f1_gr ON p.phiid = f1_gr.phiidref
+# 	
+# 	LEFT OUTER JOIN (
+# 	SELECT phiidref, Sum(fragvol) AS gravel
+# 	FROM phfrags_View_1
+# 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
+# 	WHERE (fragsize_r <= 76 OR fragsize_h <= 76) AND (fragshp != 1 OR fragshp IS NULL)
+# 	AND m.ChoiceName NOT IN ('strongly', 'very strongly', 'indurated')
+# 	GROUP BY phiidref
+# 	) as f1_pgr ON p.phiid = f1_pgr.phiidref
+# 	
+# 	LEFT OUTER JOIN (
+# 	SELECT phiidref, Sum(fragvol) AS cobbles
+# 	FROM phfrags_View_1
+# 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
+# 	WHERE (fragsize_r >= 76 OR fragsize_l >= 76) AND (fragsize_r <= 250 OR fragsize_h <= 250) AND (fragshp != 1 OR fragshp IS NULL)
+# 	AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
+# 	GROUP BY phiidref
+# 	) as f2_cb ON p.phiid = f2_cb.phiidref
+# 	
+# 	LEFT OUTER JOIN (
+# 	SELECT phiidref, Sum(fragvol) AS cobbles
+# 	FROM phfrags_View_1
+# 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
+# 	WHERE (fragsize_r >= 76 OR fragsize_l >= 76) AND (fragsize_r <= 250 OR fragsize_h <= 250) AND (fragshp != 1 OR fragshp IS NULL)
+# 	AND m.ChoiceName NOT IN ('strongly', 'very strongly', 'indurated')
+# 	GROUP BY phiidref
+# 	) as f2_pcb ON p.phiid = f2_pcb.phiidref
+# 	
+# 	LEFT OUTER JOIN (
+# 	SELECT phiidref, Sum(fragvol) AS stones
+# 	FROM phfrags_View_1
+# 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
+# 	WHERE (fragsize_r >= 250 OR fragsize_l >= 250) AND (fragsize_r <= 600 OR fragsize_h <= 600) AND (fragshp != 1 OR fragshp IS NULL)
+# 	GROUP BY phiidref
+# 	) as f3 ON p.phiid = f3.phiidref
+# 	
+# 	LEFT OUTER JOIN (
+# 	SELECT phiidref, Sum(fragvol) AS boulders
+# 	FROM phfrags_View_1
+# 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
+# 	WHERE fragsize_r >= 600 OR fragsize_l >= 600
+# 	GROUP BY phiidref
+# 	) as f4 ON p.phiid = f4.phiidref
+# 	
+# 	LEFT OUTER JOIN (
+# 	SELECT phiidref, Sum(fragvol) AS channers
+# 	FROM phfrags_View_1
+# 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
+# 	WHERE (fragsize_r <= 76 OR fragsize_h <= 76) AND fragshp = 1
+# 	AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
+# 	GROUP BY phiidref
+# 	) as f5 ON p.phiid = f5.phiidref
+# 	
+# 	LEFT OUTER JOIN (
+# 	SELECT phiidref, Sum(fragvol) AS flagstones
+# 	FROM phfrags_View_1
+# 	LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON fraghard = m.ChoiceValue
+# 	WHERE (fragsize_r >= 150 OR fragsize_l >= 150) AND (fragsize_r <= 380 OR fragsize_h <= 380) AND fragshp = 1
+# 	AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
+# 	GROUP BY phiidref
+# 	) as f6 ON p.phiid = f6.phiidref
+# 	
+# 	ORDER BY p.phiid;"
+#   
 
 	# get horizon texture modifiers
 	q.hz.texmod <- "SELECT phorizon_View_1.peiidref AS peiid, phorizon_View_1.phiid AS phiid, phtexture_View_1.phtiid AS phtiid, phtexturemod_View_1.seqnum, tmod.ChoiceName as texture_modifier 
@@ -298,8 +317,9 @@ LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 1309) AS pm
 	
 	# exec queries
 	d.veg <- RODBC::sqlQuery(channel, q.veg, stringsAsFactors=FALSE)
+	d.ecosite <- RODBC::sqlQuery(channel, q.ecosite, stringsAsFactors=FALSE)
 	d.diagnostic <- RODBC::sqlQuery(channel, q.diagnostic, stringsAsFactors=FALSE)
-	d.rf.summary <- RODBC::sqlQuery(channel, q.rf.summary, stringsAsFactors=FALSE)
+	d.rf.data <- RODBC::sqlQuery(channel, q.rf.data, stringsAsFactors=FALSE)
 	d.surf.rf.summary <- RODBC::sqlQuery(channel, q.surf.rf.summary, stringsAsFactors=FALSE)
 	d.hz.texmod <- RODBC::sqlQuery(channel, q.hz.texmod, stringsAsFactors=FALSE)
 	d.geomorph <- RODBC::sqlQuery(channel, q.geomorph, stringsAsFactors=FALSE)
@@ -314,8 +334,11 @@ LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 1309) AS pm
 	# generate wide-formatted, diagnostic boolean summary
 	d.diag.boolean <- .diagHzLongtoWide(d.diagnostic)
 	
+	# summarize rock fragment data
+	d.rf.summary <- simplfyFragmentData(d.rf.data, 'phiid', nullFragsAreZero = nullFragsAreZero)
+	
 	# return a list of results
-	return(list(veg=d.veg,
+	return(list(veg=d.veg, ecositehistory=d.ecosite,
 							diagnostic=d.diagnostic, 
 							diagHzBoolean=d.diag.boolean, 
 							frag_summary=d.rf.summary, 
