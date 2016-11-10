@@ -1,51 +1,38 @@
 \name{fetchSCAN}
 \alias{fetchSCAN}
+\alias{SCAN_sensor_metadata}
+
 \title{Fetch SCAN Data}
 \description{Query soil/climate data from USDA-NRCS SCAN Stations (experimental)}
-\usage{fetchSCAN(req)}
+
+\usage{
+# get SCAN data
+fetchSCAN(site.code, year, report='SCAN', req=NULL)
+# get SCAN station metadata
+SCAN_sensor_metadata(site.code)}
 
 \arguments{
-  \item{req}{a vector of named characters or list of named characters, e.g. 
-  c(intervalType=' View Historic ', report='STO', timeseries='Daily', 
-format='copy', sitenum='2072', interval='YEAR', year='2011', month='CY')}
+  \item{site.code}{a vector of site codes}
+  \item{year}{a vector of years}
+  \item{report}{report name, single value only}
+  \item{req}{list of SCAN request parameters, for backwards-compatibility only}
 }
-\details{An attempt is made to parse the column names from the data returned from the SCAN webservice. The data returned will depend on the report submitted. Column names contain the code (I, D, H): 
+\details{See \href{http://rstudio.com}{The fetchSCAN tutorial for details.} These functions require the `httr` and `rvest` libraries.}
 
-Daily sensors (e.g. TAVG.D-1) report a summary value for the previous day.  Hourly sensors (e.g. TAVG.H-1) report a summary value for the previous hour.  Instantaneous sensors (e.g. TOBS.I-1) report a single observation on the hour.
-
-Some of the available reports include: SCAN, ALL, SOIL, SMS, STO, PREC, WEATHER, WIND, SOLAR.
-
-See examples, details pending.}
+\note{\code{SCAN_sensor_metadata()} is known to crash on 32bit R / libraries (Windows).}
 
 \value{a \code{data.frame} object}
 \references{http://www.wcc.nrcs.usda.gov/scan/}
 \author{D.E. Beaudette}
-\note{This is still an experimental function.}
 
 \examples{
 \dontrun{
-# all sensors
-req <- c(intervalType=' View Historic ', report='ALL', timeseries='Daily', 
-format='copy', sitenum='2072', interval='YEAR', year='2011', month='CY')
+# get data: new interface
+x <- fetchSCAN(site.code=c(356, 2072), year=c(2015, 2016))
+str(x)
 
-# standard SCAN report
-req <- c(intervalType=' View Historic ', report='SCAN', timeseries='Daily', 
-format='copy', sitenum='2072', interval='YEAR', year='2011', month='CY')
-
-# soil / air temps
-req <- c(intervalType=' View Historic ', report='STO', timeseries='Daily', 
-format='copy', sitenum='2072', interval='YEAR', year='2011', month='CY')
-
-# soil moisture + precip
-req <- c(intervalType=' View Historic ', report='SMS', timeseries='Daily', 
-format='copy', sitenum='2072', interval='YEAR', year='2011', month='CY')
-
-# soil moisture, hourly: careful, lots of data!
-req <- c(intervalType=' View Historic ', report='SMS', timeseries='Hourly', 
-format='copy', sitenum='2072', interval='YEAR', year='2011', month='CY')
-
-# get data, format into DF
-x <- fetchSCAN(req)
+# get sensor metadata
+m <- SCAN_sensor_metadata(site.code=c(356, 2072))
 }
 }
 \keyword{manip}

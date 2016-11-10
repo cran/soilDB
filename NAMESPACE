@@ -10,9 +10,13 @@ importFrom("utils", "URLencode", "download.file", "object.size",
              "txtProgressBar", "write.table")
 
 importFrom(reshape2, 
-  dcast
+  dcast,
+  melt
 )
 
+importFrom(raster, 
+  extent
+)
 
 importFrom(plyr, 
   ddply,

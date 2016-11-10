@@ -1,3 +1,17 @@
+-------------------------- soilDB 1.8-7 (2016-11-09) ----------------------------
+* sanity checks for fetchHenry()
+* SCAN_sensor_metadata() vectorized and documented
+
+
+-------------------------- soilDB 1.8-6 (2016-11-04) ----------------------------
+* converted all links to SoilWeb servers to HTTPS
+* converted all NRCS web-service links to HTTPS
+
+-------------------------- soilDB 1.8-4 (2016-10-07) ----------------------------
+* fetchOSD() now returns dry colors and the source "narrative" for each horizon; function gains an argument
+* fetchOSD() now returns texture class, coarse fragment modifier, pH, and pH class
+* fetchSCAN() re-written, see manual pages and http://ncss-tech.github.io/AQP/soilDB/fetchSCAN-demo.html 
+
 -------------------------- soilDB 1.8 (2016-04-29) ----------------------------
 * fetchKSSL() can now query basic morphologic data with the argument "returnMorphologicData"
 * two new functions for simplifying NASIS color and fragment data:

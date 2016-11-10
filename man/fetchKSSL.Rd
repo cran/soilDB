@@ -6,22 +6,25 @@
 pedon_id=NULL, pedon_key=NULL, returnMorphologicData=FALSE)}
 
 \arguments{
-  \item{series}{a soil series name, case insensitive}
+  \item{series}{a single soil series name, case insensitive}
   \item{bbox}{a bounding box in WGS84 geographic coordinates e.g. \code{c(-120, 37, -122, 38)}}
   \item{mlra}{an MLRA ID, e.g. "18" or "22A"}
-  \item{pedlabsampnum}{KSSL pedon lab sample number}
-  \item{pedon_id}{user pedon ID}
-  \item{pedon_key}{KSSL internal pedon ID}
+  \item{pedlabsampnum}{a single KSSL pedon lab sample number}
+  \item{pedon_id}{a single user pedon ID}
+  \item{pedon_key}{a single KSSL internal pedon ID}
   \item{returnMorphologicData}{optionally request basic morphologic data, see details section}
 }
 
 
 
-\details{This is an experimental interface to a subset for the most commonly used data from a snapshot of KSSL (lab characterization) and NASIS (morphologic) data. The snapshots were last updated December 2015 (KSSL) and April 2016 (KSSL). 
+\details{This is an experimental interface to a subset for the most commonly used data from a snapshot of KSSL (lab characterization) and NASIS (morphologic) data. The snapshots were last updated September 2016 (KSSL) and April 2016 (NASIS). 
 
 Series-queries are case insensitive. Series name is based on the "correlated as" field (from KSSL snapshot) when present.  The "sampled as" classification was promoted to "correlated as" if the "correlated as" classification was missing.
 
 When \code{returnMorphologicData} is TRUE, the resulting object is a list. The standard output from \code{fetchKSSL} (\code{SoilProfileCollection} object) is stored in the named element "SPC". The additional elements are basic morphologic data: horizon colors, rock fragments, pores, and structure. There is a 1:many relationship between the horizon data in "SPC" and the additional dataframes in \code{morph}. See examples for ideas on how to "flatten" these tables.
+
+Function arguments (\code{series}, \code{mlra}, etc.) are NOT vectorized: the first element of a vector will be used when supplied as a filter. See the \href{http://ncss-tech.github.io/AQP/soilDB/KSSL-demo.html}{fetchKSSL tutorial} for ideas on how to iterate over a set of IDs.
+)
 }
 
 \value{a \code{SoilProfileCollection} object when \code{returnMorphologicData} is FALSE, otherwise a list.}
