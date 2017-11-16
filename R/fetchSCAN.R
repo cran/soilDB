@@ -15,6 +15,15 @@
 ###
 ###  WTEQ.I WTEQ.I-2 PREC.I PREC.I-2 TOBS.I TOBS.I-2 TOBS.I-3 TMAX.D TMIN.D TAVG.D SNWD.I SMS.I_8 STO.I_8
 
+
+### TODO: there are rarely multiple below-ground sensors:
+###   station 2196
+###
+###  "STO.I-1:-2", "STO.I-1:-4", "STO.I-1:-8", "STO.I-1:-20", "STO.I-1:-40",
+###  "STO.I-2:-2", "STO.I-2:-4", "STO.I-2:-8", "STO.I-2:-20", "STO.I-2:-40"
+
+
+
 ##
 ## ideas:
 ##   https://github.com/gunnarleffler/getSnotel
@@ -26,11 +35,11 @@
 # site.code: a single SCAN site code
 .get_single_SCAN_metadata <- function(site.code) {
   # base URL to service
-  uri <- 'http://wcc.sc.egov.usda.gov/nwcc/sensors'
+  uri <- 'https://wcc.sc.egov.usda.gov/nwcc/sensors'
   
   # note: the SCAN form processor checks the refering page and user-agent
   new.headers <- c(
-    "Referer"="http://www.wcc.nrcs.usda.gov/nwcc/",
+    "Referer"="https://wcc.sc.egov.usda.gov/nwcc/sensors",
     "User-Agent" = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13"
   )
   
@@ -110,12 +119,14 @@ fetchSCAN <- function(site.code, year, report='SCAN', req=NULL) {
   d.list <- list()
   for(i in req.list) {
     # raw data is messy, reformat
+    # when there are no data, result is NULL
     d <- .get_SCAN_data(i)
     
-    ## TODO: sometimes the above ground sensors will match multiple (?) versions
+    ## TODO: sometimes these labels will match multiple sensors
+    ## TODO: this is wasteful as then entire year's worth of data is passed around for each sensor code
     
     # save: sensor suite -> site number -> year
-    sensors <- c('SMS', 'STO', 'SAL', 'TAVG', 'PRCP', 'PREC', 'SNWD', 'WTEQ', 'WDIRV', 'WSPDV', 'LRADT')
+    sensors <- c('SMS', 'STO', 'SAL', 'TAVG', 'TMIN', 'TMAX', 'PRCP', 'PREC', 'SNWD', 'WTEQ', 'WDIRV', 'WSPDV', 'LRADT')
     for(sensor.i in sensors) {
       d.list[[sensor.i]][[as.character(i$sitenum)]][[as.character(i$year)]] <- .formatSCAN_soil_sensor_suites(d, code=sensor.i)
     }
@@ -131,6 +142,11 @@ fetchSCAN <- function(site.code, year, report='SCAN', req=NULL) {
     res[[sensor.i]] <- r.i
   }
   
+  # report object size
+  res.size <- round(object.size(res) / 1024 / 1024, 2)
+  res.rows <- sum(sapply(res, nrow), na.rm=TRUE)
+  message(paste(res.rows, ' records (', res.size, ' Mb transferred)', sep=''))
+  
   return(res)
 }
 
@@ -139,11 +155,26 @@ fetchSCAN <- function(site.code, year, report='SCAN', req=NULL) {
 
 # combine soil sensor suites into stackable format
 .formatSCAN_soil_sensor_suites <- function(d, code) {
+  
+  # hacks to make R CMD check --as-cran happy:
+  value <- NULL
+  
   # locate named columns
   d.cols <- grep(code, names(d))
   # return NULL if no data
   if(length(d.cols) == 0)
     return(NULL)
+  
+  ## https://github.com/ncss-tech/soilDB/issues/14
+  ## temporary hack to inform users that there are multiple sensors / label
+  ## this is (usually) only a problem for above-ground sensors
+  if(length(d.cols) > 1 & code %in% c('TAVG', 'TMIN', 'TMAX', 'PRCP', 'PREC', 'SNWD', 'WTEQ', 'WDIRV', 'WSPDV', 'LRADT')) {
+    message(paste0('multiple above-ground sensors per site: ', d$Site[1], ' [', paste0(names(d)[d.cols], collapse = ','), '], using first sensor'))
+    # use only the first sensor
+    d.cols <- d.cols[1]
+  }
+  
+  
   # convert to long format
   d.long <- melt(d, id.vars = c('Site', 'Date'), measure.vars = names(d)[d.cols])
   # extract depths
@@ -151,8 +182,44 @@ fetchSCAN <- function(site.code, year, report='SCAN', req=NULL) {
   d.long$depth <- sapply(d.depths, function(i) as.numeric(i[2]))
   # convert depths (in) to cm
   d.long$depth <- round(d.long$depth * 2.54)
+  # change 'variable' to 'sensor.id'
+  names(d.long)[which(names(d.long) == 'variable')] <- 'sensor.id'
+  
+  
+  ## NOTE: this doesn't work when applied to above-ground sensors
+  ## https://github.com/ncss-tech/soilDB/issues/14
+  ## there can also be multiple sensors per below-ground label
+  sensors.per.depth <- ddply(d.long, c('sensor.id', 'depth'), plyr::summarize, no.na=length(na.omit(value)))
+  most.data <- ddply(sensors.per.depth, 'depth', .fun=function(i) {
+    return(as.character(i$sensor.id[which.max(i$no.na)]))
+  })
+  
+  # check for multiple sensors per depth
+  tab <- table(sensors.per.depth$depth) > 1
+  if(any(tab)) {
+    multiple.sensor.ids <- as.character(sensors.per.depth$sensor.id[which(sensors.per.depth$depth %in% names(tab))])
+    message(paste0('multiple below-ground sensors per depth: ', paste(multiple.sensor.ids, collapse = ', ')))
+  }
+    
+  
+  ## BUG in the data output from SCAN!
+  # multiple rows on Sept 30th of each year
+  # https://github.com/ncss-tech/soilDB/issues/26
+  
+  # locate duplicate records
+  idx <- which(format(d.long$Date, "%b-%d") == 'Sep-30')
+  
+  # if there are 2 matching records
+  # then the second record is usually the "wrong" one
+  # remove it
+  if(length(idx) > 1) {
+    d.long <- d.long[-idx[2], ]
+  }
+  
+  ## BUG ^^^^
+  
   # format and return
-  return(d.long[, c('Site', 'Date', 'value', 'depth')])
+  return(d.long[, c('Site', 'Date', 'value', 'depth', 'sensor.id')])
 }
 
 # format a list request for SCAN data
@@ -178,11 +245,11 @@ fetchSCAN <- function(site.code, year, report='SCAN', req=NULL) {
     stop('please install the `httr` package', call.=FALSE)
   
   # base URL to service
-  uri <- 'http://wcc.sc.egov.usda.gov/nwcc/view'
+  uri <- 'https://wcc.sc.egov.usda.gov/nwcc/view'
   
   # note: the SCAN form processor checks the refering page and user-agent
   new.headers <- c(
-    "Referer"="http://www.wcc.nrcs.usda.gov/nwcc/",
+    "Referer"="https://wcc.sc.egov.usda.gov/nwcc/",
     "User-Agent" = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13"
   )
   
@@ -216,7 +283,14 @@ fetchSCAN <- function(site.code, year, report='SCAN', req=NULL) {
   
   # NOTE: we have already read-in the first 3 lines above, therefore we don't need to skip lines here
   # read as CSV, skipping junk + headers, accomodating white-space and NA values encoded as -99.9
-  x <- read.table(tc, header=FALSE, stringsAsFactors=FALSE, sep=',', quote='', strip.white=TRUE, na.strings='-99.9', comment.char='')
+  x <- try(read.table(tc, header=FALSE, stringsAsFactors=FALSE, sep=',', quote='', strip.white=TRUE, na.strings='-99.9', comment.char=''), silent = TRUE)
+  
+  # catch errors
+  if(class(x) == 'try-error') {
+    close.connection(tc)
+    x <- NULL
+    return(x)
+  }
   
   # the last column is always junk
   x[[names(x)[length(x)]]] <- NULL

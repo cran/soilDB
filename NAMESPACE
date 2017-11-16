@@ -1,9 +1,9 @@
 # R 3.3 compatibility:
-importFrom("grDevices", "rgb")
+importFrom("grDevices", "rgb", "convertColor")
 
 importFrom("graphics", "plot")
 
-importFrom("stats", "aggregate", "complete.cases", "na.omit", "as.formula")
+importFrom("stats", "aggregate", "complete.cases", "na.omit", "as.formula", "splinefun", "weighted.mean")
 
 importFrom("utils", "URLencode", "download.file", "object.size",
              "read.csv", "read.table", "setTxtProgressBar",
@@ -23,7 +23,8 @@ importFrom(plyr,
   llply,
   ldply,
   dlply,
-  join
+  join,
+  summarize
 )
 
 
@@ -32,15 +33,19 @@ importFrom(sp,
   CRS,
   "coordinates<-",
   "proj4string<-",
-  SpatialPolygonsDataFrame
+  SpatialPolygonsDataFrame,
+  spChFIDs
 )
 
 
-importFrom(XML,
-  xmlToDataFrame,
-  htmlTreeParse,
-  getNodeSet,
-  xmlValue
+importFrom(curl,
+  curl,
+  new_handle
+)
+
+importFrom(xml2,
+  read_html,
+  xml_text
 )
 
 

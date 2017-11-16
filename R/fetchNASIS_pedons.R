@@ -1,7 +1,7 @@
 # updated to NASIS 6.2
 
 # convenience function for loading most commonly used information from local NASIS database
-fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=TRUE, soilColorState='moist', lab=FALSE) {
+fetchNASIS_pedons <- function(rmHzErrors=TRUE, nullFragsAreZero=TRUE, soilColorState='moist', lab=FALSE) {
 	
 	# test connection
 	if(! 'nasis_local' %in% names(RODBC::odbcDataSources()))
@@ -13,7 +13,7 @@ fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=TRUE, soilColorState='m
   
 	# 1. load data in pieces
 	suppressMessages(site_data <- get_site_data_from_NASIS_db())
-	hz_data <- get_hz_data_from_NASIS_db()
+	phorizon <- get_phorizon_from_NASIS_db()
 	color_data <- get_colors_from_NASIS_db()
 	
 	## TODO: this is quite slow
@@ -22,19 +22,23 @@ fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=TRUE, soilColorState='m
 	# optionally load phlabresults table
 	if (lab) {
 	  phlabresults <- get_phlabresults_data_from_NASIS_db()
-	}
+	  }
 	
 	# test to see if the selected set is loaded
-	if (nrow(hz_data) == 0 | all(unlist(lapply(extended_data, nrow)) == 0)) message('your selected set is missing either the pedon or site table, please load and try again')
+	if (nrow(phorizon) == 0 | all(unlist(lapply(extended_data, nrow)) == 0)) message('your selected set is missing either the pedon or site table, please load and try again')
   
+	
 	## this is the "total fragment volume" per NASIS calculation
   # optionally convert NA fragvol to 0
   if(nullFragsAreZero) {
-    hz_data$total_frags_pct_cal <- ifelse(is.na(hz_data$total_frags_pct_cal), 0, hz_data$total_frags_pct_cal)
-  }
+    within(phorizon, {
+      fragvoltot[is.na(fragvoltot)] = 0
+      })
+    }
+  
   
 	# join horizon + hz color: all horizons
-	h <- join(hz_data, color_data, by='phiid', type='left')
+	h <- join(phorizon, color_data, by='phiid', type='left')
 	
 	## fix some common problems
 	
@@ -95,6 +99,7 @@ fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=TRUE, soilColorState='m
     assign("bad.horizons", value = data.frame(bad.horizons), envir = soilDB.env)
   }
 	
+	
 	## join hz + phlabresults
 	if (lab) {
 	  h <- join(h, phlabresults, by = "phiid", type = "left")
@@ -116,7 +121,6 @@ fetchNASIS <- function(rmHzErrors=TRUE, nullFragsAreZero=TRUE, soilColorState='m
 	### TODO: consider moving this into the extended data function ###
 	# load best-guess optimal records from taxhistory
 	# method is added to the new field called 'selection_method'
-	# assumes that classdate is a datetime class object!
 	best.tax.data <- ddply(extended_data$taxhistory, 'peiid', .pickBestTaxHistory)
 	site(h) <- best.tax.data
 

@@ -1,7 +1,16 @@
 
 
-# This function is NASIS-specific
-simplifyColorData <- function(d, id.var='phiid') {
+# This function heavily biased towared NASIS-specific data structures and assumptions
+# d: data.frame with color data from horizon-color table: expects "colorhue", "colorvalue", "colorchroma"
+# id.var: name of the column with unique horizon IDs
+# ...: further arguments passed to mix_and_clean_colors()
+simplifyColorData <- function(d, id.var='phiid', ...) {
+  
+  # sanity check: must contain 1 row
+  if(nrow(d) < 1) {
+    warning('0 rows of colors data, doing nothing', call. = FALSE)
+    return(d)
+  }
   
   # convert Munsell to RGB
   d.rgb <- with(d, munsell2rgb(colorhue, colorvalue, colorchroma, return_triplets=TRUE))
@@ -20,8 +29,8 @@ simplifyColorData <- function(d, id.var='phiid') {
   ## there may be cases where there are 0 records of dry or moist colors
   
   # split-out those data that need color mixing:
-  dry.to.mix <- names(which(table(dry.colors$phiid) > 1))
-  moist.to.mix <- names(which(table(moist.colors$phiid) > 1))
+  dry.to.mix <- names(which(table(dry.colors[[id.var]]) > 1))
+  moist.to.mix <- names(which(table(moist.colors[[id.var]]) > 1))
   
   # names of those columns to retain
   vars.to.keep <- c(id.var, "r", "g", "b", "colorhue", "colorvalue", "colorchroma", 'sigma')
@@ -31,8 +40,8 @@ simplifyColorData <- function(d, id.var='phiid') {
     message(paste('mixing dry colors ... [', length(dry.to.mix), ' of ', nrow(dry.colors), ' horizons]', sep=''))
     
     # filter out and mix only colors with >1 color / horizon
-    dry.mix.idx <- which(dry.colors$phiid %in% dry.to.mix)
-    mixed.dry <- ddply(dry.colors[dry.mix.idx, ], id.var, mix_and_clean_colors)
+    dry.mix.idx <- which(dry.colors[[id.var]] %in% dry.to.mix)
+    mixed.dry <- ddply(dry.colors[dry.mix.idx, ], id.var, mix_and_clean_colors, ...)
     
     # combine original[-horizons to be mixed] + mixed horizons
     dry.colors.final <- rbind(dry.colors[-dry.mix.idx, vars.to.keep], mixed.dry)
@@ -48,8 +57,8 @@ simplifyColorData <- function(d, id.var='phiid') {
     message(paste('mixing moist colors ... [', length(moist.to.mix), ' of ', nrow(moist.colors), ' horizons]', sep=''))
     
     # filter out and mix only colors with >1 color / horizon
-    moist.mix.idx <- which(moist.colors$phiid %in% moist.to.mix)
-    mixed.moist <- ddply(moist.colors[moist.mix.idx, ], id.var, mix_and_clean_colors)
+    moist.mix.idx <- which(moist.colors[[id.var]] %in% moist.to.mix)
+    mixed.moist <- ddply(moist.colors[moist.mix.idx, ], id.var, mix_and_clean_colors, ...)
     
     # combine original[-horizons to be mixed] + mixed horizons
     moist.colors.final <- rbind(moist.colors[-moist.mix.idx, vars.to.keep], mixed.moist)
@@ -71,8 +80,6 @@ simplifyColorData <- function(d, id.var='phiid') {
   d.final$dry_soil_color <- NA
   idx <- complete.cases(d.final$d_r)
   d.final$dry_soil_color[idx] <- with(d.final[idx, ], rgb(d_r, d_g, d_b))
-   
-  
   
   return(d.final)
 }
