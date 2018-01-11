@@ -1,10 +1,10 @@
-uncode <- function(df, invert = FALSE, db = "NASIS"){
+uncode <- function(df, invert = FALSE, db = "NASIS", stringsAsFactors = default.stringsAsFactors()){
   get_metadata <- function() {
     # must have RODBC installed
     if(!requireNamespace('RODBC'))
       stop('please install the `RODBC` package', call.=FALSE)
     
-    q <- "SELECT mdd.DomainID, DomainName, ChoiceSequence, ChoiceValue, ChoiceName, ChoiceLabel, ChoiceDescription, ColumnPhysicalName, ColumnLogicalName
+    q <- "SELECT mdd.DomainID, DomainName, ChoiceSequence, ChoiceValue, ChoiceName, ChoiceLabel, ChoiceDescription, ColumnPhysicalName, ColumnLogicalName, ChoiceObsolete
     
     FROM MetadataDomainDetail mdd
     INNER JOIN MetadataDomainMaster mdm ON mdm.DomainID = mdd.DomainID
@@ -68,8 +68,19 @@ uncode <- function(df, invert = FALSE, db = "NASIS"){
       }
     }
   
+  # convert factors to strings
+  if (stringsAsFactors == FALSE) {
+    idx <- unlist(lapply(df, is.factor))
+    df[idx] <- lapply(df[idx], as.character)
+  }
+  
   return(df)
 }
 
 # convenient, inverted version of uncode()
-code <- function(df, invert = TRUE, db = "NASIS") {uncode(df, invert, db)}
+code <- function(df, ...) {
+  res <- uncode(df, invert=TRUE, ...)
+  return(res)
+}
+
+

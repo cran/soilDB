@@ -1,27 +1,32 @@
-get_component_from_LIMS <- function(projectname) {
+get_component_from_LIMS <- function(projectname, stringsAsFactors = default.stringsAsFactors()) {
   
-  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=WEB-component_by_projectname"
+  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_component_from_LIMS"
   
-  args <- list(p_projectname = projectname)
-  
-  d.component <- parseWebReport(url, args)
+  d.component <- lapply(projectname, function(x) {
+    args = list(p_projectname = x)
+    d    =  parseWebReport(url, args)
+  })
+  d.component <- do.call("rbind", d.component)
   
   # set factor levels according to metadata domains
-  d.component <- uncode(d.component, db = "LIMS")
+  d.component <- uncode(d.component, db = "LIMS", stringsAsFactors = stringsAsFactors)
   
   # return data.frame
   return(d.component)
+  
   }
 
 
-get_chorizon_from_LIMS <- function(projectname, fill = FALSE) {
+get_chorizon_from_LIMS <- function(projectname, fill = FALSE, stringsAsFactors = default.stringsAsFactors()) {
   
-  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=WEB-chorizon_by_projectname"
+  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_chorizon_from_LIMS"
   
-  args <- list(p_projectname = projectname)
-  
-  d.chorizon <- parseWebReport(url, args)
-  
+  d.chorizon <- lapply(projectname, function(x) {
+    args = list(p_projectname = x)
+    d    =  parseWebReport(url, args)
+  })
+  d.chorizon <- do.call("rbind", d.chorizon)
+
   ## TODO: might be nice to abstract this into a new function
   # hacks to make R CMD check --as-cran happy:
   metadata <- NULL
@@ -31,7 +36,9 @@ get_chorizon_from_LIMS <- function(projectname, fill = FALSE) {
   # transform variables and metadata
   d.chorizon <- within(d.chorizon, {
     texture = tolower(texture)
-    texture = factor(texture, levels = metadata[metadata$ColumnPhysicalName == "texcl", "ChoiceName"])
+    if (stringsAsFactors == TRUE) {
+      texture = factor(texture, levels = metadata[metadata$ColumnPhysicalName == "texcl", "ChoiceName"])
+    }
     })
   
   # fill
@@ -45,27 +52,103 @@ get_chorizon_from_LIMS <- function(projectname, fill = FALSE) {
   }
 
 
-get_mapunit_from_LIMS <- function(projectname) {
+get_mapunit_from_LIMS <- function(projectname, stringsAsFactors = default.stringsAsFactors()) {
   
-  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=WEB-mapunit_by_projectname"
+  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_projectmapunit_from_LIMS"
   
-  args <- list(p_projectname = projectname)
   
-  d.mapunit <- parseWebReport(url, args)
+  d.mapunit <- lapply(projectname, function(x) {
+    args = list(p_projectname = x)
+    d    =  parseWebReport(url, args)
+    })
+  d.mapunit <- do.call("rbind", d.mapunit)
   
   # set factor levels according to metadata domains
-  d.mapunit <- uncode(d.mapunit, db = "LIMS")
+  d.mapunit <- uncode(d.mapunit, db = "LIMS", stringsAsFactors = stringsAsFactors)
   
   # return data.frame
   return(d.mapunit)
+  
   }
 
-fetchLIMS_component <- function(projectname, rmHzErrors = FALSE, fill = FALSE) {
+
+get_project_from_LIMS <- function(mlrassoarea, fiscalyear) {
+  
+  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_project_from_LIMS"
+  
+  args <- list(p_mlrassoarea = mlrassoarea, p_fy = fiscalyear)
+  
+  d.project <- parseWebReport(url, args)
+  
+  # prep
+  idx <- unlist(lapply(names(d.project), function(x) grepl("date_", x)))
+  if (any(idx)) {
+    d.project[idx] <- lapply(d.project[idx], function(x) as.Date(x, format = "%Y/%m/%d"))
+  }
+  
+  # return data.frame
+  return(d.project)
+  
+  }
+
+
+get_progress_from_LIMS <- function(mlrassoarea, fiscalyear, projecttypename) {
+  
+  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_progress_from_LIMS"
+  
+  args <- list(p_mlrassoarea = mlrassoarea, p_fy = fiscalyear, p_projecttypename = projecttypename)
+  
+  d.progress <- parseWebReport(url, args)
+  
+  # return data.frame
+  return(d.progress)
+  
+  }
+
+
+get_reverse_correlation_from_LIMS <- function(mlrassoarea, fiscalyear, projectname) {
+  
+  # nasty hack to trick R CMD check
+  musym <- NULL
+  new_musym <- NULL
+  
+  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_reverse_correlation_from_LIMS"
+  
+  args <- list(p_mlrassoarea = mlrassoarea, p_fy = fiscalyear, p_projectname = projectname)
+  
+  d.rcor <- parseWebReport(url, args)
+  
+  # compute musym_orig for additional lmapunits, necessary to catch changes to the original musym, due to a constraint on the lmapunit table that prevents duplicate musym for additional mapunits 
+  d.rcor <- within(d.rcor, {
+    
+    n         = nchar(musym)
+    begin_1   = substr(musym, 2, n)
+    end_1     = substr(musym, 1, n - 1)
+    end_4     = substr(musym, 1, n - 4)
+      
+    idx       = musym != new_musym & !is.na(new_musym)
+      
+    orig_musym = ifelse(idx & musym != begin_1 & new_musym == begin_1, begin_1, musym)
+    # Joe recommended using |\\+${1}, but appears to be legit in some cases
+    orig_musym = ifelse(idx & musym != end_1   & new_musym == end_1 , end_1   , orig_musym)
+    orig_musym = ifelse(idx & musym != end_4   & new_musym == end_4 , end_4   , orig_musym)
+    })
+  d.rcor[c("n", "begin_1", "end_1", "end_4", "idx")] <- NULL
+  
+  # return data.frame
+  return(d.rcor)
+  
+  }
+
+
+fetchLIMS_component <- function(projectname, rmHzErrors = FALSE, fill = FALSE, 
+                                stringsAsFactors = default.stringsAsFactors()
+                                ) {
   
   # load data in pieces
-  f.mapunit <- get_mapunit_from_LIMS(projectname)
-  f.component <- get_component_from_LIMS(projectname)
-  f.chorizon <- get_chorizon_from_LIMS(projectname, fill)
+  f.mapunit   <- get_mapunit_from_LIMS(projectname, stringsAsFactors = stringsAsFactors)
+  f.component <- get_component_from_LIMS(projectname, stringsAsFactors = stringsAsFactors)
+  f.chorizon  <- get_chorizon_from_LIMS(projectname, fill, stringsAsFactors = stringsAsFactors)
   
   # optionally test for bad horizonation... flag, and remove
   if (rmHzErrors) {
@@ -73,7 +156,7 @@ fetchLIMS_component <- function(projectname, rmHzErrors = FALSE, fill = FALSE) {
     
     # which are the good (valid) ones?
     good.ids <- as.character(f.chorizon.test$cokey[which(f.chorizon.test$hz_logic_pass)])
-    bad.ids <- as.character(f.chorizon.test$cokey[which(! f.chorizon.test$hz_logic_pass)])
+    bad.ids  <- as.character(f.chorizon.test$cokey[which(! f.chorizon.test$hz_logic_pass)])
     
     # keep the good ones
     f.chorizon <- f.chorizon[which(f.chorizon$cokey %in% good.ids), ]

@@ -32,38 +32,43 @@
 }
 
 
-# TODO: generalize this to any data
-# NOTE: this is NASIS-specific for now
-# x: raw, un-coded contents of the phfrags table
+## TODO: this is NASIS-specific for now, generalize this to any data
+# x: uncoded contents of the phfrags table
 .rockFragmentSieve <- function(x) {
   
+  # convert to lower case: NASIS metadata usese upper for labels, lower for values
+  x$fraghard <- tolower(x$fraghard)
+  x$fragshp <- tolower(x$fragshp)
+  
   ## assumptions
-  # missing hardness = fragment
-  x$fraghard[which(is.na(x$fraghard))] <- 'Strongly cemented'
+  # missing hardness = rock fragment
+  x$fraghard[which(is.na(x$fraghard))] <- 'strongly cemented'
   # missing shape = Nonflat
-  x$fragshp[which(is.na(x$fragshp))] <- 'Nonflat'
+  x$fragshp[which(is.na(x$fragshp))] <- 'nonflat'
   
   ## split frags / parafrags
-  idx <- which(x$fraghard %in% c('Strongly cemented', 'Very strongly cemented', 'Indurated'))
+  # frags: >= strongly cemented
+  # this should generalize across old / modern codes
+  idx <- grep('strong|indurated', x$fraghard, ignore.case = TRUE)
   frags <- x[idx, ]
   
-  idx <- which(! x$fraghard %in% c('Strongly cemented', 'Very strongly cemented', 'Indurated'))
+  idx <- grep('strong|indurated', x$fraghard, ignore.case = TRUE, invert = TRUE)
   parafrags <- x[idx, ]
   
   
   ## split flat / non-flat
   # frags
-  idx <- which(frags$fragshp == 'Nonflat')
+  idx <- which(frags$fragshp == 'nonflat')
   frags.nonflat <- frags[idx, ]
   
-  idx <- which(frags$fragshp == 'Flat')
+  idx <- which(frags$fragshp == 'flat')
   frags.flat <- frags[idx, ]
   
   # parafrags
-  idx <- which(parafrags$fragshp == 'Nonflat')
+  idx <- which(parafrags$fragshp == 'nonflat')
   parafrags.nonflat <- parafrags[idx, ]
   
-  idx <- which(parafrags$fragshp == 'Flat')
+  idx <- which(parafrags$fragshp == 'flat')
   parafrags.flat <- parafrags[idx, ]
   
   ## sieve
@@ -89,9 +94,10 @@
 }
 
 
+## TODO: https://github.com/ncss-tech/soilDB/issues/43
 # rf: un-coded contents of the phfrags table
 # id.var: id column name
-# convert NA to 0?
+# nullFragsAreZero: convert NA to 0?
 simplfyFragmentData <- function(rf, id.var, nullFragsAreZero=TRUE) {
   
   # nasty hack to trick R CMD check

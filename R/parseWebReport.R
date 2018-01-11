@@ -57,6 +57,12 @@ parseWebReport <- function(url, args, index=1) {
     d <- d[[index]]
   }
   
+  # replace blanks with NA, problem with LIMS reports
+  idx <- unlist(lapply(df, is.character))
+  if (any(idx)) {
+    df[idx] <- lapply(df[idx], function(x) ifelse(x == "", NA, x))
+  }
+  
   # note: col names aren't legal data.frame names
   
   # done

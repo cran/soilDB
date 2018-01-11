@@ -1,8 +1,8 @@
 Package: soilDB
 Type: Package
 Title: Soil Database Interface
-Version: 1.8.14
-Date: 2017-11-11
+Version: 2.0
+Date: 2017-12-21
 Author: D.E. Beaudette and J. Skovlin, and S.M. Roecker
 Maintainer: D.E. Beaudette <dylan.beaudette@ca.usda.gov>
 Description: A collection of functions for reading data from USDA-NCSS soil databases.
@@ -17,5 +17,5 @@ URL: http://ncss-tech.github.io/AQP/
 BugReports: https://github.com/ncss-tech/soilDB/issues
 RoxygenNote: 6.0.1
 NeedsCompilation: no
-Packaged: 2017-11-11 16:52:36 UTC; sgtpepp
-Date/Publication: 2017-11-16 23:00:28 UTC
+Packaged: 2018-01-11 19:39:10 UTC; Dylan.Beaudette
+Date/Publication: 2018-01-11 21:41:24 UTC

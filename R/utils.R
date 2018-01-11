@@ -9,7 +9,7 @@
 .diagHzLongtoWide <- function(d) {
 	
 	# get unique vector of diagnostic hz
-	d.unique <- na.omit(unique(d$diag_kind))
+	d.unique <- na.omit(unique(d$featkind))
 	
 	# init list for storing initial FALSE for each peiid / diag kind
 	l <- vector(mode='list')
@@ -25,9 +25,41 @@
 		# fill this list element with FALSE
 		l[[i]] <- f
 		# lookup those peiid with this feature
-		matching.peiid <- d$peiid[which(d$diag_kind == i)]
+		matching.peiid <- d$peiid[which(d$featkind == i)]
 		# toggle FALSE-->TRUE for these pedons
 		l[[i]][which(l[['peiid']] %in% matching.peiid)] <- TRUE
+	}
+	
+	# convert to DF
+	return(as.data.frame(l))
+		
+}
+
+
+## TODO: this may need some review
+## convert horizon designation pieces info into wide-formatted, boolean table
+.hzSuffixLongtoWide <- function(d) {
+	
+	# get unique vector of all hzdesgnsuffix
+	d.unique <- na.omit(unique(d$desgnsuffix))
+	
+	# init list for storing initial FALSE for each phiid / desgnsuffix
+	l <- vector(mode='list')
+	
+	# add unique phiid
+	l[['phiid']] <- unique(d$phiid)
+	
+	# make a vector of FALSE, matching the length of unique phiid
+	f <- rep(FALSE, times=length(l[['phiid']]))
+	
+	# iterate over hzdesgnsuffix
+	for(i in d.unique) {
+		# fill this list element with FALSE
+		l[[i]] <- f
+		# lookup those phiid with this horizon suffix
+		matching.phiid <- d$phiid[which(d$desgnsuffix == i)]
+		# toggle FALSE-->TRUE for these horizons
+		l[[i]][which(l[['phiid']] %in% matching.phiid)] <- TRUE
 	}
 	
 	# convert to DF
@@ -119,6 +151,8 @@
 #   return(d[best.record, ])
 # }
 
+
+## TODO: https://github.com/ncss-tech/soilDB/issues/47
 ## 2015-11-30: short-circuts could use some work, consider pre-marking mistakes in calling function
 # attempt to format "landform" records into a single string
 # note: there are several assumptions made about the data, 
@@ -136,7 +170,7 @@
   
   # allow for NA's
   if(nrow(i.gm) == 0)
-    return(data.frame(peiid=u.peiid, landform.string=NA, stringsAsFactors=FALSE))
+    return(data.frame(peiid=u.peiid, landform_string=NA, stringsAsFactors=FALSE))
   
   # short-circuit: if any geomfeatid are NA, then we don't know the order
   # string together as-is, in row-order
@@ -147,7 +181,7 @@
       message(paste0('Using row-order. NA in geomfeatid:', u.peiid))
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
-    return(data.frame(peiid=u.peiid, landform.string=ft.string, stringsAsFactors=FALSE))
+    return(data.frame(peiid=u.peiid, landform_string=ft.string, stringsAsFactors=FALSE))
   }
   
   # short-circuit: if any feature exists on itself, then use row-order
@@ -159,7 +193,7 @@
       message(paste0('Using row-order. Error in exists-on logic:', u.peiid))
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
-    return(data.frame(peiid=u.peiid, landform.string=ft.string, stringsAsFactors=FALSE))
+    return(data.frame(peiid=u.peiid, landform_string=ft.string, stringsAsFactors=FALSE))
   }
   
   # get an index to the top-most and bottom-most features
@@ -174,7 +208,7 @@
       warning(paste0('Using row-order. Error in exists-on logic: ', u.peiid), call.=FALSE)
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
-    return(data.frame(peiid=u.peiid, landform.string=ft.string, stringsAsFactors=FALSE))
+    return(data.frame(peiid=u.peiid, landform_string=ft.string, stringsAsFactors=FALSE))
   }
    
   ## short-circuit: only 1 row, and exists-on logic is wrong, use row-order
@@ -185,7 +219,7 @@
       warning(paste0('Using row-order. Single row / error in exists-on logic: ', u.peiid), call.=FALSE)
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
-    return(data.frame(peiid=u.peiid, landform.string=ft.string, stringsAsFactors=FALSE))
+    return(data.frame(peiid=u.peiid, landform_string=ft.string, stringsAsFactors=FALSE))
   }
   
   # short-circuit: if the exists-on logic is wrong, use row-order
@@ -196,7 +230,7 @@
       warning(paste0('Using row-order. Incorrect exists-on specification: ', u.peiid), call.=FALSE)
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
-    return(data.frame(peiid=u.peiid, landform.string=ft.string, stringsAsFactors=FALSE))
+    return(data.frame(peiid=u.peiid, landform_string=ft.string, stringsAsFactors=FALSE))
   }
   
   # init a vector to store feature names
@@ -228,7 +262,7 @@
   ft.string <- paste(ft.vect, collapse=name.sep)
   
   # done!
-  return(data.frame(peiid=u.peiid, landform.string=ft.string, stringsAsFactors=FALSE))
+  return(data.frame(peiid=u.peiid, landform_string=ft.string, stringsAsFactors=FALSE))
 }
 
 
@@ -242,7 +276,7 @@
     stop('data are from multiple site records')
   
   # subset sitepm data to remove any with NA for pm_kind
-  i.pm <- i.pm[which(!is.na(i.pm$pm_kind)), ]
+  i.pm <- i.pm[which(!is.na(i.pm$pmkind)), ]
   
   # if there is no data, then return a DF formatted as if there were data
   if(nrow(i.pm) == 0)
@@ -254,15 +288,14 @@
     # optional information on which sites have issues
     if(getOption('soilDB.verbose', default=FALSE))
       warning(paste0('Using row-order. NA in pmorder:', u.siteiid), call.=FALSE)
-  }
-  else{
+  } else {
     # there are no NAs in pmorder --> sort according to pmorder
     i.pm <- i.pm[order(i.pm$pmorder), ]
   }
   
   # composite strings and return
-  str.kind <- paste(i.pm$pm_kind, collapse=name.sep)
-  str.origin <- paste(unique(i.pm$pm_origin), collapse=name.sep)
+  str.kind <- paste(i.pm$pmkind, collapse=name.sep)
+  str.origin <- paste(unique(i.pm$pmorigin), collapse=name.sep)
   
   return(data.frame(siteiid=u.siteiid, pmkind=str.kind, pmorigin=str.origin, stringsAsFactors=FALSE))
 }
@@ -288,7 +321,7 @@
   
   # allow for NA's
   if(nrow(i.gm) == 0)
-    return(data.frame(coiid=u.coiid, landform.string=NA, stringsAsFactors=FALSE))
+    return(data.frame(coiid=u.coiid, landform_string=NA, stringsAsFactors=FALSE))
   
   # short-circuit: if any geomfeatid are NA, then we don't know the order
   # string together as-is, in row-order
@@ -299,7 +332,7 @@
       message(paste0('Using row-order. NA in geomfeatid:', u.peiid))
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
-    return(data.frame(coiid=u.coiid, landform.string=ft.string, stringsAsFactors=FALSE))
+    return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
   }
   
   # short-circuit: if any feature exists on itself, then use row-order
@@ -311,7 +344,7 @@
       message(paste0('Using row-order. Error in exists-on logic:', u.coiid))
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
-    return(data.frame(coiid=u.coiid, landform.string=ft.string, stringsAsFactors=FALSE))
+    return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
   }
   
   # get an index to the top-most and bottom-most features
@@ -327,7 +360,7 @@
       warning(paste0('Using row-order. Single row / error in exists-on logic:', u.coiid), call.=FALSE)
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
-    return(data.frame(coiid=u.coiid, landform.string=ft.string, stringsAsFactors=FALSE))
+    return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
   }
   
   # short-circuit: if the exists-on logic is wrong, use row-order
@@ -338,7 +371,7 @@
       warning(paste0('Using row-order. Incorrect exists-on specification:', u.coiid), call.=FALSE)
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
-    return(data.frame(coiid=u.coiid, landform.string=ft.string, stringsAsFactors=FALSE))
+    return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
   }
   
   # init a vector to store feature names
@@ -370,7 +403,7 @@
   ft.string <- paste(ft.vect, collapse=name.sep)
   
   # done!
-  return(data.frame(coiid=u.coiid, landform.string=ft.string, stringsAsFactors=FALSE))
+  return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
 }
 
 
@@ -518,7 +551,56 @@
   return(std_new)
 }
 
-# fix column classes, for some reason all the data is getting imported as characters
-.fix_class <- function(x) {
-  if (class(x) == "character" & any(!is.na(as.numeric(x)))) {as.numeric(x)} else x
+
+
+# impute "not populated" into freqcl and "201" into dept_r & depb_r if !is.na(freqcl)
+.cosoilmoist_prep <- function(df, impute, stringsAsFactors) {
+  
+  # cache original column names
+  orig_names <- names(df)
+  
+  # relabel names
+  names(df) <- gsub("^soimoist", "", names(df))
+  old_names <- "stat"
+  new_names <- "status"
+  names(df)[names(df) %in% old_names] <- new_names
+  
+  
+  # impute NA freqcl values, default = "not populated"
+  if (impute == TRUE) {
+    vars <- c("flodfreqcl", "pondfreqcl")
+    missing <- "not_populated"
+    freqcl2 <- c(missing, levels(df$flodfreqcl))
+    status2 <- c(missing, levels(df$status))
+    
+    df <- within(df, {
+      # replace NULL RV depths with 201 cm if pondfreqcl or flodqcl is not NULL
+      dept_r[is.na(dept_r) & (!is.na(pondfreqcl) | !is.na(flodfreqcl))] = 201
+      depb_r[is.na(depb_r) & (!is.na(pondfreqcl) | !is.na(flodfreqcl))] = 201
+      
+      # replace NULL L and H depths with the RV
+      dept_l = ifelse(is.na(dept_l), dept_r, dept_l)
+      dept_h = ifelse(is.na(dept_h), dept_r, dept_h)
+      
+      depb_l = ifelse(is.na(depb_l), depb_r, depb_l)
+      depb_h = ifelse(is.na(depb_h), depb_r, depb_h)
+      
+      # replace NULL freqcl with "Not_Populated"
+      status = factor(status, levels = status2)
+      flodfreqcl = factor(flodfreqcl, levels = freqcl2)
+      pondfreqcl = factor(pondfreqcl, levels = freqcl2)
+      
+      status[is.na(status)]         <- missing
+      flodfreqcl[is.na(flodfreqcl)] <- missing
+      pondfreqcl[is.na(pondfreqcl)] <- missing
+    })
   }
+  
+  # convert factors to strings
+  idx <- unlist(lapply(df, is.factor))
+  if (stringsAsFactors == FALSE & any(idx)) {
+    df[idx] <- lapply(df[idx], as.character)
+  }
+  
+  return(df)
+}

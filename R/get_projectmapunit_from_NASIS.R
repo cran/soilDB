@@ -1,4 +1,4 @@
-get_projectmapunit_from_NASIS <- function() {
+get_projectmapunit_from_NASIS <- function(stringsAsFactors = default.stringsAsFactors()) {
   # must have RODBC installed
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
@@ -8,9 +8,9 @@ get_projectmapunit_from_NASIS <- function() {
              FROM 
              project_View_1 p INNER JOIN
              projectmapunit_View_1 pmu ON pmu.projectiidref = p.projectiid LEFT OUTER JOIN 
-             mapunit mu ON mu.muiid = pmu.muiidref LEFT OUTER JOIN
-             lmapunit lmu ON lmu.muiidref = mu.muiid LEFT OUTER JOIN
-             legend l ON l.liid = lmu.liidref
+             mapunit_View_1 mu ON mu.muiid = pmu.muiidref LEFT OUTER JOIN
+             lmapunit_View_1 lmu ON lmu.muiidref = mu.muiid LEFT OUTER JOIN
+             legend_View_1 l ON l.liid = lmu.liidref
              
              INNER JOIN 
                area a ON a.areaiid = p.mlrassoareaiidref
@@ -34,7 +34,7 @@ get_projectmapunit_from_NASIS <- function() {
   if (nrow(d.project) == 0) message("your selected set is missing the project table, please load it and try again")
   
   # uncode metadata domains
-  d.project <- uncode(d.project)
+  d.project <- uncode(d.project, stringsAsFactors = stringsAsFactors)
   
   
   # close connection
