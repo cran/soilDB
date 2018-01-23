@@ -1,6 +1,6 @@
-573a67f7f30d3d94c38faf2a16adfcbb *DESCRIPTION
+6ed997c6b87ea65971b991585e14329d *DESCRIPTION
 7046cb1bfa0a0bdb6f5ba27f4a64eedb *NAMESPACE
-8243721d9eb96e4a02bdb051eb6012c8 *NEWS
+ab8066abceb7955ac724db8fb9a5f580 *NEWS
 9d3d1497f3ec3849a0b617e90ea7c090 *R/AAAA.R
 9bbf9bbf2b08aed1e6fb2cb423034e54 *R/KSSL_VG_model.R
 8819d51ee9b6aaf7634415bc248684d2 *R/SDA_query.R
@@ -22,9 +22,9 @@ c9613ea97717a52c00990d3e1ab3cc24 *R/get_colors_from_pedon_db.R
 c878b78e807833d1f530fce9681105c4 *R/get_component_data_from_NASIS_db.R
 925e2c14acb20fcd675d718aa4f4ed43 *R/get_component_from_LIMS.R
 2549e8f44194e80451f32a2880c06b84 *R/get_component_from_SDA.R
-43ff8f421ac8925eaf2d8c63d37d6748 *R/get_cosoilmoist_from_LIMS.R
-fd92b23e104c7db6cb09978b436731c8 *R/get_cosoilmoist_from_NASIS.R
-ffa0883634a53b60e1f2f6f9dd6815fb *R/get_cosoilmoist_from_SDA.R
+d8471a63dc89cf12fa986b2af67f112f *R/get_cosoilmoist_from_LIMS.R
+8d998831dc6b32a5747651fbae518c7e *R/get_cosoilmoist_from_NASIS.R
+8b5251fa1741ea9940f2939469d33516 *R/get_cosoilmoist_from_SDA.R
 70f890d10935f0dab32b9efec7cbfd75 *R/get_extended_data_from_NASIS_db.R
 3af49f4ef0b89b1ae87c46cbb24e3ca7 *R/get_extended_data_from_pedon_db.R
 ee3f86763ccdb358c84e2fbe841f189c *R/get_hz_data_from_NASIS_db.R
@@ -50,12 +50,12 @@ d5f2cf82aec318b75e80374ae5609448 *R/seriesExtent.R
 5c3be3d78d5c4bf59511de11871df9ea *R/simplfyFragmentData.R
 09f7c5efa159ca3a3b72d61565803ea6 *R/simplifyColorData.R
 ae6303812d25b173276aef229dc1d1af *R/uncode.R
-e7dc3abad65782780e04c0cc0d7c909e *R/utils.R
+09b36a4e2322205e7bcfe974e7f1cc0b *R/utils.R
 508d1c17ab8273c843aa14d153c658ad *data/andic.subset.rda
 aacf6970790eb113a50fa59183e426bd *data/cisne.rda
 a5200cd5aed20ba619650f98e037e189 *data/gSSURGO.chunk.rda
-d348fb6883ce4591e835b41b607b1098 *data/gopheridge.rda
-ecde7e779dce654e67bc3e8af411a2ad *data/loafercreek.rda
+777918ea7501e7a8896ad9e286750e35 *data/gopheridge.rda
+466848a523212dbd6fdd06e5bf424056 *data/loafercreek.rda
 37b03a5c9035adf7c7b3d99d0e8842d4 *data/metadata.rda
 0ee40a80797eba25b5f006ecff362809 *man/KSSL_VG_model.Rd
 24cbd5d953540bbfca33e1acaf0d0e13 *man/SDA_query.Rd
@@ -92,7 +92,7 @@ aa950d35d7cc74f2ca1491dead0ee961 *man/get_veg_from_AK_Site.Rd
 234d2bfc25cc09fa15111e73597d8689 *man/get_veg_from_NPS_PLOTS_db.Rd
 3aa507e465e7e698f7ed273f6b376835 *man/get_veg_other_from_MT_veg_db.Rd
 5ccada20ef64243b943b50a04bde91bb *man/get_veg_species_from_MT_veg_db.Rd
-722c553c59ebd7e911fe241f32fcadfc *man/loafercreek.Rd
+75f268623fcb6e5c59c437ec62a1760e *man/loafercreek.Rd
 9e8fe71d48047aa12cd9886dd84a4970 *man/mapunit_geom_by_ll_bbox.Rd
 1925d712918da29904dd461ed1be2906 *man/parseWebReport.Rd
 d0cfd78617fe44ee39f377cc8aaf4b2d *man/seriesExtent.Rd
