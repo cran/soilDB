@@ -1,3 +1,45 @@
+-------------------------- soilDB 2.3 (2018-11-17) ------------------------------
+* new function for exploring soil series co-occurrence data: siblings()
+* fetchOSD(..., extended=TRUE) gets competing soil series
+* new tests
+* removed old sample gSSURGO chunk and related documentation
+* release to CRAN
+
+-------------------------- soilDB 2.2-6 (2018-10-11) ------------------------------
+* new function for spatial queries: SDA_spatialQuery(), still needs testing and documentation
+
+-------------------------- soilDB 2.2-6 (2018-10-11) ------------------------------
+* fetchOSD gets an overhaul, new API and features
+
+-------------------------- soilDB 2.2-5 (2018-10-05) ------------------------------
+* experimental interface to SoillWeb OSD fulltext search: OSDquery()
+
+-------------------------- soilDB 2.2-4 (2018-09-04) ------------------------------
+* numerous bug-fixes in simplifyFragmentData() see (https://github.com/ncss-tech/soilDB/issues/70)
+
+-------------------------- soilDB 2.2-1 (2018-05-21) ------------------------------
+* get_mutext_from_NASIS_db() added for extraction of map unit text notes
+
+-------------------------- soilDB 2.2 (2018-05-08) ------------------------------
+* CRAN release
+* better bug-fix for fetchSCAN and missing data (https://github.com/ncss-tech/soilDB/issues/26)
+* exposing some of the internal functionality used by fetchHenry
+
+-------------------------- soilDB 2.1-1 (2018-03-29) ------------------------------
+* added more SCAN/SNOTEL metadata (https://github.com/ncss-tech/soilDB/issues/61)
+
+-------------------------- soilDB 2.1 (2018-03-12) ------------------------------
+* generalized local NASIS ODBC authentication, should work on windows 7, 8, 10 https://github.com/ncss-tech/soilDB/issues/54
+
+-------------------------- soilDB 2.0-4 (2018-03-06) ----------------------------
+* bug fix for subtle change in how SCAN data are returned from webservice
+
+-------------------------- soilDB 2.0-3 (2018-02-13) ----------------------------
+* bug fix for simplfyFragmentData(, nullFragsAreZero=FALSE), still more work to do
+
+-------------------------- soilDB 2.0-2 (2018-01-29) ----------------------------
+* bug fix for simplfyFragmentData() when fragment volume > 100%
+
 -------------------------- soilDB 2.0-1 (2018-01-23) ----------------------------
 * updated `loafercreek` and `gopheridge` sample datasets and manual page to reflect latest fetchNASIS
 

@@ -12,8 +12,25 @@
 \alias{get_component_esd_data_from_NASIS_db}
 \alias{get_component_otherveg_data_from_NASIS_db}
 \alias{get_copedon_from_NASIS_db}
-\alias{get_vegplot_from_NASIS_db}
+
+\alias{get_mapunit_from_NASIS}
 \alias{get_projectmapunit_from_NASIS}
+\alias{get_projectstaff_from_NASIS}
+\alias{get_component_diaghz_from_NASIS_db}
+\alias{get_mutext_from_NASIS_db}
+
+\alias{fetchVegdata}
+\alias{get_vegplot_from_NASIS_db}
+\alias{get_vegplot_location_from_NASIS_db}
+\alias{get_vegplot_species_from_NASIS_db}
+\alias{get_vegplot_textnote_from_NASIS_db}
+\alias{get_vegplot_transect_from_NASIS_db}
+\alias{get_vegplot_transpecies_from_NASIS_db}
+\alias{get_vegplot_tree_si_details_from_NASIS_db}
+\alias{get_vegplot_tree_si_summary_from_NASIS_db}
+\alias{get_vegplot_trhi_from_NASIS_db}
+
+
 
 \title{Fetch commonly used site/pedon/horizon or component data from a local NASIS database.}
 \description{Fetch commonly used site/pedon/horizon data or component from a local NASIS database, return as a SoilProfileCollection object.}
@@ -40,7 +57,7 @@ getHzErrorsNASIS(strict=TRUE)
   \item{nullFragsAreZero}{should fragment volumes of NULL be interpreted as 0? (default: TRUE), see details}
   \item{soilColorState}{which colors should be used to generate the convenience field 'soil_color'? ('moist' | 'dry')}
   \item{lab}{should the phlabresults child table be fetched with site/pedon/horizon data (default: FALSE)}  
-  \item{fill}{should missing "month" rows in the comonth table be filled with NA (FALSE)}
+  \item{fill}{toggle inclusion of components that are missing horizon data  (FALSE)}
   \item{strict}{how strict should horizon boundaries be checked for consistency: TRUE=more | FALSE=less}
 }
 

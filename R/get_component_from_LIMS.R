@@ -1,8 +1,9 @@
-get_component_from_LIMS <- function(projectname, stringsAsFactors = default.stringsAsFactors()) {
+get_component_from_NASISWebReport <- function(projectname, stringsAsFactors = default.stringsAsFactors()) {
   
-  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_component_from_LIMS"
+  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_component_from_NASISWebReport"
   
   d.component <- lapply(projectname, function(x) {
+    cat("getting project '", x, "' from NasisReportsWebSite \n", sep = "")
     args = list(p_projectname = x)
     d    =  parseWebReport(url, args)
   })
@@ -11,15 +12,20 @@ get_component_from_LIMS <- function(projectname, stringsAsFactors = default.stri
   # set factor levels according to metadata domains
   d.component <- uncode(d.component, db = "LIMS", stringsAsFactors = stringsAsFactors)
   
+  
+  # prep
+  d.component <- .cogmd_prep(d.component, db = "LIMS")
+  
+  
   # return data.frame
   return(d.component)
   
   }
 
 
-get_chorizon_from_LIMS <- function(projectname, fill = FALSE, stringsAsFactors = default.stringsAsFactors()) {
+get_chorizon_from_NASISWebReport <- function(projectname, fill = FALSE, stringsAsFactors = default.stringsAsFactors()) {
   
-  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_chorizon_from_LIMS"
+  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_chorizon_from_NASISWebReport"
   
   d.chorizon <- lapply(projectname, function(x) {
     args = list(p_projectname = x)
@@ -52,9 +58,34 @@ get_chorizon_from_LIMS <- function(projectname, fill = FALSE, stringsAsFactors =
   }
 
 
-get_mapunit_from_LIMS <- function(projectname, stringsAsFactors = default.stringsAsFactors()) {
+
+get_mapunit_from_NASISWebReport <- function(areasymbol, stringsAsFactors = default.stringsAsFactors()) {
+  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_mapunit_from_NASISWebReport"
   
-  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_projectmapunit_from_LIMS"
+  d.mapunit <- lapply(areasymbol, function(x) {
+    cat("getting map units for '", x, "' from NasisReportsWebSite \n", sep = "")
+    args = list(p_areasymbol = x)
+    d    =  parseWebReport(url, args)
+  })
+  d.mapunit <- do.call("rbind", d.mapunit)
+  
+  
+  # set factor levels according to metadata domains
+  # data is coming back uncoded from LIMS so db is set to "SDA"
+  d.mapunit <- uncode(d.mapunit, db = "SDA", stringsAsFactors = stringsAsFactors)
+  
+  # date
+  d.mapunit$cordate <- as.Date(d.mapunit$cordate)
+  
+  # return data.frame
+  return(d.mapunit)
+  
+}
+
+
+get_projectmapunit_from_NASISWebReport <- function(projectname, stringsAsFactors = default.stringsAsFactors()) {
+  
+  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_projectmapunit_from_NASISWebReport"
   
   
   d.mapunit <- lapply(projectname, function(x) {
@@ -72,9 +103,30 @@ get_mapunit_from_LIMS <- function(projectname, stringsAsFactors = default.string
   }
 
 
-get_project_from_LIMS <- function(mlrassoarea, fiscalyear) {
+get_projectmapunit2_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projectname, stringsAsFactors = default.stringsAsFactors()) {
   
-  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_project_from_LIMS"
+  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_projectmapunit2_from_NASISWebReport"
+  
+  
+  args = list(p_mlrassoarea = mlrassoarea, p_fy = fiscalyear, p_projectname = projectname)
+  d.mapunit    =  parseWebReport(url, args)
+  
+  # set factor levels according to metadata domains
+  # data is coming back uncoded from LIMS so db is set to "SDA"
+  d.mapunit <- uncode(d.mapunit, db = "SDA", stringsAsFactors = stringsAsFactors)
+  
+  # date
+  d.mapunit$cordate <- as.Date(d.mapunit$cordate)
+  
+  # return data.frame
+  return(d.mapunit)
+  
+}
+
+
+get_project_from_NASISWebReport <- function(mlrassoarea, fiscalyear) {
+  
+  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_project_from_NASISWebReport"
   
   args <- list(p_mlrassoarea = mlrassoarea, p_fy = fiscalyear)
   
@@ -92,9 +144,9 @@ get_project_from_LIMS <- function(mlrassoarea, fiscalyear) {
   }
 
 
-get_progress_from_LIMS <- function(mlrassoarea, fiscalyear, projecttypename) {
+get_progress_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projecttypename) {
   
-  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_progress_from_LIMS"
+  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_progress_from_NASISWebReport"
   
   args <- list(p_mlrassoarea = mlrassoarea, p_fy = fiscalyear, p_projecttypename = projecttypename)
   
@@ -106,13 +158,13 @@ get_progress_from_LIMS <- function(mlrassoarea, fiscalyear, projecttypename) {
   }
 
 
-get_reverse_correlation_from_LIMS <- function(mlrassoarea, fiscalyear, projectname) {
+get_project_correlation_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projectname) {
   
   # nasty hack to trick R CMD check
   musym <- NULL
   new_musym <- NULL
   
-  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_reverse_correlation_from_LIMS"
+  url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_project_correlation_from_NASISWebReport"
   
   args <- list(p_mlrassoarea = mlrassoarea, p_fy = fiscalyear, p_projectname = projectname)
   
@@ -120,19 +172,19 @@ get_reverse_correlation_from_LIMS <- function(mlrassoarea, fiscalyear, projectna
   
   # compute musym_orig for additional lmapunits, necessary to catch changes to the original musym, due to a constraint on the lmapunit table that prevents duplicate musym for additional mapunits 
   d.rcor <- within(d.rcor, {
-    
+
     n         = nchar(musym)
     begin_1   = substr(musym, 2, n)
     end_1     = substr(musym, 1, n - 1)
     end_4     = substr(musym, 1, n - 4)
-      
+
     idx       = musym != new_musym & !is.na(new_musym)
-      
-    orig_musym = ifelse(idx & musym != begin_1 & new_musym == begin_1, begin_1, musym)
+
+    orig_musym = ifelse(idx & musym != begin_1 & (new_musym == begin_1 | substr(musym, 1, 1) %in% c("x", "z")), begin_1, musym)
     # Joe recommended using |\\+${1}, but appears to be legit in some cases
     orig_musym = ifelse(idx & musym != end_1   & new_musym == end_1 , end_1   , orig_musym)
     orig_musym = ifelse(idx & musym != end_4   & new_musym == end_4 , end_4   , orig_musym)
-    })
+  })
   d.rcor[c("n", "begin_1", "end_1", "end_4", "idx")] <- NULL
   
   # return data.frame
@@ -141,14 +193,14 @@ get_reverse_correlation_from_LIMS <- function(mlrassoarea, fiscalyear, projectna
   }
 
 
-fetchLIMS_component <- function(projectname, rmHzErrors = FALSE, fill = FALSE, 
-                                stringsAsFactors = default.stringsAsFactors()
-                                ) {
+fetchNASISWebReport <- function(projectname, rmHzErrors = FALSE, fill = FALSE,
+                                 stringsAsFactors = default.stringsAsFactors()
+                                 ) {
   
   # load data in pieces
-  f.mapunit   <- get_mapunit_from_LIMS(projectname, stringsAsFactors = stringsAsFactors)
-  f.component <- get_component_from_LIMS(projectname, stringsAsFactors = stringsAsFactors)
-  f.chorizon  <- get_chorizon_from_LIMS(projectname, fill, stringsAsFactors = stringsAsFactors)
+  f.mapunit   <- get_projectmapunit_from_NASISWebReport(projectname, stringsAsFactors = stringsAsFactors)
+  f.component <- get_component_from_NASISWebReport(projectname, stringsAsFactors = stringsAsFactors)
+  f.chorizon  <- get_chorizon_from_NASISWebReport(projectname, fill, stringsAsFactors = stringsAsFactors)
   
   # optionally test for bad horizonation... flag, and remove
   if (rmHzErrors) {

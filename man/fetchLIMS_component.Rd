@@ -1,32 +1,44 @@
-\name{fetchLIMS_component}
-\alias{fetchLIMS_component}
-\alias{get_project_from_LIMS}
-\alias{get_progress_from_LIMS}
-\alias{get_reverse_correlation_from_LIMS}
-\alias{get_mapunit_from_LIMS}
-\alias{get_component_from_LIMS}
-\alias{get_chorizon_from_LIMS}
-\alias{get_cosoilmoist_from_LIMS}
-\alias{get_sitesoilmoist_from_LIMS}
+\name{fetchNASISWebReport}
+\alias{fetchNASISWebReport}
+\alias{get_project_from_NASISWebReport}
+\alias{get_progress_from_NASISWebReport}
+\alias{get_project_correlation_from_NASISWebReport}
+\alias{get_mapunit_from_NASISWebReport}
+\alias{get_projectmapunit_from_NASISWebReport}
+\alias{get_projectmapunit2_from_NASISWebReport}
+\alias{get_component_from_NASISWebReport}
+\alias{get_chorizon_from_NASISWebReport}
+\alias{get_cosoilmoist_from_NASISWebReport}
+\alias{get_sitesoilmoist_from_NASISWebReport}
 
-\title{Extract component tables from a the Laboratory Information Management System}
+\title{Extract component tables from a the NASIS Web Reports}
 \description{Get, format, impute, and return component tables.}
 \usage{
-fetchLIMS_component(projectname, rmHzErrors = FALSE, fill = FALSE,
+fetchNASISWebReport(projectname, rmHzErrors = FALSE, fill = FALSE,
                     stringsAsFactors = default.stringsAsFactors()
                     )
-get_progress_from_LIMS(mlrassoarea, fiscalyear, projecttypename)
-get_project_from_LIMS(mlrassoarea, fiscalyear)
-get_reverse_correlation_from_LIMS(mlrassoarea, fiscalyear, projectname)
-get_mapunit_from_LIMS(projectname, stringsAsFactors = default.stringsAsFactors())
-get_component_from_LIMS(projectname, stringsAsFactors = default.stringsAsFactors())
-get_chorizon_from_LIMS(projectname, fill = FALSE, 
-                       stringsAsFactors = default.stringsAsFactors()
-                       )
-get_cosoilmoist_from_LIMS(projectname, impute = TRUE, 
-                         stringsAsFactors = default.stringsAsFactors()
-                         )
-get_sitesoilmoist_from_LIMS(usiteid)
+get_progress_from_NASISWebReport(mlrassoarea, fiscalyear, projecttypename)
+get_project_from_NASISWebReport(mlrassoarea, fiscalyear)
+get_project_correlation_from_NASISWebReport(mlrassoarea, fiscalyear, projectname)
+get_projectmapunit_from_NASISWebReport(projectname, 
+                                       stringsAsFactors = default.stringsAsFactors()
+                                       )
+get_projectmapunit2_from_NASISWebReport(mlrassoarea, fiscalyear, projectname, 
+                                        stringsAsFactors = default.stringsAsFactors()
+                                        )
+get_mapunit_from_NASISWebReport(areasymbol, 
+                                stringsAsFactors = default.stringsAsFactors()
+                                )
+get_component_from_NASISWebReport(projectname, 
+                                  stringsAsFactors = default.stringsAsFactors()
+                                  )
+get_chorizon_from_NASISWebReport(projectname, fill = FALSE, 
+                                 stringsAsFactors = default.stringsAsFactors()
+                                 )
+get_cosoilmoist_from_NASISWebReport(projectname, impute = TRUE, 
+                                    stringsAsFactors = default.stringsAsFactors()
+                                    )
+get_sitesoilmoist_from_NASISWebReport(usiteid)
 }
 
 
@@ -35,6 +47,7 @@ get_sitesoilmoist_from_LIMS(usiteid)
   \item{mlrassoarea}{text string value identifying the mlra soil survey office areasymbol symbol inserted into a SQL WHERE clause (default: NA)}
   \item{fiscalyear}{text string value identifying the fiscal year inserted into a SQL WHERE clause (default: NA)}
   \item{projecttypename}{text string value identifying the project type name inserted into a SQL WHERE clause (default: NA)}
+  \item{areasymbol}{text string value identifying the area symbol (e.g. "IN001" or "IN\%") inserted into a SQL WHERE clause (default: NA)}
   \item{usiteid}{text string value identifying the user site id inserted into a SQL WHERE clause (default: NA)}
   \item{impute}{replace missing (i.e. NULL) values with "Not_Populated" for categorical data, or the "RV" for numeric data or 201 cm if the "RV" is also NULL (default: TRUE)}
   \item{fill}{should rows with missing component ids be removed NA (FALSE)}
@@ -57,7 +70,7 @@ library(ggplot2)
 library(gridExtra)
 
 # query soil components by projectname
-test = fetchLIMS_component(
+test = fetchNASISWebReport_component(
 "EVAL - MLRA 111A - Ross silt loam, 0 to 2 percent slopes, frequently flooded"
 )
 test = test$spc
@@ -100,7 +113,7 @@ grid.arrange(g1, g2)
 
 # query cosoilmoist (e.g. water table data) by mukey
 # NA depths are interpreted as (???) with impute=TRUE argument
-x <- get_cosoilmoist_from_LIMS(
+x <- get_cosoilmoist_from_NASISWebReport(
 "EVAL - MLRA 111A - Ross silt loam, 0 to 2 percent slopes, frequently flooded"
 )
 

@@ -14,6 +14,7 @@ fetchNASIS_components <- function(SS=TRUE, rmHzErrors=TRUE, fill = FALSE, string
   f.cogeomorph <- get_component_cogeomorph_data_from_NASIS_db(SS=SS)
   f.otherveg   <- get_component_otherveg_data_from_NASIS_db(SS=SS)
   f.ecosite    <- get_component_esd_data_from_NASIS_db(SS=SS, stringsAsFactors = stringsAsFactors)
+  f.diaghz     <- get_component_diaghz_from_NASIS_db(SS=SS)
   
   # optionally test for bad horizonation... flag, and remove
   if(rmHzErrors) {
@@ -27,8 +28,8 @@ fetchNASIS_components <- function(SS=TRUE, rmHzErrors=TRUE, fill = FALSE, string
     f.chorizon <- f.chorizon[which(f.chorizon$coiid %in% good.ids), ]
     
     # keep track of those components with horizonation errors
-    if(length(bad.ids) > 0)
-      assign('component.hz.problems', value=bad.ids, envir=soilDB.env)
+    #if(length(bad.ids) > 0) # AGB removed this line of code b/c it prevents update of 'component.hz.problems' on subsequent error-free calls
+    assign('component.hz.problems', value=bad.ids, envir=soilDB.env)
   }
   
   
@@ -64,9 +65,13 @@ fetchNASIS_components <- function(SS=TRUE, rmHzErrors=TRUE, fill = FALSE, string
   if(nrow(ov) > 0)
     site(f.chorizon) <- ov
   
+  # add diagnostic features to SPC
+  diagnostic_hz(f.chorizon) <- f.diaghz
+  
   # print any messages on possible data quality problems:
   if(exists('component.hz.problems', envir=soilDB.env))
-    message("-> QC: horizon errors detected, use `get('component.hz.problems', envir=soilDB.env)` for related coiid values")
+    if(length(get("component.hz.problems", envir = soilDB.env)) > 0)
+      message("-> QC: horizon errors detected, use `get('component.hz.problems', envir=soilDB.env)` for related coiid values")
   
   
   # done, return SPC

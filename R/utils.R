@@ -9,7 +9,7 @@
 .diagHzLongtoWide <- function(d) {
 	
 	# get unique vector of diagnostic hz
-	d.unique <- na.omit(unique(d$featkind))
+	d.unique <- na.omit(unique(as.character(d$featkind)))
 	
 	# init list for storing initial FALSE for each peiid / diag kind
 	l <- vector(mode='list')
@@ -151,7 +151,7 @@
 #   return(d[best.record, ])
 # }
 
-
+## https://github.com/ncss-tech/soilDB/issues/84
 ## TODO: https://github.com/ncss-tech/soilDB/issues/47
 ## 2015-11-30: short-circuts could use some work, consider pre-marking mistakes in calling function
 # attempt to format "landform" records into a single string
@@ -266,6 +266,7 @@
 }
 
 
+## https://github.com/ncss-tech/soilDB/issues/84
 # attempt to flatten site parent material data into 2 strings
 .formatParentMaterialString <- function(i.pm, name.sep='|') {
   # get the current site
@@ -301,6 +302,7 @@
 }
 
 
+## https://github.com/ncss-tech/soilDB/issues/84
 # 2017-03-13: attempt to format COMPONENT "landform" records into a single string
 # note: there are several assumptions made about the data, 
 # see "short-circuits" used when there are funky data
@@ -329,7 +331,7 @@
     
     # optional information on which pedons have issues
     if(getOption('soilDB.verbose', default=FALSE))
-      message(paste0('Using row-order. NA in geomfeatid:', u.peiid))
+      message(paste0('Using row-order. NA in geomfeatid: ', u.peiid))
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
     return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
@@ -341,7 +343,7 @@
     
     # optional information on which pedons have issues
     if(getOption('soilDB.verbose', default=FALSE))
-      message(paste0('Using row-order. Error in exists-on logic:', u.coiid))
+      message(paste0('Using row-order. Error in exists-on logic: ', u.coiid))
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
     return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
@@ -357,7 +359,7 @@
     
     # optional information on which pedons have issues
     if(getOption('soilDB.verbose', default=FALSE))
-      warning(paste0('Using row-order. Single row / error in exists-on logic:', u.coiid), call.=FALSE)
+      warning(paste0('Using row-order. Single row / error in exists-on logic: ', u.coiid), call.=FALSE)
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
     return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
@@ -368,7 +370,19 @@
     
     # optional information on which pedons have issues
     if(getOption('soilDB.verbose', default=FALSE))
-      warning(paste0('Using row-order. Incorrect exists-on specification:', u.coiid), call.=FALSE)
+      warning(paste0('Using row-order. Incorrect exists-on specification: ', u.coiid), call.=FALSE)
+    
+    ft.string <- paste(i.gm$geomfname, collapse=name.sep)
+    return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
+  }
+  
+  # short circuit: if there is circularity in the exists-on logic, use row-order
+  # example coiid: 2119838
+  if(length(top.feature) < 1 | length(bottom.feature) < 1) {
+    
+    # optional information on which pedons have issues
+    if(getOption('soilDB.verbose', default=FALSE))
+      warning(paste0('Using row-order. Incorrect exists-on specification: ', u.coiid), call.=FALSE)
     
     ft.string <- paste(i.gm$geomfname, collapse=name.sep)
     return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
@@ -385,6 +399,7 @@
     # get the current feature
     f.i <- i.gm$geomfname[this.feature.idx]
     
+    # likely an error condition, print some debugging info
     if(length(f.i) == 0) {
       print(this.feature.idx)
       print(i.gm)
@@ -407,6 +422,7 @@
 }
 
 
+## https://github.com/ncss-tech/soilDB/issues/84
 # attempt to flatten component parent material data into 2 strings
 .formatcoParentMaterialString <- function(i.pm, name.sep='|') {
   # get the current site
@@ -568,10 +584,11 @@
   
   # impute NA freqcl values, default = "not populated"
   if (impute == TRUE) {
-    vars <- c("flodfreqcl", "pondfreqcl")
-    missing <- "not_populated"
-    freqcl2 <- c(missing, "none", "very rare", "rare", "common", "occasional", "frequent", "very frequent")
-    status2 <- c(missing, levels(df$status))
+    
+    missing <- "Not populated"
+    lev_flodfreqcl <- c(missing, levels(df$flodfreqcl))
+    lev_pondfreqcl <- c(missing, levels(df$pondfreqcl))
+    lev_status <- c(missing, levels(df$status))
     
     df <- within(df, {
       # replace NULL RV depths with 201 cm if pondfreqcl or flodqcl is not NULL
@@ -586,9 +603,9 @@
       depb_h = ifelse(is.na(depb_h), depb_r, depb_h)
       
       # replace NULL freqcl with "Not_Populated"
-      status = factor(status, levels = status2)
-      flodfreqcl = factor(flodfreqcl, levels = freqcl2)
-      pondfreqcl = factor(pondfreqcl, levels = freqcl2)
+      status = factor(levels(status)[status], levels = lev_status)
+      flodfreqcl = factor(levels(flodfreqcl)[flodfreqcl], levels = lev_flodfreqcl)
+      pondfreqcl = factor(levels(pondfreqcl)[pondfreqcl], levels = lev_flodfreqcl)
       
       status[is.na(status)] <- missing
       flodfreqcl[is.na(flodfreqcl)] <- missing
@@ -604,3 +621,194 @@
   
   return(df)
 }
+
+
+## https://github.com/ncss-tech/soilDB/issues/84
+# Prep of the component parent material
+# flatten multiple records into 1 cokey
+.copm_prep <- function(df, db = NULL) {
+  
+  if (db == "SDA") {
+    
+    # flatten
+    idx <- duplicated(df$cokey)
+    
+    if (any(idx)) {
+      dups_idx <- df$cokey %in% df[idx, "cokey"]
+      dups     <- df[dups_idx, ]
+      nodups   <- df[!dups_idx, ]
+      
+      # hack to make CRAN check happy
+      pmorigin = NA; pmkind = NA;
+      
+      dups_clean <- {
+        transform(dups, 
+                  idx_pmo = !is.na(pmorigin),
+                  idx_pmk = !is.na(pmkind)
+                  ) ->.;
+        split(., .$cokey, drop = TRUE) ->.
+        lapply(., function(x) { data.frame(
+          x[1, c("cokey", "pmgroupname")],
+          pmkind   = paste(x[x$idx_pmk, "pmkind"  ][order(x[x$idx_pmk, "pmorder"])],   collapse = " over "),
+          pmorigin = paste(x[x$idx_pmo, "pmorigin"][order(x[x$idx_pmo, "pmorder"])], collapse = " over "),
+          stringsAsFactors = FALSE
+          )}) ->.
+        do.call("rbind", .) ->.;
+      }
+      nodups[c("copmgrpkey", "pmorder")] <- NULL
+      
+      df <- rbind(nodups, dups_clean)  
+      df <- df[order(df$cokey), ]
+      row.names(df) <- 1:nrow(df)
+      }
+    
+    
+    # replace "" with NA
+    vars <- c("pmorigin", "pmkind")
+    idx <- unlist(lapply(df, is.character))
+    idx <- names(df) %in% vars & idx
+    df[, idx] <- lapply(df[, idx], function(x) ifelse(x == "", NA, x))
+    }
+  
+  return(df)
+  }
+
+
+## https://github.com/ncss-tech/soilDB/issues/84
+# Prep of the component geomorphic description
+# flatten multiple records into 1 cokey
+.cogmd_prep <- function(df, db = NULL) {
+  
+  # rename LIMS columns and sort comma separated lists
+  if (db == "LIMS") {
+    # rename columns
+    vars <- c("pmkind_grp", "pmorigin_grp", "gc_mntn", "gc_hill", "gc_trce", "gc_flats", "hs_hillslopeprof", "ss_shapeacross", "ss_shapedown")
+    new_names <- c("pmkind", "pmorigin", "mntn", "hill", "trce", "flats", "hillslopeprof", "shapeacross", "shapedown")
+    idx <- which(names(df) %in% vars)
+    names(df)[idx] <- new_names
+    
+    # hack to make CRAN check happy
+    mntn = NULL; hill = NULL; trce = NULL; flats = NULL; hillslopeprof = NULL;
+    
+    df <- within(df, {
+      if (class(mntn) == "character") {
+        mntn  = sapply(strsplit(mntn, ", "),  function(x) paste(sort(unlist(x)), collapse = ", "))
+        }
+      if (class(hill) == "character") {
+        hill  = sapply(strsplit(hill, ", "),  function(x) paste(sort(unlist(x)), collapse = ", "))
+        }
+      if (class(trce) == "character") {
+        trce  = sapply(strsplit(trce, ", "),  function(x) paste(sort(unlist(x)), collapse = ", "))
+        }
+      if (class(flats) == "character") {
+        flats = sapply(strsplit(flats, ", "), function(x) paste(sort(unlist(x)), collapse = ", "))
+        }
+      if (class(hillslopeprof) == "character") {
+        hillslopeprof = sapply(strsplit(hillslopeprof, ", "), function(x) paste(sort(unlist(x)), collapse = ", "))
+        }
+      })
+    }
+  
+  
+  # flatten the SDA results to 1 cokey
+  if (db == "SDA") {
+    
+    # flatten
+    idx <- duplicated(df$cokey)
+    
+    if (any(idx)) {
+      dups_idx <- df$cokey %in% df[idx, "cokey"]
+      dups     <- df[dups_idx, ]
+      nodups   <- df[!dups_idx, ]
+      
+      dups_clean <- {
+        split(dups, dups$cokey, drop = TRUE) ->.
+        lapply(., function(x) { data.frame(
+          cokey = x$cokey[1],
+          landscape     = paste(unique(x$landscape),           collapse = " and "),
+          landform      = paste(unique(x$landform),            collapse = " on  "),
+          mntn          = paste(sort(unique(x$mntn)),          collapse = ", "   ),
+          hill          = paste(sort(unique(x$hill)),          collapse = ", "   ),
+          trce          = paste(sort(unique(x$trce)),          collapse = ", "   ),
+          flats         = paste(sort(unique(x$flats)),         collapse = ", "   ),
+          shapeacross   = paste(sort(unique(x$shapeacross)),   collapse = ", "   ),
+          shapedown     = paste(sort(unique(x$shapedown)),     collapse = ", "   ),
+          hillslopeprof = paste(sort(unique(x$hillslopeprof)), collapse = ", "),
+          stringsAsFactors = TRUE
+        )}) ->.
+        do.call("rbind", .) ->.
+      }
+      nodups[c("geomfeatid", "existsonfeat")] <- NULL
+      
+      df <- rbind(nodups, dups_clean)  
+      df <- df[order(df$cokey), ]
+      row.names(df) <- 1:nrow(df)
+      }
+    }
+  
+  vars <- c("landscape", "landform", "mntn", "hill", "trce", "flats", "hillslopeprof")
+  idx <- unlist(lapply(df, is.character))
+  idx <- names(df) %in% vars & idx
+  df[, idx] <- lapply(df[, idx], function(x) ifelse(x %in% c("", "NA"), NA, x))
+  
+  # hack to make CRAN check happy
+  mntn = NA; hill = NA; trce = NA; flats = NA; shapeacross = NA; shapedown = NA;
+  
+  # combine geompos and shapes
+  df <- within(df, {
+    geompos = NA
+    geompos = paste(mntn, hill, trce, flats, sep = ", ")
+    geompos = gsub("NA", "", geompos)
+    geompos = gsub("^, |^, , |^, , , |, $|, , $|, , , $", "", geompos)
+    geompos = gsub(", , ", ", ", geompos)
+    geompos[geompos == ""] = NA
+    
+    ssa = NA # slope shape across
+    ssd = NA # slope shape down
+    slopeshape = NA
+
+    ssa = gsub("Concave", "C", shapeacross)
+    ssa = gsub("Linear",  "L", ssa)
+    ssa = gsub("Convex",  "V", ssa)
+
+    ssd = gsub("Concave", "C", shapedown)
+    ssd = gsub("Linear",  "L", ssd)
+    ssd = gsub("Convex",  "V", ssd)
+
+    slopeshape = paste0(ssd, ssa, sep = "")
+    slopeshape[slopeshape %in% c("NANA", "")] = NA
+  })
+  df[c("ssa", "ssd")] <- NULL
+  
+  ss_vars <- c("CC", "CV", "CL", "LC", "LL", "LV", "VL", "VC", "VV")
+  if (all(df$slopeshape[!is.na(df$slopeshape)] %in% ss_vars)) {
+    df$slopeshape <- factor(df$slopeshape, levels = ss_vars)
+    df$slopeshape <- droplevels(df$slopeshape)
+  }
+  
+  hs_vars <- c("Toeslope", "Footslope", "Backslope", "Shoulder", "Summit")
+  if (all(df$hillslopeprof[!is.na(df$hillslopeprof)] %in% hs_vars)) {
+    df$hillslopeprof <- factor(df$hillslopeprof, levels = hs_vars)
+    df$hillslopeprof <- droplevels(df$hillslopeprof)
+  }
+  
+  hill_vars <- c("Base Slope", "Head Slope", "Side Slope", "Free Face", "Nose Slope", "Crest", "Interfluve")
+  if (all(df$hill[!is.na(df$hill)] %in% hill_vars)) {
+    df$hill <- factor(df$hill, levels = hill_vars)
+    df$hill <- droplevels(df$hill)
+  }
+  
+  flats_vars <- c("Dip", "Talf", "Rise")
+  if (all(df$flats[!is.na(df$flats)] %in% flats_vars)) {
+    df$flats <- factor(df$flats, levels = flats_vars)
+    df$flats <- droplevels(df$flats)
+  }
+  
+  trce_vars <- c("Tread", "Riser")
+  if (all(df$trce[!is.na(df$trce)] %in% trce_vars)) {
+    df$trce <- factor(df$trce, levels = trce_vars)
+    df$trce <- droplevels(df$trce)
+  }
+
+  return(df)
+  }

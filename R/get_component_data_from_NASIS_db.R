@@ -6,24 +6,102 @@
 ## 
 
 
-## just the components
+## component diagnostic features
+get_component_diaghz_from_NASIS_db <- function(SS=TRUE) {
+  
+  # must have RODBC installed
+  if(!requireNamespace('RODBC'))
+    stop('please install the `RODBC` package', call.=FALSE)
+  
+  # setup connection local NASIS
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
+  
+  # query diagnostic horizons, usually a 1:many relationship with pedons
+  q <- "SELECT coiidref as coiid, featkind, featdept_r, featdepb_r
+  FROM 
+  codiagfeatures_View_1 AS cdf
+  ORDER BY cdf.coiidref, cdf.featdept_r;"
+  
+  # toggle selected set vs. local DB
+  if(SS == FALSE) {
+    q <- gsub(pattern = '_View_1', replacement = '', x = q, fixed = TRUE)
+  }
+  
+  # exec query
+  d <- RODBC::sqlQuery(channel, q, stringsAsFactors=FALSE)
+  
+  # close connection
+  RODBC::odbcClose(channel)
+  
+  # convert codes
+  d <- uncode(d)
+}
+
+## get map unit text from local NASIS
+get_mutext_from_NASIS_db <- function(SS=TRUE, fixLineEndings=TRUE) {
+  # must have RODBC installed
+  if(!requireNamespace('RODBC'))
+    stop('please install the `RODBC` package', call.=FALSE)
+  
+  q <- "SELECT mu.muiid, mu.mukind, mu.mutype, mu.muname, mu.nationalmusym,
+  mut.seqnum, mut.recdate, mut.recauthor, mut.mapunittextkind, mut.textcat, mut.textsubcat, mut.textentry
+  
+  FROM 
+  mapunit_View_1 AS mu
+  INNER JOIN mutext_View_1 AS mut ON mu.muiid = mut.muiidref
+  
+  ;
+  "
+  # setup connection local NASIS
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
+  
+  # toggle selected set vs. local DB
+  if(SS == FALSE) {
+    q <- gsub(pattern = '_View_1', replacement = '', x = q, fixed = TRUE)
+  }
+  
+  # exec query
+  d <- RODBC::sqlQuery(channel, q, stringsAsFactors=FALSE)
+  
+  # close connection
+  RODBC::odbcClose(channel)
+  
+  # convert codes
+  d <- uncode(d)
+  
+  # replace tabs with spaces
+  # tabs at the beginning of a line will confuse the MD parser, generating <code><pre> blocks
+  d$textentry <- gsub(d$textentry, pattern = '\t', replacement = ' ', fixed = TRUE)
+  
+  # optionally convert \r\n -> \n
+  if(fixLineEndings){
+    d$textentry <- gsub(d$textentry, pattern = '\r\n', replacement = '\n', fixed = TRUE)
+  }
+  
+  
+  # done
+  return(d)
+}
+
+
+
+
+## just the component records, nothing above or below
 get_component_data_from_NASIS_db <- function(SS=TRUE, stringsAsFactors = default.stringsAsFactors()) {
   # must have RODBC installed
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
   
-  q <- "SELECT dmudesc, compname, comppct_r, compkind, majcompflag, localphase, drainagecl, pmgroupname, elev_r, slope_l, slope_r, slope_h, aspectrep, map_r, airtempa_r as maat_r, soiltempa_r as mast_r, reannualprecip_r, ffd_r, tfact, wei, weg, nirrcapcl, nirrcapscl, irrcapcl, irrcapscl, frostact, hydgrp, corcon, corsteel, taxclname, taxorder, taxsuborder, taxgrtgroup, taxsubgrp, taxpartsize, taxpartsizemod, taxceactcl, taxreaction, taxtempcl, taxmoistscl, taxtempregime, soiltaxedition, coiid, dmuiid
+  q <- "SELECT dmudesc, compname, comppct_r, compkind, majcompflag, localphase, drainagecl, elev_l, elev_r, elev_h, slope_l, slope_r, slope_h, aspectccwise, aspectrep, aspectcwise, map_l, map_r, map_h, airtempa_l as maat_l, airtempa_r as maat_r, airtempa_h as maat_h, soiltempa_r as mast_r, reannualprecip_r, ffd_l, ffd_r, ffd_h, tfact, wei, weg, nirrcapcl, nirrcapscl, nirrcapunit, irrcapcl, irrcapscl, irrcapunit, frostact, hydricrating, hydgrp, corcon, corsteel, taxclname, taxorder, taxsuborder, taxgrtgroup, taxsubgrp, taxpartsize, taxpartsizemod, taxceactcl, taxreaction, taxtempcl, taxmoistscl, taxtempregime, soiltaxedition, coiid, dmuiid
   
   FROM 
   datamapunit_View_1 AS dmu 
   INNER JOIN component_View_1 AS co ON co.dmuiidref = dmu.dmuiid 
-  LEFT OUTER JOIN copmgrp_View_1 ON copmgrp_View_1.coiidref = co.coiid 
-  WHERE copmgrp_View_1.rvindicator = 1
 
   ORDER BY dmudesc, comppct_r DESC, compname ASC;"
   
   # setup connection local NASIS
-  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {
@@ -46,13 +124,89 @@ get_component_data_from_NASIS_db <- function(SS=TRUE, stringsAsFactors = default
   
   # test for no data
   if(nrow(d) == 0)
-    stop('there are no NASIS components in your selected set!')
+    stop('there are no NASIS components in your selected set!', call. = FALSE)
   
   # uncode metadata domains
   d <- uncode(d, stringsAsFactors = stringsAsFactors)
   
   # done
   return(d)
+}
+
+
+get_mapunit_from_NASIS <- function(SS = TRUE, stringsAsFactors = default.stringsAsFactors()) {
+  # must have RODBC installed
+  if(!requireNamespace('RODBC'))
+    stop('please install the `RODBC` package', call.=FALSE)
+  
+  q.mapunit <- paste("
+                     SELECT 
+                     mlraoffice, ng.grpname, areasymbol, areaname, areaacres, ssastatus, cordate, projectscale, 
+                     lmapunitiid, nationalmusym, musym, muname, mukind, mutype, mustatus, muacres, farmlndcl,
+                     pct_hydric, pct_component, n_component, n_majcompflag
+                     
+                     FROM  
+                         area            a                               INNER JOIN 
+                         legend_View_1   l   ON l.areaiidref = a.areaiid INNER JOIN
+                         lmapunit_View_1 lmu ON lmu.liidref = l.liid     INNER JOIN 
+                         mapunit_View_1  mu  ON mu.muiid = lmu.muiidref
+                     
+                    INNER JOIN
+                         areatype at  ON at.areatypeiid = areatypeiidref
+
+                    INNER JOIN 
+                        nasisgroup  ng ON ng.grpiid = mu.grpiidref
+                    
+                    LEFT OUTER JOIN  
+                    --components
+                    (SELECT 
+                     cor.muiidref cor_muiidref, 
+                     SUM(comppct_r * CASE WHEN hydricrating = 1 THEN 1 ELSE 0 END) pct_hydric,
+                     SUM(comppct_r)                                                 pct_component,
+                     COUNT(*)                                                       n_component,
+                     SUM(CASE WHEN majcompflag  = 1 THEN 1 ELSE 0 END)              n_majcompflag
+   
+                     FROM     
+                         component_View_1   co                                  LEFT OUTER JOIN
+                         datamapunit_View_1 dmu ON dmu.dmuiid    = co.dmuiidref LEFT OUTER JOIN
+                         correlation_View_1 cor ON cor.dmuiidref = dmu.dmuiid   AND
+                                                   cor.repdmu    = 1
+
+                     GROUP BY cor.muiidref
+                    ) co ON co.cor_muiidref = mu.muiid
+
+                     WHERE
+                         legendsuituse = 3              AND
+                         mustatus IN (2, 3)             AND
+                         areatypename = 'Non-MLRA Soil Survey Area'
+
+                     ORDER BY mlraoffice, areasymbol, musym
+                     ;")
+  
+  # toggle selected set vs. local DB
+  if(SS == FALSE) {
+    q.mapunit <- gsub(pattern = '_View_1', replacement = '', x = q.mapunit, fixed = TRUE)
+  }
+  
+  # setup connection local NASIS
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
+  
+  # exec query
+  d.mapunit <- RODBC::sqlQuery(channel, q.mapunit, stringsAsFactors=FALSE)
+  
+  # close connection
+  RODBC::odbcClose(channel)
+  
+  # recode metadata domains
+  d.mapunit <- uncode(d.mapunit, db = "NASIS", stringsAsFactors = stringsAsFactors)
+  
+  
+  # cache original column names
+  orig_names <- names(d.mapunit)
+  
+  
+  # done
+  return(d.mapunit)
 }
 
 
@@ -63,7 +217,7 @@ get_component_correlation_data_from_NASIS_db <- function(SS=TRUE, dropAdditional
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
   
-  q <- "SELECT mu.muiid, musym, nationalmusym, mu.muname, mukind, mutype, mustatus, muacres, farmlndcl, repdmu, dmuiid, areasymbol, areaname, ssastatus, cordate
+  q <- "SELECT lmapunitiid, mu.muiid, musym, nationalmusym, mu.muname, mukind, mutype, mustatus, muacres, farmlndcl, repdmu, dmuiid, areasymbol, areaname, ssastatus, cordate
   
   FROM  mapunit_View_1 AS mu
   
@@ -76,7 +230,7 @@ get_component_correlation_data_from_NASIS_db <- function(SS=TRUE, dropAdditional
   ORDER BY nationalmusym, dmuiid;"
   
   # setup connection local NASIS
-  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {
@@ -149,7 +303,7 @@ get_component_cogeomorph_data_from_NASIS_db <- function(SS=TRUE) {
   ORDER BY coiid, geomfeatid ASC;"
   
   # setup connection local NASIS
-  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {
@@ -184,7 +338,7 @@ get_component_copm_data_from_NASIS_db <- function(SS=TRUE, stringsAsFactors = de
   ORDER BY coiidref, seqnum, pmorder, copmgrpiid ASC;" 
   
   # setup connection local NASIS
-  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {
@@ -217,12 +371,12 @@ get_component_esd_data_from_NASIS_db <- function(SS=TRUE, stringsAsFactors = def
   
   FROM coecosite_View_1 AS coecosite
   
-  INNER JOIN ecologicalsite_View_1 AS es ON es.ecositeiid = coecosite.ecositeiidref
+  INNER JOIN ecologicalsite AS es ON es.ecositeiid = coecosite.ecositeiidref
   
   ORDER BY coiid;"
   
   # setup connection local NASIS
-  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {
@@ -237,9 +391,9 @@ get_component_esd_data_from_NASIS_db <- function(SS=TRUE, stringsAsFactors = def
   
   # check for more than 1 record / coiid
   idx <- which(table(d$coiid) > 1)
+  dupes <- names(idx)
+  assign('multiple.ecosite.per.coiid', value=dupes, envir=soilDB.env)
   if(length(idx) > 0) {
-    dupes <- names(idx)
-    assign('multiple.ecosite.per.coiid', value=dupes, envir=soilDB.env)
     message("-> QC: multiple ecosites / component. Use `get('multiple.ecosite.per.coiid', envir=soilDB.env)` for related coiid values.")
   }
   
@@ -263,7 +417,7 @@ get_component_otherveg_data_from_NASIS_db <- function(SS=TRUE) {
   ORDER BY coiid;"
   
   # setup connection local NASIS
-  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {
@@ -300,7 +454,7 @@ get_comonth_from_NASIS_db <- function(SS=TRUE, fill=FALSE, stringsAsFactors = de
   FROM comonth_View_1 AS comonth;"
   
   # setup connection local NASIS
-  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {
@@ -395,7 +549,7 @@ get_copedon_from_NASIS_db <- function(SS=TRUE) {
   LEFT OUTER JOIN pedon_View_1 p ON p.peiid = copedon.peiidref;
   "
   # setup connection local NASIS
-  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {
@@ -425,7 +579,7 @@ get_component_horizon_data_from_NASIS_db <- function(SS=TRUE, fill = FALSE) {
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
   
-  q <- "SELECT coiid, chiid, hzname, hzdept_r, hzdepb_r, texture, fragvoltot_l, fragvoltot_r, fragvoltot_h, sandtotal_l, sandtotal_r, sandtotal_h, silttotal_l, silttotal_r, silttotal_h, claytotal_l, claytotal_r, claytotal_h, om_l, om_r, om_h, structgrpname, dbthirdbar_l, dbthirdbar_r, dbthirdbar_h, ksat_l, ksat_r, ksat_h, awc_l, awc_r, awc_h, lep_r, sar_r, ec_r, cec7_r, sumbases_r, ph1to1h2o_l, ph1to1h2o_r, ph1to1h2o_h, caco3_l, caco3_r, caco3_h
+  q <- "SELECT coiid, chiid, hzname, hzdept_r, hzdepb_r, texture, fragvoltot_l, fragvoltot_r, fragvoltot_h, sandtotal_l, sandtotal_r, sandtotal_h, silttotal_l, silttotal_r, silttotal_h, claytotal_l, claytotal_r, claytotal_h, om_l, om_r, om_h, structgrpname, dbthirdbar_l, dbthirdbar_r, dbthirdbar_h, ksat_l, ksat_r, ksat_h, awc_l, awc_r, awc_h, lep_r, sar_r, ec_r, cec7_r, sumbases_r, ph1to1h2o_l, ph1to1h2o_r, ph1to1h2o_h, ph01mcacl2_l, ph01mcacl2_r, ph01mcacl2_h, caco3_l, caco3_r, caco3_h
   
   FROM
   component_View_1 co 
@@ -440,7 +594,7 @@ get_component_horizon_data_from_NASIS_db <- function(SS=TRUE, fill = FALSE) {
   
   
   # setup connection local NASIS
-  channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {

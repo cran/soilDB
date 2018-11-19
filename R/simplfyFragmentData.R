@@ -1,5 +1,7 @@
 
 # internally-used function to test size classes
+# diameter is in mm
+# NA diameter results in NA class
 .sieve <- function(diameter, flat=FALSE, para=FALSE) {
   
   # flat fragments
@@ -25,7 +27,7 @@
     
     # change names if we are working with parafrags
     if(para == TRUE)
-      res <- paste0('para', res)
+      res[no.na.idx] <- paste0('para', res[no.na.idx])
   }
   
   return(res)  
@@ -98,56 +100,110 @@
 # rf: un-coded contents of the phfrags table
 # id.var: id column name
 # nullFragsAreZero: convert NA to 0?
-simplfyFragmentData <- function(rf, id.var, nullFragsAreZero=TRUE) {
+simplifyFragmentData <- function(rf, id.var, nullFragsAreZero=TRUE) {
   
   # nasty hack to trick R CMD check
   fragvol <- NULL
   
+  # fragment classes used in this function
+  frag.classes <- c('fine_gravel', 'gravel', 'cobbles', 'stones', 'boulders', 'channers', 'flagstones', 'parafine_gravel', 'paragravel', 'paracobbles', 'parastones', 'paraboulders', 'parachanners', 'paraflagstones')
+  
+  # first of all, we can't do anything if the fragment volume is NA
+  # warn the user and remove the offending records
+  if(any(is.na(rf$fragvol))) {
+    warning('some records are missing rock fragment volume, these have been removed', call. = FALSE)
+  }
+  rf <- rf[which(!is.na(rf$fragvol)), ]
+  
   # extract classes
   rf.classes <- .rockFragmentSieve(rf)
   
-  ## note: this must include all classes that related functions return
-  # set levels of classes
-  rf.classes$class <- factor(rf.classes$class, levels=c('fine_gravel', 'gravel', 'cobbles', 'stones', 'boulders', 'channers', 'flagstones', 'parafine_gravel', 'paragravel', 'paracobbles', 'parastones', 'paraboulders', 'parachanners', 'paraflagstones'))
-  
+  ## NOTE: this is performed on the data, as-is: not over all possible classes as enforced by factor levels
   # sum volume by id and class
-  rf.sums <- ddply(rf.classes, c(id.var, 'class'), plyr::summarise, volume=sum(fragvol, na.rm=TRUE), .drop=FALSE)
+  rf.sums <- ddply(rf.classes, c(id.var, 'class'), plyr::summarise, volume=sum(fragvol, na.rm=TRUE))
+  
+  ## NOTE: we set factor levels here because the reshaping (long->wide) needs to account for all possible classes
+  ## NOTE: this must include all classes that related functions return
+  # set levels of classes
+  rf.sums$class <- factor(rf.sums$class, levels=frag.classes)
   
   # convert to wide format
   fm <- as.formula(paste0(id.var, ' ~ class'))
-  rf.wide <- dcast(rf.sums, fm, value.var = 'volume', DROP = FALSE)
+  rf.wide <- reshape2::dcast(rf.sums, fm, value.var = 'volume', drop = FALSE)
   
-  # fix "NA" column name
+  # must determine the index to the ID column in the wide format
+  id.col.idx <- which(names(rf.wide) == id.var)
+  
+  ## a thought:
+  # what does an NA fragment class mean?
+  # 
+  # typically, fragment size missing
+  # or, worst-case, .sieve() rules are missing criteria 
+  # 
+  # keep track of these for QC in an 'unspecified' column
+  #
   if(any(names(rf.wide) == 'NA'))
     names(rf.wide)[which(names(rf.wide) == 'NA')] <- 'unspecified'
   
-  # convert NULL frags -> 0
+  
+  ## optionally convert NULL frags -> 0
   if(nullFragsAreZero & ncol(rf.wide) > 1) {
     rf.wide <- as.data.frame(
-      cbind(rf.wide[, 1, drop=FALSE], 
-            lapply(rf.wide[, -1], function(i) ifelse(is.na(i), 0, i))
+      cbind(rf.wide[, id.col.idx, drop=FALSE], 
+            lapply(rf.wide[, -id.col.idx], function(i) ifelse(is.na(i), 0, i))
       ), stringsAsFactors=FALSE)
   }
   
-  # compute total fragments
-  # trap no frag condition
-  if(ncol(rf.wide) > 1) {
-    #calculate another column for total RF, ignoring parafractions
-    rf.wide$total_frags_pct_nopf <- rowSums(rf.wide[,c(FALSE,!grepl(levels(rf.classes$class),pattern="para"))], na.rm=TRUE)
+  # final sanity check: are there any fractions or the total >= 100%
+  # note: sapply() was previously used here
+  #       1 row in rf.wide --> result is a vector
+  #       >1 row in rf.wide --> result is a matrix
+  # solution: keep as a list
+  gt.100 <- lapply(rf.wide[, -id.col.idx, drop=FALSE], FUN=function(i) i >= 100)
+  
+  # check each size fraction and report id.var if there are any
+  gt.100.matches <- sapply(gt.100, any, na.rm=TRUE)
+  if(any(gt.100.matches)) {
+    # search within each fraction
+    class.idx <- which(gt.100.matches)
+    idx <- unique(unlist(lapply(gt.100[class.idx], which)))
+    flagged.ids <- rf.wide[[id.var]][idx]
     
-    #calculate total fragments (including para)
-    rf.wide$total_frags_pct <- rowSums(rf.wide[, -c(1,length(names(rf.wide)))], na.rm=TRUE)
+    warning(sprintf("fragment volume >= 100%%\n%s:\n%s", id.var, paste(flagged.ids, collapse = "\n")), call. = FALSE)
   }
   
+  ## TODO: 0 is returned when all NA and nullFragsAreZero=FALSE
+  ## https://github.com/ncss-tech/soilDB/issues/57
+  # compute total fragments
+  # trap no frag condition
+  # includes unspecified class
+  if(ncol(rf.wide) > 1) {
+    # calculate another column for total RF, ignoring parafractions
+    # index of columns to ignore, para*
+    idx.pf <- grep(names(rf.wide), pattern="para")
+    # also remove ID column
+    idx <- c(id.col.idx, idx.pf)
+    # this could result in an error if all fragments are para*
+    rf.wide$total_frags_pct_nopf <- rowSums(rf.wide[, -idx], na.rm=TRUE)
+    
+    # calculate total fragments (including para)
+    # excluding ID and last columns
+    idx <- c(id.col.idx, length(names(rf.wide)))
+    rf.wide$total_frags_pct <- rowSums(rf.wide[, -idx], na.rm=TRUE)
+  }
+  
+  ## TODO: 0 is returned when all NA and nullFragsAreZero=FALSE
+  ## https://github.com/ncss-tech/soilDB/issues/57
   # corrections:
   # 1. fine gravel is a subset of gravel, therefore: gravel = gravel + fine_gravel
-  rf.wide$gravel <- rf.wide$gravel + rf.wide$fine_gravel
-  rf.wide$paragravel <- rf.wide$paragravel + rf.wide$parafine_gravel
+  rf.wide$gravel <- rowSums(cbind(rf.wide$gravel, rf.wide$fine_gravel), na.rm = TRUE)
+  rf.wide$paragravel <- rowSums(cbind(rf.wide$paragravel, rf.wide$parafine_gravel), na.rm=TRUE)
   
   # done
   return(rf.wide)
-  
 }
 
-
+# crap, backwards compatibility for typo
+# https://github.com/ncss-tech/soilDB/issues/43
+simplfyFragmentData <- simplifyFragmentData
 

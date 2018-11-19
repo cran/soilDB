@@ -24,8 +24,9 @@ parseWebReport <- function(url, args, index=1) {
     stop('please install the package: rvest', call. = FALSE)
   
   # parse args and create final URL
-  URLargs <- paste0('&', paste(names(args), unlist(args), sep='='), collapse='')
-  url <- paste0(url, URLencode(URLargs, reserved = FALSE))
+  args2 <- lapply(args, function(x) URLencode(as.character(x), reserved = TRUE))
+  URLargs <- paste0('&', paste(names(args2), unlist(args2), sep = '='), collapse='')
+  url <- paste0(url, URLargs)
   
   # get HTML, result is NULL when HTTP ERROR is encountered
   # using curl package functions / low level options to account for slow servers
@@ -58,9 +59,9 @@ parseWebReport <- function(url, args, index=1) {
   }
   
   # replace blanks with NA, problem with LIMS reports
-  idx <- unlist(lapply(df, is.character))
+  idx <- unlist(lapply(d, is.character))
   if (any(idx)) {
-    df[idx] <- lapply(df[idx], function(x) ifelse(x == "", NA, x))
+    d[idx] <- lapply(d[idx], function(x) ifelse(x == "", NA, x))
   }
   
   # note: col names aren't legal data.frame names

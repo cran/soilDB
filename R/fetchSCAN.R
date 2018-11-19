@@ -29,6 +29,13 @@
 ##   https://github.com/gunnarleffler/getSnotel
 ##
 
+## site images:
+## https://www.wcc.nrcs.usda.gov/siteimages/462.jpg
+## 
+## site notes: 
+## https://wcc.sc.egov.usda.gov/nwcc/sitenotes?sitenum=462
+##
+
 
 ## TODO: this crashes on 32bit R / libraries
 # helper function for getting a single table of SCAN metadata
@@ -95,6 +102,25 @@ SCAN_sensor_metadata <- function(site.code) {
 }
 
 
+
+## https://github.com/ncss-tech/soilDB/issues/61
+# site.code: vector of SCAN site codes
+SCAN_site_metadata <- function(site.code) {
+
+  # hack to please R CMD check
+  SCAN_SNOTEL_metadata <- NULL
+  
+  # cached copy available in soilDB::SCAN_SNOTEL_metadata
+  load(system.file("data/SCAN_SNOTEL_metadata.rda", package="soilDB")[1])
+  
+  # subset requested codes
+  res <- SCAN_SNOTEL_metadata[which(SCAN_SNOTEL_metadata$Site %in% site.code), ]
+  
+  return(res)
+}
+
+
+
 # site.code: vector of site codes
 # year: vector of years
 # report: single report type
@@ -107,6 +133,12 @@ fetchSCAN <- function(site.code, year, report='SCAN', req=NULL) {
     return(.get_SCAN_data(req))
   }
   
+  # init list to store results
+  res <- list()
+  
+  # add metadata from cached table in soilDB
+  m <- SCAN_site_metadata(site.code)
+  res[['metadata']] <- m
   
   # all possible combinations of site codes and year | single report type
   g <- expand.grid(s=site.code, y=year, r=report)
@@ -133,8 +165,7 @@ fetchSCAN <- function(site.code, year, report='SCAN', req=NULL) {
     
   }
   
-  # init list to store results
-  res <- list()
+  # iterate over sensors
   for(sensor.i in sensors) {
     # flatten individual sensors over years, by site number
     r.i <- ldply(llply(d.list[[sensor.i]], ldply))
@@ -203,20 +234,13 @@ fetchSCAN <- function(site.code, year, report='SCAN', req=NULL) {
     
   
   ## BUG in the data output from SCAN!
-  # multiple rows on Sept 30th of each year
+  # mulitple rows / day, second row in set has NA in sensor values
+  # this is related to site visits
   # https://github.com/ncss-tech/soilDB/issues/26
-  
-  # locate duplicate records
-  idx <- which(format(d.long$Date, "%b-%d") == 'Sep-30')
-  
-  # if there are 2 matching records
-  # then the second record is usually the "wrong" one
-  # remove it
-  if(length(idx) > 1) {
-    d.long <- d.long[-idx[2], ]
-  }
-  
-  ## BUG ^^^^
+  # 
+  # solution is simple remove NAs
+  idx <- which(!is.na(d.long$value))
+  d.long <- d.long[idx, ]
   
   # format and return
   return(d.long[, c('Site', 'Date', 'value', 'depth', 'sensor.id')])
@@ -269,7 +293,9 @@ fetchSCAN <- function(site.code, year, report='SCAN', req=NULL) {
   tc <- textConnection(r.content)
   
   # attempt to read column headers, after skipping the first two lines of data
-  h <- unlist(read.table(tc, nrows=1, skip=2, header=FALSE, stringsAsFactors=FALSE, sep=',', quote='', strip.white=TRUE, na.strings='-99.9', comment.char=''))
+  # note: this moves the text connection cursor forward 3 lines
+  # 2018-03-06 DEB: results have an extra line up top, now need to skip 3 lines
+  h <- unlist(read.table(tc, nrows=1, skip=3, header=FALSE, stringsAsFactors=FALSE, sep=',', quote='', strip.white=TRUE, na.strings='-99.9', comment.char=''))
   
   # the last header is junk (NA)
   h <- as.vector(na.omit(h))

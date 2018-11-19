@@ -1,103 +1,6 @@
 ## TODO: better checking of inputs, as the entitre DB could be downloaded by accident!!
 
-## TODO: vectorize
-# vectors of MAST, summer mean, winter mean all in Deg C
-.estimateSTR <- function(mast, mean.summer, mean.winter) {
-  
-  # check to make sure that the lengths of vectors are the same
-  if(! all.equal(length(mast), length(mean.summer), length(mean.winter)))
-    stop('inputs must all have the same length', call. = TRUE)
-  
-  # iterate over input
-  n <- length(mast)
-  res <- vector(mode = 'character', length = n)
-  
-  for(i in seq_along(mast)) {
-    # check for NA
-    if(any(is.na(c(mast[i], mean.summer[i], mean.winter[i])))){
-      res[i] <- NA
-      next
-    }
-    
-    # gelic, suborder and GG levels
-    if(mast[i] <= 0) {
-      res[i] <- 'gelic*'
-      next
-    }
-    
-    # gelic, order level
-    if(mast[i] <= 1) {
-      res[i] <- 'gelic*'
-      next
-    }
-    
-    
-    # possibly cryic, because we don't know saturation and O hz status
-    if(mast[i] <= 8) {
-      if(mean.summer[i] <= 8) {
-        res[i] <- 'cryic*'
-        next
-      }
-    }
-    
-    # frigid
-    if(mast[i] <= 8) {
-      if(mean.summer[i] - mean.winter[i] >= 6) {
-        res[i] <- 'frigid*'
-        next
-      }
-      else {
-        res[i] <- 'isofrigid'
-        next
-      }
-    }
-    
-    # mesic
-    if(mast[i] >= 8 & mast[i] < 15) {
-      if(mean.summer[i] - mean.winter[i] >= 6) {
-        res[i] <- 'mesic'
-        next
-      }
-      else {
-        res[i] <- 'isomesic'
-        next
-      }
-    }
-    
-    # thermic
-    if(mast[i] >= 15 & mast[i] < 22) {
-      if(mean.summer[i] - mean.winter[i] >= 6){
-        res[i] <- 'thermic'
-        next
-      }
-      else {
-        res[i] <- 'isothermic'
-        next
-      }
-    }
-    
-    # hyperthermic
-    if(mast[i] >= 22) {
-      if(mean.summer[i] - mean.winter[i] >= 6) {
-        res[i] <- 'hyperthermic'
-        next
-      }
-      else {
-        res[i] <- 'isohyperthermic'
-        next
-      }
-    }
-    
-    # unknown
-    res[i] <- NA
-  }
-  
-  # set levels
-  res <- factor(res, levels=c('gelic*', 'cryic*','frigid*','isofrigid','mesic','isomesic','thermic','isothermic','hyperthermic','isohyperthermic'))
-  
-  # done
-  return(res)
-}
+
 
 # # TODO: finish this
 # .summarizeSoilVWC <- function(soilVWC.data) {
@@ -122,7 +25,7 @@
 
 
 # summarize daily values via julian day
-.summarizeSoilTemperature <- function(soiltemp.data) {
+summarizeSoilTemperature <- function(soiltemp.data) {
   
   # hacks to make R CMD check --as-cran happy:
   n <- NULL
@@ -157,7 +60,7 @@
   
   # convert DOY -> month
   d$month <- format(as.Date(as.character(d$doy), format="%j"), "%b")
-  d$season <- .month2season(d$month)
+  d$season <- month2season(d$month)
   
   # compute unbiased MAST, number of obs, complete records per average no. days in year
   d.mast <- ddply(d, 'sid', .fun=plyr::summarize, 
@@ -178,15 +81,16 @@
   d.summary <- join(d.summary, cr.2, by='sid')
   d.summary <- join(d.summary, fy, by='sid')
   
-  # estimate STR, note that gelic / cryic assignment is problematic
-  d.summary$STR <- .estimateSTR(d.summary$MAST, d.summary$Summer, d.summary$Winter)
+  # estimate STR
+  # note that gelic / cryic assignment is problematic when missing O horizon / saturation details
+  d.summary$STR <- estimateSTR(d.summary$MAST, d.summary$Summer, d.summary$Winter)
   
   # re-shuffle columns and return
   return(d.summary[, c('sid', 'days.of.data', 'gap.index', 'functional.yrs', 'complete.yrs', 'MAST', 'Winter', 'Summer', 'STR')])
 }
 
 
-.month2season <- function(x) {
+month2season <- function(x) {
   season <- rep(NA, times=length(x))
   season[x %in% c('Jun', 'Jul', 'Aug')] <- 'Summer'
   season[x %in% c('Dec', 'Jan', 'Feb')] <- 'Winter'
@@ -246,7 +150,7 @@
     }
     
     # add-in seasons
-    sensor.data$season <- .month2season(sensor.data$month)
+    sensor.data$season <- month2season(sensor.data$month)
   }
   
   return(sensor.data)
@@ -355,7 +259,7 @@ fetchHenry <- function(what='all', usersiteid=NULL, project=NULL, sso=NULL, gran
         stop('soil temperature summaries can only be computed from daily data', call. = FALSE)
       
       # compute unbiased estimates of MAST and summer/winter temp
-      soiltemp.summary <- .summarizeSoilTemperature(s$soiltemp)
+      soiltemp.summary <- summarizeSoilTemperature(s$soiltemp)
       
       # combine summaries and join to sensors data
       por <- join(por, soiltemp.summary, by='sid')

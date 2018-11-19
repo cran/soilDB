@@ -1,32 +1,45 @@
-## NOTE: this function assumes that the series name in osd.osd_colors exactly matches seriesname in osd.taxa
 
-# fetch basic OSD data from the SoilWeb snapshot of the SC database
-fetchOSD <- function(soils, colorState='moist') {
+# 2018-10-11: updated to new API, URL subject to change
+# fetch basic OSD, SC, and SoilWeb summaries from new API
+fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	
-	# base URLs
-	u.osd_site <- 'https://casoilresource.lawr.ucdavis.edu/soil_web/reflector_api/soils.php?what=osd_site_query&q_string='
-	u.osd_hz <- 'https://casoilresource.lawr.ucdavis.edu/soil_web/reflector_api/soils.php?what=osd_query&q_string='
-	
-	# compile URL + requested soil series
-  # note: not affected by horizon names with prime (')
-	u.site <- paste(u.osd_site, paste(soils, collapse=','), sep='')
-	u.hz <- paste(u.osd_hz, paste(soils, collapse=','), sep='')
-	
-	# encode special characters into URLS
-	u.site <- URLencode(u.site)
-	u.hz <- URLencode(u.hz)
-	
-	# init empty vars
-	s <- NULL
-	h <- NULL
-	
-	# request data
-	try(s <- read.csv(url(u.site), stringsAsFactors=FALSE), silent=TRUE)
-	try(h <- read.csv(url(u.hz), stringsAsFactors=FALSE), silent=TRUE)
-	
+  # sanity check
+  if( !requireNamespace('jsonlite', quietly=TRUE))
+    stop('please install the `jsonlite` package', call.=FALSE)
+  
+  
+  # compose query
+  # note: this is the load-balancer
+  if(extended) {
+    url <- 'https://casoilresource.lawr.ucdavis.edu/api/soil-series.php?q=all&s='
+  } else {
+    url <- 'https://casoilresource.lawr.ucdavis.edu/api/soil-series.php?q=site_hz&s='
+  }
+  
+  # format series list and append to url
+  final.url <- paste(url, URLencode(paste(soils, collapse=',')), sep='')
+  
+  # attempt query to API, result is JSON
+  res <- try(jsonlite::fromJSON(final.url))
+  
+  ## TODO: further testing / message detail required
+  # trap errors
+  if(class(res) == 'try-error'){
+    message('error')
+    return(NULL)
+  }
+  
+  # extract site+hz data
+  # these will be FALSE if query returns NULL
+  s <- res$site
+  h <- res$hz
+  
 	# report missing data
-	if(any(c(is.null(s), is.null(h)))) {
-		stop('query returned no data', call.=FALSE)
+  # no data condition: s == FALSE | h == FALSE
+  # otherwise both will be a data.frame
+	if( (is.logical(s) & length(s) == 1) | (is.logical(h) & length(s) == 1)) {
+		message('query returned no data')
+	  return(NULL)
 	}
 	
 	# reformatting and color conversion
@@ -70,6 +83,55 @@ fetchOSD <- function(soils, colorState='moist') {
 	s$seriesname <- NULL
 	site(h) <- s
 	
-	# done
-	return(h)
+	# standard or extended version?
+	if(extended) {
+	  # extended
+	  # if available, split climate summaries into annual / monthly and add helper columns
+	  # FALSE if missing
+	  if(class(res$climate) == 'data.frame') {
+	    # split annual from monthly climate summaries
+	    annual.data <- res$climate[grep('ppt|pet', res$climate$climate_var, invert = TRUE), ]
+	    monthly.data <- res$climate[grep('ppt|pet', res$climate$climate_var), ]
+	    
+	    # add helper columns to monthly data
+	    monthly.data$month <- factor(as.numeric(gsub('ppt|pet', '', monthly.data$climate_var)))
+	    monthly.data$variable <- gsub('[0-9]', '', monthly.data$climate_var)
+	    monthly.data$variable <- factor(monthly.data$variable, levels = c('pet', 'ppt'), labels=c('Potential ET (mm)', 'Precipitation (mm)'))
+	  }
+	  
+	  ## must check for data, no data is returned as FALSE
+	  
+	  # fix column names in pmkind and pmorigin tables
+	  if(class(res$pmkind) == 'data.frame')
+	    names(res$pmkind) <- c('series', 'pmkind', 'n', 'total', 'P')
+	  
+	  if(class(res$pmorigin) == 'data.frame')
+	    names(res$pmorigin) <- c('series', 'pmorigin', 'n', 'total', 'P')
+	  
+	  # fix column names in competing series
+	  if(class(res$competing) == 'data.frame')
+	    names(res$competing) <- c('series', 'competing', 'family')
+	  
+	  # compose into a list
+	  data.list <- list(
+	    SPC=h,
+	    competing=res$competing,
+	    geomcomp=res$geomcomp,
+	    hillpos=res$hillpos,
+	    mtnpos=res$mtnpos,
+	    pmkind=res$pmkind,
+	    pmorigin=res$pmorigin,
+	    mlra=res$mlra,
+	    climate.annual=annual.data,
+	    climate.monthly=monthly.data
+	  )
+	  
+	  return(data.list)
+	  
+	} else {
+	  # standard
+	  return(h) 
+	}
+
+	
 }

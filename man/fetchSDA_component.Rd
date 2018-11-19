@@ -5,23 +5,29 @@
 \alias{get_chorizon_from_SDA}
 \alias{get_cosoilmoist_from_SDA}
 \alias{get_cosoilmoist_from_NASIS}
+\alias{get_cointerp_from_SDA}
 
 \title{Extract component tables from Soil Data Access}
 \description{Get, format, impute, and return component tables.}
 \usage{
-fetchSDA_component(WHERE = NULL, duplicates = FALSE, rmHzErrors = FALSE, 
+fetchSDA_component(WHERE = NULL, duplicates = FALSE, childs = TRUE, rmHzErrors = FALSE, 
                    stringsAsFactors = default.stringsAsFactors()
                    )
+                   
 get_mapunit_from_SDA(WHERE = NULL, stringsAsFactors = default.stringsAsFactors())
-get_component_from_SDA(WHERE = NULL, duplicates = FALSE, 
+
+get_component_from_SDA(WHERE = NULL, duplicates = FALSE, childs = TRUE,
                        stringsAsFactors = default.stringsAsFactors()
                        )
+                       
 get_chorizon_from_SDA(WHERE = NULL, duplicates = FALSE, 
                       stringsAsFactors = default.stringsAsFactors()
                       )
+                      
 get_cosoilmoist_from_SDA(WHERE = NULL, duplicates = FALSE, impute = TRUE, 
                          stringsAsFactors = default.stringsAsFactors()
                          )
+                         
 get_cosoilmoist_from_NASIS(impute = TRUE, stringsAsFactors = default.stringsAsFactors())
 }
 
@@ -29,6 +35,7 @@ get_cosoilmoist_from_NASIS(impute = TRUE, stringsAsFactors = default.stringsAsFa
 \arguments{
   \item{WHERE}{text string formated as an SQL WHERE clause (default: FALSE)}
   \item{duplicates}{logical; if TRUE duplicate nationalmusym are returned}
+  \item{childs}{logical; if FALSE parent material and geomorphic child tables are not flattened and appended}
   \item{impute}{replace missing (i.e. NULL) values with "Not_Populated" for categorical data, or the "RV" for numeric data or 201 cm if the "RV" is also NULL (default: TRUE)}
   \item{rmHzErrors}{should pedons with horizonation errors be removed from the results? (default: FALSE)}
   UE)	
@@ -56,7 +63,6 @@ library(gridExtra)
 
 # query soil components by areasymbol and musym
 test = fetchSDA_component(WHERE = "areasymbol = 'IN005' AND musym = 'MnpB2'")
-test = test$spc
 
 # profile plot
 plot(test)
@@ -112,9 +118,43 @@ ggplot(x, aes(x = as.integer(month), y = dept_r, lty = status)) +
   ggtitle(paste0(x$nationalmusym[1], 
   ': Water Table Levels from Component Soil Moisture Month Data'))
 
+
+
+# query all Miami major components
+s <- get_component_from_SDA(WHERE = "compname = 'Miami' AND majcompflag = 'Yes'")
+
+# landform vs 3-D morphometry
+test <- {
+  subset(s, ! is.na(landform) | ! is.na(geompos)) ->.;
+  split(., .$drainagecl, drop = TRUE) ->.;
+  lapply(., function(x) {
+    test = data.frame()
+    test = as.data.frame(table(x$landform, x$geompos))
+    test$compname   = x$compname[1]
+    test$drainagecl = x$drainagecl[1]
+    names(test)[1:2] <- c("landform", "geompos")
+    return(test)
+    }) ->.;
+  do.call("rbind", .) ->.;
+  .[.$Freq > 0, ] ->.;
+  within(., {
+    landform = reorder(factor(landform), Freq, max)
+    geompos  = reorder(factor(geompos),  Freq, max)
+    geompos  = factor(geompos, levels = rev(levels(geompos)))
+  }) ->.;
+  }
+test$Freq2 <- cut(test$Freq, 
+                  breaks = c(0, 5, 10, 25, 50, 100, 150),
+                  labels = c("<5", "5-10", "10-25", "25-50", "50-100", "100-150")
+                  )
+ggplot(test, aes(x = geompos, y = landform, fill = Freq2)) + 
+  geom_tile(alpha = 0.5) + facet_wrap(~ paste0(compname, "\n", drainagecl)) +
+  viridis::scale_fill_viridis(discrete = T) +
+  theme(aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  ggtitle("Landform vs 3-D Morphometry for Miami Major Components on SDA")
+
   }
 }
-
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{manip}

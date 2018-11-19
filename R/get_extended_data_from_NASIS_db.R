@@ -48,9 +48,12 @@ get_extended_data_from_NASIS_db <- function(SS=TRUE, nullFragsAreZero=TRUE, stri
   }
   
   
+  ## TODO: include all peiid from pedon table so that there are no NA in the boolean summary
+  ## https://github.com/ncss-tech/soilDB/issues/59
   # query diagnostic horizons, usually a 1:many relationship with pedons
   q.diagnostic <- "SELECT peiidref as peiid, featkind, featdept, featdepb
-  FROM pediagfeatures_View_1 AS pdf
+  FROM 
+  pediagfeatures_View_1 AS pdf
 	ORDER BY pdf.peiidref, pdf.featdept;"
   
   # toggle selected set vs. local DB
@@ -261,7 +264,7 @@ LEFT OUTER JOIN (
 
 	
 	# setup connection local NASIS
-	channel <- RODBC::odbcDriverConnect(connection="DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
+	channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
 	
 	# exec queries
 	d.ecosite <- RODBC::sqlQuery(channel, q.ecosite, stringsAsFactors=FALSE)
@@ -316,7 +319,7 @@ LEFT OUTER JOIN (
 
 	if(nrow(d.rf.data) > 0) {
 	  # summarize rock fragment data
-	  d.rf.summary <- simplfyFragmentData(d.rf.data, 'phiid', nullFragsAreZero = nullFragsAreZero)
+	  d.rf.summary <- simplifyFragmentData(d.rf.data, id.var='phiid', nullFragsAreZero = nullFragsAreZero)
 	} else {
 	  d.rf.summary <- NULL
 	}
