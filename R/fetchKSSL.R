@@ -1,6 +1,6 @@
 
 # experimental function for getting basic KSSL data from CASRL
-fetchKSSL <- function(series=NULL, bbox=NULL, mlra=NULL, pedlabsampnum=NULL, pedon_id=NULL, pedon_key=NULL, returnMorphologicData=FALSE) {
+fetchKSSL <- function(series=NULL, bbox=NULL, mlra=NULL, pedlabsampnum=NULL, pedon_id=NULL, pedon_key=NULL, returnMorphologicData=FALSE, simplifyColors=FALSE) {
 	
 	# sanity-check: user must supply some kind of criteria
 	if(missing(series) & missing(bbox) & missing(mlra) & missing(pedlabsampnum) & missing(pedon_id) & missing(pedon_key))
@@ -77,9 +77,31 @@ fetchKSSL <- function(series=NULL, bbox=NULL, mlra=NULL, pedlabsampnum=NULL, ped
 	  # check for required packages
 	  if(!requireNamespace('jsonlite', quietly=TRUE))
 	    stop('please install the `jsonlite` packages', call.=FALSE)
+	  
 	  # get list of dataframe objects
 	  m <- jsonlite::fromJSON(morph.url)
+	  
+	  ## TODO: consider simplification of fragment data here too
+	  
+	  # try to auto-simplify colors
+	  if(simplifyColors) {
+	    # extract horizon data from SPC
+	    hh <- horizons(h)
+	    
+	    # simplify color data: 1 row / horizon, from morphologic data tables
+	    x.colors <- simplifyColorData(m$phcolor, id.var = 'labsampnum', wt='colorpct')
+	    
+	    # merge color data into SPC
+	    hh <- join(hh, x.colors, by='labsampnum', type='left', match='first')
+	    horizons(h) <- hh
+	  }
+	  
 	} else m <- NULL
+	
+	## set metadata
+	h.metadata <- metadata(h)
+	h.metadata$origin <- 'KSSL via Soilweb / fetchKSSL'
+	metadata(h) <- h.metadata
 	
 	# report object size
 	res.size <- round(object.size(h) / 1024 / 1024, 2) + round(object.size(m) / 1024 / 1024, 2)
