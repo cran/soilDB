@@ -5,7 +5,7 @@
 ## https://github.com/ncss-tech/soilDB/issues/79
 # all colors are mixed, should be applied to groups of related colors
 # x: data.frame, typically from NASIS containing at least 'r', 'g', 'b' colors {0,1} and some kind of weight
-mix_and_clean_colors <- function(x, wt='pct', colorSpace='LAB') {
+mix_and_clean_colors <- function(x, wt='pct', colorSpace='LAB', backTransform=FALSE) {
   
   # sanity check: no NA
   if(any(c(is.na(x$r), is.na(x$g), is.na(x$b))))
@@ -37,35 +37,41 @@ mix_and_clean_colors <- function(x, wt='pct', colorSpace='LAB') {
     lab.cols$pct <- x[[wt]]
     
     # compute weighted mixtures in LAB space
-    L <- with(lab.cols, wtd.mean(L, weights=pct))
-    A <- with(lab.cols, wtd.mean(A, weights=pct))
-    B <- with(lab.cols, wtd.mean(B, weights=pct))
+    # 2019-11-04 DEB: dropping Hmisc import
+    L <- with(lab.cols, weighted.mean(L, w=pct, na.rm = TRUE))
+    A <- with(lab.cols, weighted.mean(A, w=pct, na.rm = TRUE))
+    B <- with(lab.cols, weighted.mean(B, w=pct, na.rm = TRUE))
     
     # back to sRGB
     mixed.color <- data.frame(convertColor(cbind(L, A, B), from='Lab', to='sRGB', from.ref.white='D65', to.ref.white = 'D65'))
     names(mixed.color) <- c('r', 'g', 'b')
   } else {
+    ## TODO: there is never a reason to do this
     # use sRGB space
     
     # compute weighted mixtures in sRGB space
-    r <- with(x, wtd.mean(r, weights=pct))
-    g <- with(x, wtd.mean(g, weights=pct))
-    b <- with(x, wtd.mean(b, weights=pct))
+    r <- with(x, weighted.mean(r, w=pct, na.rm = TRUE))
+    g <- with(x, weighted.mean(g, w=pct, na.rm = TRUE))
+    b <- with(x, weighted.mean(b, w=pct, na.rm = TRUE))
     
     mixed.color <- data.frame(r, g, b)
   }
   
-  # back-transform mixture to Munsell
-  m <- rgb2munsell(mixed.color)
+  # optionally back-transform mixture to Munsell
+  if(backTransform) {
+
+    m <- rgb2munsell(mixed.color[, c('r', 'g', 'b')])
+
+    # adjust names to match NASIS
+    names(m) <- c("colorhue", "colorvalue", "colorchroma", "sigma")
+
+    # combine with mixed sRGB coordinates
+    mixed.color <- cbind(mixed.color, m)
+  }
   
-  # adjust names to match NASIS
-  names(m) <- c("colorhue", "colorvalue", "colorchroma", "sigma")
-  
-  # composite
-  res <- cbind(mixed.color, m)
   
   # done
-  return(res)
+  return(mixed.color)
   
 }
 

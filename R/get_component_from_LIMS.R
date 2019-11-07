@@ -43,7 +43,10 @@ get_chorizon_from_NASISWebReport <- function(projectname, fill = FALSE, stringsA
   d.chorizon <- within(d.chorizon, {
     texture = tolower(texture)
     if (stringsAsFactors == TRUE) {
-      texture = factor(texture, levels = metadata[metadata$ColumnPhysicalName == "texcl", "ChoiceName"])
+      texcl = factor(texcl, 
+                     levels = metadata[metadata$ColumnPhysicalName == "texcl", "ChoiceValue"],
+                     labels = metadata[metadata$ColumnPhysicalName == "texcl", "ChoiceName"]
+                     )
     }
     })
   
@@ -59,7 +62,62 @@ get_chorizon_from_NASISWebReport <- function(projectname, fill = FALSE, stringsA
 
 
 
-get_mapunit_from_NASISWebReport <- function(areasymbol, stringsAsFactors = default.stringsAsFactors()) {
+get_legend_from_NASISWebReport <- function(areasymbol, drop.unused.levels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
+  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_legend_from_NASISWebReport"
+  
+  d.legend <- lapply(areasymbol, function(x) {
+    cat("getting legend for '", x, "' from NasisReportsWebSite \n", sep = "")
+    args = list(p_areasymbol = x)
+    d    =  parseWebReport(url, args)
+  })
+  d.legend <- do.call("rbind", d.legend)
+  
+  
+  # set factor levels according to metadata domains
+  # data is coming back uncoded from LIMS so db is set to "SDA"
+  d.legend <- uncode(d.legend, 
+                      db = "SDA",
+                      drop.unused.levels = drop.unused.levels,
+                      stringsAsFactors = stringsAsFactors
+  )
+  
+  # date
+  d.legend$cordate <- as.Date(d.legend$cordate)
+  
+  # return data.frame
+  return(d.legend)
+  
+}
+
+
+
+get_lmuaoverlap_from_NASISWebReport <- function(areasymbol, drop.unused.levels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
+  url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_lmuaoverlap_from_NASISWebReport"
+  
+  d <- lapply(areasymbol, function(x) {
+    cat("getting legend for '", x, "' from NasisReportsWebSite \n", sep = "")
+    args = list(p_areasymbol = x)
+    d    =  parseWebReport(url, args)
+  })
+  d <- do.call("rbind", d)
+  
+  
+  # set factor levels according to metadata domains
+  # data is coming back uncoded from LIMS so db is set to "SDA"
+  d <- uncode(d, 
+              db = "SDA",
+              drop.unused.levels = drop.unused.levels,
+              stringsAsFactors = stringsAsFactors
+  )
+  
+    # return data.frame
+  return(d)
+  
+}
+
+
+
+get_mapunit_from_NASISWebReport <- function(areasymbol, drop.unused.levels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
   url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_mapunit_from_NASISWebReport"
   
   d.mapunit <- lapply(areasymbol, function(x) {
@@ -69,13 +127,15 @@ get_mapunit_from_NASISWebReport <- function(areasymbol, stringsAsFactors = defau
   })
   d.mapunit <- do.call("rbind", d.mapunit)
   
+  d.mapunit$musym = as.character(d.mapunit$musym)
   
   # set factor levels according to metadata domains
   # data is coming back uncoded from LIMS so db is set to "SDA"
-  d.mapunit <- uncode(d.mapunit, db = "SDA", stringsAsFactors = stringsAsFactors)
-  
-  # date
-  d.mapunit$cordate <- as.Date(d.mapunit$cordate)
+  d.mapunit <- uncode(d.mapunit, 
+                      db = "SDA",
+                      drop.unused.levels = drop.unused.levels,
+                      stringsAsFactors = stringsAsFactors
+                      )
   
   # return data.frame
   return(d.mapunit)
@@ -94,6 +154,8 @@ get_projectmapunit_from_NASISWebReport <- function(projectname, stringsAsFactors
     })
   d.mapunit <- do.call("rbind", d.mapunit)
   
+  d.mapunit$musym = as.character(d.mapunit$musym)
+  
   # set factor levels according to metadata domains
   d.mapunit <- uncode(d.mapunit, db = "LIMS", stringsAsFactors = stringsAsFactors)
   
@@ -111,12 +173,11 @@ get_projectmapunit2_from_NASISWebReport <- function(mlrassoarea, fiscalyear, pro
   args = list(p_mlrassoarea = mlrassoarea, p_fy = fiscalyear, p_projectname = projectname)
   d.mapunit    =  parseWebReport(url, args)
   
+  d.mapunit$musym = as.character(d.mapunit$musym)
+  
   # set factor levels according to metadata domains
   # data is coming back uncoded from LIMS so db is set to "SDA"
   d.mapunit <- uncode(d.mapunit, db = "SDA", stringsAsFactors = stringsAsFactors)
-  
-  # date
-  d.mapunit$cordate <- as.Date(d.mapunit$cordate)
   
   # return data.frame
   return(d.mapunit)
@@ -226,6 +287,9 @@ fetchNASISWebReport <- function(projectname, rmHzErrors = FALSE, fill = FALSE,
   ## TODO: make this error more informative
   # add site data to object
   site(f.chorizon) <- f.component # left-join via cokey
+  
+  # set SDA/SSURGO-specific horizon identifier
+  hzidname(f.chorizon) <- 'chkey'
   
   # print any messages on possible data quality problems:
   if (exists('component.hz.problems', envir=soilDB.env))

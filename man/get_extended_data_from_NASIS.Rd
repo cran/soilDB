@@ -25,7 +25,7 @@ get_extended_data_from_NASIS_db(SS = TRUE, nullFragsAreZero = TRUE,
 }
 
 \examples{
-\dontrun{
+\donttest{
 # query extended data
 e <- get_extended_data_from_NASIS_db()
 

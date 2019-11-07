@@ -13,6 +13,8 @@
 \alias{get_component_otherveg_data_from_NASIS_db}
 \alias{get_copedon_from_NASIS_db}
 
+\alias{get_legend_from_NASIS}
+\alias{get_lmuaoverlap_from_NASIS}
 \alias{get_mapunit_from_NASIS}
 \alias{get_projectmapunit_from_NASIS}
 \alias{get_projectstaff_from_NASIS}
@@ -51,13 +53,13 @@ getHzErrorsNASIS(strict=TRUE)
 \arguments{
   \item{from}{determines what objects should fetched? ('pedons' | 'components')}
   \item{\dots}{arguments passed to \code{fetchNASIS_pedons()} or \code{fetchNASIS_components()}}
-  \item{SS}{fetch data from the currently loaded selected set in NASIS or from the entire local database (default: TRUE)}	
+  \item{SS}{fetch data from the currently loaded selected set in NASIS or from the entire local database (default: TRUE)}
   \item{stringsAsFactors}{logical: should character vectors be converted to factors? This argument is passed to the uncode() function. It does not convert those vectors that have been set outside of uncode() (i.e. hard coded). The 'factory-fresh' default is TRUE, but this can be changed by setting options(stringsAsFactors = FALSE)}
   \item{rmHzErrors}{should pedons with horizonation errors be removed from the results? (default: TRUE)}
   \item{nullFragsAreZero}{should fragment volumes of NULL be interpreted as 0? (default: TRUE), see details}
   \item{soilColorState}{which colors should be used to generate the convenience field 'soil_color'? ('moist' | 'dry')}
   \item{lab}{should the phlabresults child table be fetched with site/pedon/horizon data (default: FALSE)}  
-  \item{fill}{toggle inclusion of components that are missing horizon data  (FALSE)}
+  \item{fill}{(fetchNASIS_components only: include components without horizon data? (default: FALSE)}
   \item{strict}{how strict should horizon boundaries be checked for consistency: TRUE=more | FALSE=less}
 }
 
@@ -75,7 +77,7 @@ See the \href{http://ncss-tech.github.io/AQP/soilDB/NASIS-component-data.html}{N
 \note{This function currently works only on Windows, and requires a 'nasis_local' ODBC connection.}
 
 \examples{
-\dontrun{
+\donttest{
 # query depends on some pedon data, queried against the national database
 # note that you must setup this connection ahead of time
 f <- fetchNASIS(from = 'pedons')

@@ -34,7 +34,7 @@ SCAN_site_metadata(site.code)
 \author{D.E. Beaudette}
 
 \examples{
-\dontrun{
+\donttest{
 # get data: new interface
 x <- fetchSCAN(site.code=c(356, 2072), year=c(2015, 2016))
 str(x)

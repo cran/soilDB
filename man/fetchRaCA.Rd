@@ -33,7 +33,7 @@
 
 \seealso{\code{\link{fetchOSD}}}
 \examples{
-\dontrun{
+\donttest{
   # search by series name
   s <- fetchRaCA(series='auburn')
   

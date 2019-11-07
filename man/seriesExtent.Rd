@@ -23,7 +23,7 @@ seriesExtentAsGmap(s, timeout=60, exp=1.25)
 \note{These function require the `rgdal` and `dismo` packages.}
 
 \examples{
-\dontrun{
+\donttest{
 # fetch series extent for the 'Amador' soil series
 s <- seriesExtent('amador')
 plot(s)
@@ -31,7 +31,6 @@ plot(s)
 # fetch then plot the extent of the 'Amador' soil series
 seriesExtentAsGmap('amador')
 }
-	 
 }
 
 \keyword{manip}

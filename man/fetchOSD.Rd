@@ -28,6 +28,7 @@ The standard set of "site" and "horizon" data are returned as a \code{SoilProfil
 	\item{pmorigin}{empirical probabilities for parent material origin, derrived from the current SSURGO snapshot}
 	\item{mlra}{empirical MLRA membership values, derrived from the current SSURGO snapshot}
 	\item{climate}{experimental climate summaries from PRISM stack}
+	\item{metadata}{metadata associated with SoilWeb cached summaries}
 	} 
 
 Further details pending.
@@ -48,7 +49,7 @@ USDA-NRCS OSD search tools: \url{http://www.nrcs.usda.gov/wps/portal/nrcs/detail
 }
 
 \examples{
-\dontrun{
+\donttest{
 # soils of interest
 s.list <- c('musick', 'cecil', 'drummer', 'amador', 'pentz', 
 'reiff', 'san joaquin', 'montpellier', 'grangeville', 'pollasky', 'ramona')
@@ -70,7 +71,6 @@ par(mar=c(0,0,1,1))
 plot(x$SPC)
 
 str(x, 1)
-
 }
 }
 

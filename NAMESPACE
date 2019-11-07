@@ -8,7 +8,7 @@ importFrom("stats", "aggregate", "complete.cases", "na.omit", "as.formula", "spl
 
 importFrom("utils", "URLencode", "download.file", "object.size",
              "read.csv", "read.table", "setTxtProgressBar",
-             "txtProgressBar", "write.table")
+             "txtProgressBar", "write.table", "type.convert")
 
 importFrom(reshape2, 
   dcast,
@@ -17,6 +17,10 @@ importFrom(reshape2,
 
 importFrom(raster, 
   extent
+)
+
+importFrom(lattice, 
+  panel.abline
 )
 
 importFrom(plyr, 
@@ -37,6 +41,7 @@ importFrom(sp,
   "proj4string<-",
   SpatialPolygonsDataFrame,
   SpatialPointsDataFrame,
+  SpatialPoints,
   spChFIDs
 )
 
@@ -52,25 +57,31 @@ importFrom(xml2,
 )
 
 
-importFrom(Hmisc, 
-  wtd.mean, 
-  wtd.var, 
-  wtd.quantile, 
-  wtd.rank, 
-  wtd.table
-)
-
 importFrom(aqp, 
   "depths<-", 
   "site<-",
+  site,
+  idname,
+  parseMunsell,
   diagnostic_hz,
+  horizonDepths,
   "diagnostic_hz<-",
   test_hz_logic,
+  munsell2rgb,
   rgb2munsell,
   horizons,
   "horizons<-",
   metadata,
-  "metadata<-"
+  "metadata<-",
+  hzidname,
+  "hzidname<-" 
 )
+
+importMethodsFrom(aqp, "plot")
+importMethodsFrom(aqp, "length")
+importMethodsFrom(aqp, "nrow")
+importClassesFrom(aqp, "SoilProfileCollection")
+
+
 
 exportPattern("^[^\\.]")

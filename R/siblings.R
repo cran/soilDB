@@ -9,7 +9,7 @@ siblings <- function(s, only.major=FALSE, component.data=FALSE, cousins=FALSE) {
   # helper functions
   .getSibling <- function(i, only.major) {
     # these use the new API
-    u <- sprintf('https://casoilresource.lawr.ucdavis.edu/api/soil-series.php?q=siblings&s=%s', i)
+    u <- URLencode(sprintf('https://casoilresource.lawr.ucdavis.edu/api/soil-series.php?q=siblings&s=%s', i))
     
     # attempt query to API for basic sibling set, result is JSON
     sib <- try(jsonlite::fromJSON(u))[[1]]
@@ -19,6 +19,9 @@ siblings <- function(s, only.major=FALSE, component.data=FALSE, cousins=FALSE) {
       
       # convert 'Yes'|'No' -> TRUE|FALSE
       sib$majcompflag <- ifelse(sib$majcompflag == 'Yes', TRUE, FALSE)
+      
+      # TODO: convert series into title case
+      # https://github.com/ncss-tech/soilDB/issues/95
       
       # note: there may be both major and minor siblings
       # optionally cut-down to just major siblings
@@ -35,7 +38,7 @@ siblings <- function(s, only.major=FALSE, component.data=FALSE, cousins=FALSE) {
   
   .getSiblingData <- function(i) {
     # these use the new API
-    u <- sprintf('https://casoilresource.lawr.ucdavis.edu/api/soil-series.php?q=sibling_data&s=%s', i)
+    u <- URLencode(sprintf('https://casoilresource.lawr.ucdavis.edu/api/soil-series.php?q=sibling_data&s=%s', i))
     
     # attempt query to API for component data, result is JSON
     # result is FALSE if no matching data

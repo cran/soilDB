@@ -24,5 +24,7 @@ parseWebReport(url, args, index = 1)
 \note{Most web reports are for internal use only.}
 
 \examples{
+\donttest{
 # pending
+}
 }

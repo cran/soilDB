@@ -19,6 +19,13 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
   # format series list and append to url
   final.url <- paste(url, URLencode(paste(soils, collapse=',')), sep='')
   
+  ## TODO: implement HTTP POST + JSON for safer encapsulation
+  # using HTTP GET is convenient but comes with limits on the number of chars in the URL
+  # limiting to 2048 will likely save some trouble
+  if(nchar(final.url) > 2048) {
+    stop('URL too long, consider splitting input vector of soil series with `makeChunks()` and iterating over chunks', call. = FALSE)
+  }
+  
   # attempt query to API, result is JSON
   res <- try(jsonlite::fromJSON(final.url))
   
@@ -103,6 +110,10 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	    monthly.data$month <- factor(as.numeric(gsub('ppt|pet', '', monthly.data$climate_var)))
 	    monthly.data$variable <- gsub('[0-9]', '', monthly.data$climate_var)
 	    monthly.data$variable <- factor(monthly.data$variable, levels = c('pet', 'ppt'), labels=c('Potential ET (mm)', 'Precipitation (mm)'))
+	  } else {
+	    # likely outside of CONUS
+	    annual.data <- FALSE
+	    monthly.data <- FALSE
 	  }
 	  
 	  ## must check for data, no data is returned as FALSE
@@ -129,7 +140,8 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	    pmorigin=res$pmorigin,
 	    mlra=res$mlra,
 	    climate.annual=annual.data,
-	    climate.monthly=monthly.data
+	    climate.monthly=monthly.data,
+	    soilweb.metadata=res$metadata
 	  )
 	  
 	  return(data.list)

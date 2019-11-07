@@ -78,13 +78,15 @@ fetchKSSL <- function(series=NULL, bbox=NULL, mlra=NULL, pedlabsampnum=NULL, ped
 	  if(!requireNamespace('jsonlite', quietly=TRUE))
 	    stop('please install the `jsonlite` packages', call.=FALSE)
 	  
+	  
+	  ## note: missing data are returned as FALSE
 	  # get list of dataframe objects
 	  m <- jsonlite::fromJSON(morph.url)
 	  
 	  ## TODO: consider simplification of fragment data here too
 	  
 	  # try to auto-simplify colors
-	  if(simplifyColors) {
+	  if(simplifyColors & class(m$phcolor) == 'data.frame') {
 	    # extract horizon data from SPC
 	    hh <- horizons(h)
 	    
@@ -97,6 +99,9 @@ fetchKSSL <- function(series=NULL, bbox=NULL, mlra=NULL, pedlabsampnum=NULL, ped
 	  }
 	  
 	} else m <- NULL
+	
+	# set KSSL-specific horizon identifier
+	hzidname(h) <- "labsampnum"
 	
 	## set metadata
 	h.metadata <- metadata(h)

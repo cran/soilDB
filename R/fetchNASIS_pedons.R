@@ -22,20 +22,14 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
     stop('No site/pedons objects in local NASIS DB or selected set.', call. = FALSE)
   }
   
-  ## TODO: improve efficiency
-  # data that don't flatten well
+  # data that cannot be effectively flattened in SQL
   extended_data <- get_extended_data_from_NASIS_db(SS=SS, nullFragsAreZero=nullFragsAreZero, stringsAsFactors = stringsAsFactors)
-  
-  ## https://github.com/ncss-tech/soilDB/issues/44
-  # optionally load phlabresults table
-  if (lab) {
-    phlabresults <- get_phlabresults_data_from_NASIS_db(SS=SS)
-  }
   
   ## join horizon + hz color: all horizons
   h <- join(hz_data, color_data, by='phiid', type='left')
   
   ## join hz + fragment summary
+  # there is a record for each phiid
   h <- join(h, extended_data$frag_summary, by='phiid', type='left')
   
   ## fix some common problems
@@ -78,6 +72,7 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   
   
   ## test for horizonation inconsistencies... flag, and optionally remove
+  # ~ 1.3 seconds / ~ 4k pedons
   h.test <- ddply(h, 'peiid', test_hz_logic, topcol='hzdept', bottomcol='hzdepb', strict=TRUE)
   
   # which are the good (valid) ones?
@@ -94,10 +89,14 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   assign('bad.pedon.ids', value=bad.pedon.ids, envir=soilDB.env)
   assign("bad.horizons", value = data.frame(bad.horizons), envir = soilDB.env)
   
-  ## join hz + phlabresults
+  
+  ## https://github.com/ncss-tech/soilDB/issues/44
+  # optionally load phlabresults table
   if (lab) {
+    phlabresults <- get_phlabresults_data_from_NASIS_db(SS=SS)
     h <- join(h, phlabresults, by = "phiid", type = "left")
   }
+  
   
   ## optionally convert NA fragvol to 0
   if(nullFragsAreZero) {
@@ -116,7 +115,9 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   depths(h) <- peiid ~ hzdept + hzdepb
   
   # move pedon_id into @site
+  # 1 second for ~ 4k pedons
   site(h) <- ~ pedon_id
+  
   
   ## TODO: this will fail in the presence of duplicates
   # add site data to object
@@ -124,19 +125,26 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   site_data$pedon_id <- NULL
   
   # left-join via peiid
+  # < 0.1 second for ~ 4k pedons
   site(h) <- site_data
   
   
   ### TODO: consider moving this into the extended data function ###
-  ## TODO: slow
   # load best-guess optimal records from taxhistory
   # method is added to the new field called 'selection_method'
   # assumes that classdate is a datetime class object!
-  best.tax.data <- ddply(extended_data$taxhistory, 'peiid', .pickBestTaxHistory)
+  # ddply: 26 seconds for ~ 4k pedons
+  # best.tax.data <- ddply(extended_data$taxhistory, 'peiid', .pickBestTaxHistory)
+  # 
+  # 2019-01-31: converting to base functions
+  ed.tax <- split(extended_data$taxhistory, extended_data$taxhistory$peiid)
+  ed.tax.flat <- lapply(ed.tax, .pickBestTaxHistory)
+  best.tax.data <- do.call('rbind', ed.tax.flat)
   site(h) <- best.tax.data
   
   # load best-guess optimal records from ecositehistory
   # method is added to the new field called 'es_selection_method'
+  # 1.4 seconds for ~ 4k pedons
   best.ecosite.data <- ddply(extended_data$ecositehistory, 'siteiid', .pickBestEcosite)
   site(h) <- best.ecosite.data
   
@@ -166,11 +174,18 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   
   # join-in landform string
   ## 2015-11-30: short-circuts could use some work, consider pre-marking mistakes before parsing
-  lf <- ddply(extended_data$geomorph, 'peiid', .formatLandformString, name.sep=' & ')
+  # ddply: 3 seconds for ~ 4k pedons
+  # lf <- ddply(extended_data$geomorph, 'peiid', .formatLandformString, name.sep=' & ')
+  #
+  # 2019-01-31: converting to base functions
+  ed.lf <- split(extended_data$geomorph, extended_data$geomorph$peiid)
+  ed.lf.flat <- lapply(ed.lf, .formatLandformString, name.sep=' & ')
+  lf <- do.call('rbind', ed.lf.flat)
   if(nrow(lf) > 0)
     site(h) <- lf
   
   # join-in parent material strings
+  # ddply: 4 seconds for ~ 4k pedons
   pm <- ddply(extended_data$pm, 'siteiid', .formatParentMaterialString, name.sep=' & ')
   if(nrow(pm) > 0)
     site(h) <- pm
@@ -179,6 +194,9 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   m <- metadata(h)
   m$origin <- 'NASIS pedons'
   metadata(h) <- m
+  
+  # set NASIS-specific horizon identifier
+  hzidname(h) <- 'phiid'
   
   # print any messages on possible data quality problems:
   if(exists('sites.missing.pedons', envir=soilDB.env))

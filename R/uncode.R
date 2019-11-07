@@ -1,4 +1,9 @@
-uncode <- function(df, invert = FALSE, db = "NASIS", stringsAsFactors = default.stringsAsFactors()){
+uncode <- function(df, 
+                   invert = FALSE, 
+                   db = "NASIS", 
+                   drop.unused.levels = FALSE, 
+                   stringsAsFactors = default.stringsAsFactors()
+                   ) {
   get_metadata <- function() {
     # must have RODBC installed
     if(!requireNamespace('RODBC'))
@@ -66,6 +71,12 @@ uncode <- function(df, invert = FALSE, db = "NASIS", stringsAsFactors = default.
         df[, i] <- factor(df[, i], levels = sub$ChoiceLabel, labels = sub$ChoiceValue)
         }
       }
+    }
+  
+  # drop unused levels
+  if (drop.unused.levels == TRUE) {
+    idx <- which(! nm %in% possibleReplacements)
+    df <- droplevels(df, except = idx)
     }
   
   # convert factors to strings

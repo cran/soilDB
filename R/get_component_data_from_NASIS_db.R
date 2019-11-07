@@ -17,10 +17,7 @@ get_component_diaghz_from_NASIS_db <- function(SS=TRUE) {
   channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
   
   # query diagnostic horizons, usually a 1:many relationship with pedons
-  q <- "SELECT coiidref as coiid, featkind, featdept_r, featdepb_r
-  FROM 
-  codiagfeatures_View_1 AS cdf
-  ORDER BY cdf.coiidref, cdf.featdept_r;"
+  q <- "SELECT coiidref as coiid, featkind, featdept_l, featdept_r, featdept_h, featdepb_l, featdepb_r, featdepb_h, featthick_l, featthick_r, featthick_h FROM codiagfeatures_View_1 AS cdf ORDER BY cdf.coiidref, cdf.featdept_r;"
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {
@@ -92,7 +89,7 @@ get_component_data_from_NASIS_db <- function(SS=TRUE, stringsAsFactors = default
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
   
-  q <- "SELECT dmudesc, compname, comppct_r, compkind, majcompflag, localphase, drainagecl, elev_l, elev_r, elev_h, slope_l, slope_r, slope_h, aspectccwise, aspectrep, aspectcwise, map_l, map_r, map_h, airtempa_l as maat_l, airtempa_r as maat_r, airtempa_h as maat_h, soiltempa_r as mast_r, reannualprecip_r, ffd_l, ffd_r, ffd_h, tfact, wei, weg, nirrcapcl, nirrcapscl, nirrcapunit, irrcapcl, irrcapscl, irrcapunit, frostact, hydricrating, hydgrp, corcon, corsteel, taxclname, taxorder, taxsuborder, taxgrtgroup, taxsubgrp, taxpartsize, taxpartsizemod, taxceactcl, taxreaction, taxtempcl, taxmoistscl, taxtempregime, soiltaxedition, coiid, dmuiid
+  q <- "SELECT dmudesc, compname, comppct_r, compkind, majcompflag, localphase, drainagecl, hydricrating, elev_l, elev_r, elev_h, slope_l, slope_r, slope_h, aspectccwise, aspectrep, aspectcwise, map_l, map_r, map_h, airtempa_l as maat_l, airtempa_r as maat_r, airtempa_h as maat_h, soiltempa_r as mast_r, reannualprecip_r, ffd_l, ffd_r, ffd_h, tfact, wei, weg, nirrcapcl, nirrcapscl, nirrcapunit, irrcapcl, irrcapscl, irrcapunit, frostact, hydricrating, hydgrp, corcon, corsteel, taxclname, taxorder, taxsuborder, taxgrtgroup, taxsubgrp, taxpartsize, taxpartsizemod, taxceactcl, taxreaction, taxtempcl, taxmoistscl, taxtempregime, soiltaxedition, coiid, dmuiid
   
   FROM 
   datamapunit_View_1 AS dmu 
@@ -134,16 +131,140 @@ get_component_data_from_NASIS_db <- function(SS=TRUE, stringsAsFactors = default
 }
 
 
-get_mapunit_from_NASIS <- function(SS = TRUE, stringsAsFactors = default.stringsAsFactors()) {
+get_legend_from_NASIS <- function(SS = TRUE, drop.unused.levels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
+  # must have RODBC installed
+  if(!requireNamespace('RODBC'))
+    stop('please install the `RODBC` package', call.=FALSE)
+  
+  q.legend  <- paste("
+                     SELECT
+                     mlraoffice,  
+                     areasymbol, areaname, areatypename, CAST(areaacres AS INTEGER) AS areaacres, ssastatus, 
+                     CAST(projectscale AS INTEGER) projectscale, cordate, 
+                     CAST(liid AS INTEGER) liid, COUNT(lmu.lmapunitiid) n_lmapunitiid
+                     
+                     FROM 
+                     area     a                                  INNER JOIN 
+                     legend_View_1   l      ON l.areaiidref = a.areaiid INNER JOIN
+                     lmapunit_View_1 lmu    ON lmu.liidref = l.liid
+                                    
+                     INNER JOIN
+                     areatype at  ON at.areatypeiid = areatypeiidref
+                     
+                     WHERE
+                         legendsuituse = 3  AND
+                         mustatus IN (2, 3) AND
+                         areatypename = 'Non-MLRA Soil Survey Area'
+                     
+                     GROUP BY mlraoffice, areasymbol, areaname, areatypename, areaacres, ssastatus, projectscale, cordate, liid
+                     
+                     ORDER BY mlraoffice, areasymbol
+                     ;")
+  
+  # toggle selected set vs. local DB
+  if(SS == FALSE) {
+    q.legend <- gsub(pattern = '_View_1', replacement = '', x = q.legend, fixed = TRUE)
+  }
+  
+  # setup connection local NASIS
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
+  
+  # exec query
+  d.legend <- RODBC::sqlQuery(channel, q.legend, stringsAsFactors=FALSE)
+  
+  # close connection
+  RODBC::odbcClose(channel)
+  
+  # recode metadata domains
+  d.legend <- uncode(d.legend,
+                     db = "NASIS", 
+                     drop.unused.levels = drop.unused.levels,
+                     stringsAsFactors = stringsAsFactors
+                     )
+
+  
+  # done
+  return(d.legend)
+}
+
+
+
+get_lmuaoverlap_from_NASIS <- function(SS = TRUE, drop.unused.levels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
+  # must have RODBC installed
+  if(!requireNamespace('RODBC'))
+    stop('please install the `RODBC` package', call.=FALSE)
+  
+  q <- paste("SELECT
+             a.areasymbol, a.areaname, a.areaacres, 
+             at2.areatypename lao_areatypename, a2.areasymbol lao_areasymbol, a2.areaname lao_areaname, lao.areaovacres lao_areaovacres,
+             lmapunitiid, musym, nationalmusym, muname, mustatus, muacres,
+             lmuao.areaovacres lmuao_areaovacres
+             
+             FROM 
+             legend_View_1   l                                             INNER JOIN 
+             lmapunit_View_1 lmu   ON lmu.liidref          = l.liid        INNER JOIN 
+             mapunit_View_1  mu    ON mu.muiid             = lmu.muiidref    
+             
+             INNER JOIN 
+                 area     a  ON a.areaiid      = l.areaiidref INNER JOIN
+                 areatype at ON at.areatypeiid = a.areatypeiidref
+             
+             LEFT OUTER JOIN             
+                 laoverlap_View_1  lao ON lao.liidref      = l.liid         INNER JOIN
+                 area              a2  ON a2.areaiid       = lao.areaiidref INNER JOIN
+                 areatype          at2  ON at2.areatypeiid = a2.areatypeiidref
+             
+             LEFT OUTER JOIN
+                 lmuaoverlap_View_1 lmuao ON lmuao.lmapunitiidref = lmu.lmapunitiid
+                                     AND lmuao.lareaoviidref  = lao.lareaoviid
+             
+             WHERE legendsuituse = 3  AND
+                   mustatus IN (2, 3) AND
+                   at.areatypename = 'Non-MLRA Soil Survey Area'
+             
+             ORDER BY a.areasymbol, lmu.musym, lao_areatypename
+             ;"
+  )
+  
+  # toggle selected set vs. local DB
+  if(SS == FALSE) {
+    q <- gsub(pattern = '_View_1', replacement = '', x = q, fixed = TRUE)
+  }
+  
+  # setup connection local NASIS
+  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
+  
+  # exec query
+  d <- RODBC::sqlQuery(channel, q, stringsAsFactors=FALSE)
+  
+  # close connection
+  RODBC::odbcClose(channel)
+  
+  d$musym <- as.character(d$musym)
+  
+  # recode metadata domains
+  d <- uncode(d,
+              db = "NASIS", 
+              drop.unused.levels = drop.unused.levels,
+              stringsAsFactors = stringsAsFactors
+  )
+  
+  # done
+  return(d)
+}
+
+
+
+get_mapunit_from_NASIS <- function(SS = TRUE, drop.unused.levels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
   # must have RODBC installed
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
   
   q.mapunit <- paste("
                      SELECT 
-                     mlraoffice, ng.grpname, areasymbol, areaname, areaacres, ssastatus, cordate, projectscale, 
-                     lmapunitiid, nationalmusym, musym, muname, mukind, mutype, mustatus, muacres, farmlndcl,
-                     pct_hydric, pct_component, n_component, n_majcompflag
+                     ng.grpname, areasymbol, liid, lmapunitiid, 
+                     nationalmusym, muiid, musym, muname, mukind, mutype, mustatus, dmuinvesintens, muacres, 
+                     farmlndcl, dmuiid, pct_component, pct_hydric, n_component, n_majcompflag
                      
                      FROM  
                          area            a                               INNER JOIN 
@@ -160,11 +281,11 @@ get_mapunit_from_NASIS <- function(SS = TRUE, stringsAsFactors = default.strings
                     LEFT OUTER JOIN  
                     --components
                     (SELECT 
-                     cor.muiidref cor_muiidref, 
+                     cor.muiidref cor_muiidref, dmuiid, dmuinvesintens,
+                     SUM(comppct_r)                                                pct_component,
                      SUM(comppct_r * CASE WHEN hydricrating = 1 THEN 1 ELSE 0 END) pct_hydric,
-                     SUM(comppct_r)                                                 pct_component,
-                     COUNT(*)                                                       n_component,
-                     SUM(CASE WHEN majcompflag  = 1 THEN 1 ELSE 0 END)              n_majcompflag
+                     COUNT(*)                                                      n_component,
+                     SUM(CASE WHEN majcompflag  = 1 THEN 1 ELSE 0 END)             n_majcompflag
    
                      FROM     
                          component_View_1   co                                  LEFT OUTER JOIN
@@ -172,15 +293,13 @@ get_mapunit_from_NASIS <- function(SS = TRUE, stringsAsFactors = default.strings
                          correlation_View_1 cor ON cor.dmuiidref = dmu.dmuiid   AND
                                                    cor.repdmu    = 1
 
-                     GROUP BY cor.muiidref
+                     GROUP BY cor.muiidref, dmuiid, dmuinvesintens
                     ) co ON co.cor_muiidref = mu.muiid
 
                      WHERE
-                         legendsuituse = 3              AND
-                         mustatus IN (2, 3)             AND
                          areatypename = 'Non-MLRA Soil Survey Area'
 
-                     ORDER BY mlraoffice, areasymbol, musym
+                     ORDER BY areasymbol, musym
                      ;")
   
   # toggle selected set vs. local DB
@@ -196,11 +315,34 @@ get_mapunit_from_NASIS <- function(SS = TRUE, stringsAsFactors = default.strings
   
   # close connection
   RODBC::odbcClose(channel)
-  
+
   # recode metadata domains
-  d.mapunit <- uncode(d.mapunit, db = "NASIS", stringsAsFactors = stringsAsFactors)
+  d.mapunit <- uncode(d.mapunit, 
+                      db = "NASIS", 
+                      drop.unused.levels = drop.unused.levels,
+                      stringsAsFactors = stringsAsFactors
+  )
   
+  # hacks to make R CMD check --as-cran happy:
+  metadata <- NULL
   
+  # load local copy of metadata
+  load(system.file("data/metadata.rda", package="soilDB")[1])
+  
+  # transform variables and metadata
+  d.mapunit <- within(d.mapunit, {
+    farmlndcl = factor(farmlndcl, 
+                       levels = metadata[metadata$ColumnPhysicalName == "farmlndcl", "ChoiceValue"],
+                       labels = metadata[metadata$ColumnPhysicalName == "farmlndcl", "ChoiceLabel"]
+    )
+    if (stringsAsFactors == FALSE) {
+      farmlndcl = as.character(farmlndcl)
+    }
+    if (drop.unused.levels == TRUE & is.factor(farmlndcl)) {
+      farmlndcl = droplevels(farmlndcl)
+    }
+  })
+
   # cache original column names
   orig_names <- names(d.mapunit)
   
@@ -579,7 +721,7 @@ get_component_horizon_data_from_NASIS_db <- function(SS=TRUE, fill = FALSE) {
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
   
-  q <- "SELECT coiid, chiid, hzname, hzdept_r, hzdepb_r, texture, fragvoltot_l, fragvoltot_r, fragvoltot_h, sandtotal_l, sandtotal_r, sandtotal_h, silttotal_l, silttotal_r, silttotal_h, claytotal_l, claytotal_r, claytotal_h, om_l, om_r, om_h, structgrpname, dbthirdbar_l, dbthirdbar_r, dbthirdbar_h, ksat_l, ksat_r, ksat_h, awc_l, awc_r, awc_h, lep_r, sar_r, ec_r, cec7_r, sumbases_r, ph1to1h2o_l, ph1to1h2o_r, ph1to1h2o_h, ph01mcacl2_l, ph01mcacl2_r, ph01mcacl2_h, caco3_l, caco3_r, caco3_h
+  q <- "SELECT coiid, chiid, hzname, hzdept_r, hzdepb_r, texture, fragvoltot_l, fragvoltot_r, fragvoltot_h, sandtotal_l, sandtotal_r, sandtotal_h, silttotal_l, silttotal_r, silttotal_h, claytotal_l, claytotal_r, claytotal_h, om_l, om_r, om_h, structgrpname, dbthirdbar_l, dbthirdbar_r, dbthirdbar_h, ksat_l, ksat_r, ksat_h, awc_l, awc_r, awc_h, lep_l, lep_r, lep_h, ll_l, ll_r, ll_h, pi_l, pi_r, pi_h, sieveno4_l, sieveno4_r, sieveno4_h, sieveno10_l, sieveno10_r, sieveno10_h, sieveno40_l, sieveno40_r, sieveno40_h, sieveno200_l, sieveno200_r, sieveno200_h, sar_l, sar_r, sar_h, ec_l, ec_r, ec_h, cec7_l, cec7_r, cec7_h, sumbases_l, sumbases_r, sumbases_h, ecec_l, ecec_r, ecec_h, ph1to1h2o_l, ph1to1h2o_r, ph1to1h2o_h, ph01mcacl2_l, ph01mcacl2_r, ph01mcacl2_h, caco3_l, caco3_r, caco3_h, kffact, kwfact, aashind_l, aashind_r, aashind_h
   
   FROM
   component_View_1 co 

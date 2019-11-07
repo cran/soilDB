@@ -28,7 +28,7 @@ mapunit_geom_by_ll_bbox(bbox, source = 'sda')
 #         |                     |
 # (-120.54, 38.61) --------------+
 
-\dontrun{
+\donttest{
 # basic usage
 b <- c(-120.54,38.61,-120.41,38.70)
 x <- mapunit_geom_by_ll_bbox(b) # about 20 seconds

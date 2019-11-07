@@ -1,15 +1,24 @@
 context("fetchKSSL() -- requires internet connection")
 
-
-## sample data
-x <- fetchKSSL(series='sierra')
-x.morph <- fetchKSSL(series='sierra', returnMorphologicData = TRUE)
-x.morp.simple.colors <- fetchKSSL(series='sierra', returnMorphologicData = TRUE, simplifyColors = TRUE)
-
-test_that("fetchKSSL() returns an SPC or list", {
+test_that("fetchKSSL() works", {
+  
+  skip_if_offline()
+  
+  ## sample data
+  x <<- fetchKSSL(series='sierra')
+  x.morph <<- fetchKSSL(series='sierra', returnMorphologicData = TRUE)
+  x.morp.simple.colors <<- fetchKSSL(series='sierra', returnMorphologicData = TRUE, simplifyColors = TRUE)
   
   # standard request
   expect_match(class(x), 'SoilProfileCollection')
+  
+  
+})
+
+
+test_that("fetchKSSL() returns an SPC or list", {
+  
+  skip_if_offline()
   
   # SPC + morphologic data
   expect_match(class(x.morph), 'list')
@@ -24,6 +33,8 @@ test_that("fetchKSSL() returns an SPC or list", {
 
 test_that("fetchKSSL() returns reasonable data", {
   
+  skip_if_offline()
+  
   # standard request
   expect_equal(nrow(site(x)) > 0, TRUE)
   expect_equal(nrow(horizons(x)) > 0, TRUE)
@@ -34,6 +45,8 @@ test_that("fetchKSSL() returns reasonable data", {
 
 test_that("fetchKSSL() returns data associated with named series (sierra)", {
   
+  skip_if_offline()
+  
   # all of the results should contain the search term
   f <- grepl('sierra', x$taxonname, ignore.case = TRUE)
   expect_equal(all(f), TRUE)
@@ -43,8 +56,29 @@ test_that("fetchKSSL() returns data associated with named series (sierra)", {
 
 test_that("fetchKSSL() returns NULL with bogus query", {
   
+  skip_if_offline()
+  
   # a message is printed and NULL returned when no results
   res <- suppressMessages(fetchKSSL(series='XXX'))
   expect_null(res)
   
 })
+
+
+test_that("fetchKSSL() fails gracefully when morphology data are missing", {
+  
+  skip_if_offline()
+  
+  # pedon_key 37457 is missing:
+  # * most lab data
+  # * all morphologic data
+  # --> cannot simplify colors, so skip
+  res <- suppressMessages(fetchKSSL(pedon_key=37457, returnMorphologicData = TRUE, simplifyColors = TRUE))
+  expect_false(res$morph$phcolor)
+  expect_false(res$morph$phfrags)
+  expect_false(res$morph$phpores)
+  expect_false(res$morph$phstructure)
+  expect_false(res$morph$pediagfeatures)
+  
+})
+

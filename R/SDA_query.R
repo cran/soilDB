@@ -1,3 +1,17 @@
+
+# generate chunk labels for splitting data
+# ids: vector of IDs
+# size: chunk size
+makeChunks <- function(ids, size=100) {
+  n <- length(ids)
+  chunk.id <- seq(from=1, to=floor(n / size)+1)
+  chunk.ids <- rep(chunk.id, each=size)
+  chunk.ids <- chunk.ids[1:n]
+  return(chunk.ids)
+}
+
+
+
 # format vector of values into a string suitable for an SQL `IN` statement
 # currently expects character data only
 format_SQL_in_statement <- function(x) {
@@ -16,20 +30,11 @@ SDA_query <- function(q) {
   if(!requireNamespace('httr', quietly=TRUE) | !requireNamespace('jsonlite', quietly=TRUE))
     stop('please install the `httr` and `jsonlite` packages', call.=FALSE)
   
-  # important: change the default behavior of data.frame
-  opt.original <- options(stringsAsFactors = FALSE)
-  
-  # temp place to keep json-style post args
-  tf <- tempfile() 
-  
-  # compute json post args and save to temp file
-  # result is JSON with first-line as column names
-  # this means result is a character matrix
-  post.data <- jsonlite::toJSON(list(query=q, format='JSON+COLUMNNAME'), auto_unbox = TRUE)
-  cat(post.data, file=tf, sep = '\n')
-  
-  # submit request
-  r <- httr::POST(url="https://sdmdataaccess.sc.egov.usda.gov/tabular/post.rest", body=httr::upload_file(tf))
+   # submit request
+  r <- httr::POST(url = "https://sdmdataaccess.sc.egov.usda.gov/tabular/post.rest",
+                  body = list(query = q,
+                              format = "JSON+COLUMNNAME"),
+                  encode = "form")
   
   # trap errors, likely related to SQL syntax errors
   request.status <- try(httr::stop_for_status(r), silent = TRUE)
@@ -48,6 +53,8 @@ SDA_query <- function(q) {
   
   # the result is JSON:
   # list of character matrix, one for each "Table" returned
+  # note: the data returned by SDA/JSON are all character class
+  #       we "fix" this later on
   r.content <- httr::content(r, as = 'text', encoding = 'UTF-8')
   d <- jsonlite::fromJSON(r.content)
   
@@ -61,6 +68,9 @@ SDA_query <- function(q) {
   }
   
   # process list of tables
+  # * consistent encoding of NA
+  # * type conversion via read.table() 
+  # * no conversion strings -> factors: do this on your own
   d <- lapply(d, .post_process_SDA_result_set)
   
   # keep track of SDA result set IDs
@@ -69,8 +79,6 @@ SDA_query <- function(q) {
     attr(d[[i]], 'SDA_id') <- SDA.ids[i]
   }
   
-  # reset options
-  options(opt.original)
   
   if(n.tables > 1) {
     message('multi-part result set, returning a list')
@@ -90,31 +98,24 @@ SDA_query <- function(q) {
 
 # note: empty strings and 'NA' are converted into <NA>
 # convert the raw results from SDA into a proper data.frame
+# no conversion of strings -> factors
 .post_process_SDA_result_set <- function(i) {
   # the first line is always the colnames
-  i.header <- i[1, ]
-  
+  colnames(i) <- i[1, ]
+
   # remove the first line
-  # Arrg! the dreaded sing-row indexing bug: drop=FALSE ensures result is a matrix
+  # Arrg! the dreaded single-row indexing bug: drop=FALSE ensures result is a matrix
   i <- i[-1, , drop=FALSE]
   
-  i.tf <- tempfile() # work-around for all data encoded as char
+  # keep everything in memory, c/o Kyle Bockinsky
+  df <- as.data.frame(i, stringsAsFactors = FALSE)
+  # attempt type conversion, same result as writing to file and reading-in via read.table()
+  df <- type.convert(df,
+                     na.strings = c('', 'NA'),
+                     as.is = TRUE
+                     )
   
-  # save to file / re-load to guess column classes
-  write.table(i, file=i.tf, col.names=TRUE, row.names=FALSE, quote=FALSE, sep='|')
-  
-  ## https://github.com/ncss-tech/soilDB/issues/28
-  ## this breaks when there are multi-line records
-  df <- read.table(i.tf, header=TRUE, sep='|', quote='', comment.char='', na.strings = c('', 'NA'), stringsAsFactors = FALSE)
-  
-  ## not quite there...
-  # tmp <- scan(file=i.tf, multi.line = TRUE, blank.lines.skip = TRUE, what=list(rep(character(), times=length(i.header))), sep='\n', quote='', comment.char='', quiet = TRUE, na.strings = c('', 'NA'), skip=1)
-  
- 
-  # add colnames from original header
-  names(df) <- i.header
-  
-  ## error checking?
+  ## TODO further error checking?
   
   # done
   return(df)

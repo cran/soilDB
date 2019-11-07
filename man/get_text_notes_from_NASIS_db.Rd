@@ -22,7 +22,7 @@ get_text_notes_from_NASIS_db(SS = TRUE, fixLineEndings = TRUE)
 }
 
 \examples{
-\dontrun{
+\donttest{
 # query text note data
 t <- get_text_notes_from_NASIS_db()
 
@@ -31,7 +31,6 @@ str(t)
 
 # view text categories for site text notes
 table(t$site_text$textcat)
-
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

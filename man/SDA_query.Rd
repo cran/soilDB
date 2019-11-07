@@ -1,14 +1,22 @@
 \name{SDA_query}
 \alias{SDA_query}
+\alias{makeChunks}
 \alias{format_SQL_in_statement}
 
 \title{Soil Data Access Query}
 \description{Submit a query to the Soil Data Acccess (SDA) website in SQL, get the results as a dataframe.}
 
-\usage{SDA_query(q)}
+\usage{
+SDA_query(q)
+makeChunks(ids, size=100)
+format_SQL_in_statement(x)
+}
 
 \arguments{
   \item{q}{a valid T-SQL query surrounded by double quotes}
+  \item{ids}{vector of IDs for chunking, contents aren't used just length}
+  \item{size}{target chunk size}
+  \item{x}{character vector to be packed into an SQL `IN` statement}
 }
 
 \details{The SDA website can be found at \url{http://sdmdataaccess.nrcs.usda.gov} and query examples can be found at \url{http://sdmdataaccess.nrcs.usda.gov/QueryHelp.aspx}. A library of query examples can be found at \url{https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=SDA-SQL_Library_Home}.
@@ -21,9 +29,9 @@ SSURGO (detailed soil survey) and STATSGO (generalized soil survey) data are sto
 \note{This function requires the `httr`, `jsonlite`, and `XML` packages}
 
 \seealso{\code{\link{mapunit_geom_by_ll_bbox}}}
-\examples{
-\dontrun{
 
+\examples{
+\donttest{
 
 ## get SSURGO export date for all soil survey areas in California
 # there is no need to filter STATSGO 
@@ -87,9 +95,6 @@ q <- paste0("SELECT mukey, cokey, compname, comppct_r
 x <- SDA_query(q)
 str(x)
 }
-
-
-
 }
 
 \keyword{manip}

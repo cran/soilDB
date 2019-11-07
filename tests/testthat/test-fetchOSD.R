@@ -1,11 +1,24 @@
 context("fetchOSD() -- requires internet connection")
 
-## sample data
-x <- fetchOSD(soils = c('sierra', 'cecil'))
-x.extended <- fetchOSD(soils = c('sierra', 'cecil'), extended = TRUE)
+
+test_that("fetchOSD() works", {
+  
+  skip_if_offline()
+  
+  ## sample data
+  x <<- fetchOSD(soils = c('sierra', 'cecil'))
+  x.extended <<- fetchOSD(soils = c('sierra', 'cecil'), extended = TRUE)
+  
+  # standard request
+  expect_match(class(x), 'SoilProfileCollection')
+  
+})
+
 
 
 test_that("fetchOSD() returns NULL with bogus query", {
+  
+  skip_if_offline()
   
   # a message is printed and NULL returned when no results
   res <- suppressMessages(fetchOSD(soils='XXX'))
@@ -13,14 +26,11 @@ test_that("fetchOSD() returns NULL with bogus query", {
   
 })
 
-test_that("fetchOSD() returns an SPC", {
-  
-  # standard request
-  expect_match(class(x), 'SoilProfileCollection')
-  
-})
+
 
 test_that("fetchOSD() returns a list + SPC in extended mode", {
+  
+  skip_if_offline()
   
   # extended request
   expect_match(class(x.extended), 'list')
@@ -29,6 +39,8 @@ test_that("fetchOSD() returns a list + SPC in extended mode", {
 })
 
 test_that("fetchOSD() returns reasonable data", {
+  
+  skip_if_offline()
   
   # standard request
   expect_equal(nrow(site(x)) == 2, TRUE)
@@ -40,15 +52,19 @@ test_that("fetchOSD() returns reasonable data", {
 
 test_that("fetchOSD() returns reasonable data in extended mode", {
   
+  skip_if_offline()
+  
   # extended request
   expect_equal(
     names(x.extended), 
-    c("SPC", "competing", "geomcomp", "hillpos", "mtnpos", "pmkind", "pmorigin", "mlra", "climate.annual", "climate.monthly")
+    c("SPC", "competing", "geomcomp", "hillpos", "mtnpos", "pmkind", "pmorigin", "mlra", "climate.annual", "climate.monthly", "soilweb.metadata")
     )
   
 })
 
 test_that("fetchOSD() returns data associated with named series (sierra|cecil)", {
+  
+  skip_if_offline()
   
   # all of the results should contain the search term
   f <- grepl('sierra|cecil', x$id, ignore.case = TRUE)

@@ -18,9 +18,7 @@
 }
 
 \examples{
-
-\dontrun{
-
+\donttest{
 ## Example: export / convert DMS coordinates from NASIS and save to DD import file
 
 # load required libraries
