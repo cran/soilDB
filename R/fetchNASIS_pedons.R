@@ -1,7 +1,7 @@
 
 
 # get NASIS site/pedon/horizon/diagnostic feature data
-fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, soilColorState='moist', lab=FALSE, stringsAsFactors = default.stringsAsFactors()) {
+.fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, soilColorState='moist', lab=FALSE, stringsAsFactors = default.stringsAsFactors()) {
   
   # test connection
   if(! 'nasis_local' %in% names(RODBC::odbcDataSources()))
@@ -28,9 +28,19 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   ## join horizon + hz color: all horizons
   h <- join(hz_data, color_data, by='phiid', type='left')
   
+  # check for empty artifact summary and nullFragsAreZero
+  if(nullFragsAreZero & all(is.na(unique(extended_data$frag_summary$phiid))))
+    extended_data$frag_summary <- cbind(unique(h$phiid), extended_data$frag_summary[,-1])
+  
   ## join hz + fragment summary
-  # there is a record for each phiid
   h <- join(h, extended_data$frag_summary, by='phiid', type='left')
+  
+  # check for empty artifact summary and nullFragsAreZero
+  if(nullFragsAreZero & all(is.na(unique(extended_data$art_summary$phiid))))
+    extended_data$art_summary <- cbind(unique(h$phiid), extended_data$art_summary[,-1])
+  
+  # join hz + artifact
+  h <- join(h, extended_data$art_summary, by='phiid', type='left')
   
   ## fix some common problems
   
@@ -73,7 +83,10 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   
   ## test for horizonation inconsistencies... flag, and optionally remove
   # ~ 1.3 seconds / ~ 4k pedons
-  h.test <- ddply(h, 'peiid', test_hz_logic, topcol='hzdept', bottomcol='hzdepb', strict=TRUE)
+  h.test <- ddply(h, 'peiid', function(d) {
+    res <- aqp::hzDepthTests(top=d[['hzdept']], bottom=d[['hzdepb']])
+    return(data.frame(hz_logic_pass=all(!res)))
+  })
   
   # which are the good (valid) ones?
   good.ids <- as.character(h.test$peiid[which(h.test$hz_logic_pass)])
@@ -89,15 +102,6 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   assign('bad.pedon.ids', value=bad.pedon.ids, envir=soilDB.env)
   assign("bad.horizons", value = data.frame(bad.horizons), envir = soilDB.env)
   
-  
-  ## https://github.com/ncss-tech/soilDB/issues/44
-  # optionally load phlabresults table
-  if (lab) {
-    phlabresults <- get_phlabresults_data_from_NASIS_db(SS=SS)
-    h <- join(h, phlabresults, by = "phiid", type = "left")
-  }
-  
-  
   ## optionally convert NA fragvol to 0
   if(nullFragsAreZero) {
     # this is the "total fragment volume" per NASIS calculation
@@ -109,6 +113,9 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
     # this is computed by soilDB::simplifyFragmentData()
     # no para-frags
     h$total_frags_pct_nopf <- ifelse(is.na(h$total_frags_pct_nopf), 0, h$total_frags_pct_nopf)
+    
+    # this is computed by soilDB::simplifyArtifactData()
+    h$total_art_pct <- ifelse(is.na(h$total_art_pct), 0, h$total_art_pct)
   }
   
   # upgrade to SoilProfilecollection
@@ -117,7 +124,6 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   # move pedon_id into @site
   # 1 second for ~ 4k pedons
   site(h) <- ~ pedon_id
-  
   
   ## TODO: this will fail in the presence of duplicates
   # add site data to object
@@ -172,6 +178,10 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   # supress warnings: diagnostic_hz() <- is noisy when not all profiles have diagnostic hz data
   suppressWarnings(diagnostic_hz(h) <- extended_data$diagnostic)
   
+  # add restrictions to SPC
+  # required new setter in aqp SPC object (AGB added 2019/12/23)
+  suppressWarnings(restrictions(h) <- extended_data$restriction)
+  
   # join-in landform string
   ## 2015-11-30: short-circuts could use some work, consider pre-marking mistakes before parsing
   # ddply: 3 seconds for ~ 4k pedons
@@ -195,9 +205,6 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   m$origin <- 'NASIS pedons'
   metadata(h) <- m
   
-  # set NASIS-specific horizon identifier
-  hzidname(h) <- 'phiid'
-  
   # print any messages on possible data quality problems:
   if(exists('sites.missing.pedons', envir=soilDB.env))
     if(length(get('sites.missing.pedons', envir=soilDB.env)) > 0)
@@ -206,6 +213,23 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   if(exists('dup.pedon.ids', envir=soilDB.env))
     if(length(get('dup.pedon.ids', envir=soilDB.env)) > 0)
       message("-> QC: duplicate pedons: use `get('dup.pedon.ids', envir=soilDB.env)` for related peiid values")
+  
+  # set NASIS-specific horizon identifier
+  tryCatch(hzidname(h) <- 'phiid', error = function(e) {
+    if(grepl(e$message, pattern="not unique$")) {
+       if(!rmHzErrors) {
+        # if rmHzErrors = FALSE, keep unique integer assigned ID to all records automatically
+        message("-> QC: duplicate horizons are present with rmHzErrors=FALSE! defaulting to `hzID` as unique horizon ID.")
+       } else {
+         stop(e)
+       }
+    }
+  })  
+  
+  # set hz designation and texture fields -- NB: chose to use calculated texture -- more versatile
+  # functions designed to use hztexclname() should handle presence of in-lieu, modifiers, etc.
+  hzdesgnname(h) <- "hzname"
+  hztexclname(h) <- "texture"
   
   if(exists('bad.pedon.ids', envir=soilDB.env))
     if(length(get('bad.pedon.ids', envir=soilDB.env)) > 0)
@@ -218,6 +242,14 @@ fetchNASIS_pedons <- function(SS=TRUE, rmHzErrors=TRUE, nullFragsAreZero=TRUE, s
   if(exists('top.bottom.equal', envir=soilDB.env))
     if(length(get('top.bottom.equal', envir=soilDB.env)) > 0)
       message("-> QC: equal hz top and bottom depths: use `get('top.bottom.equal', envir=soilDB.env)` for related pedon IDs")
+  
+  ## https://github.com/ncss-tech/soilDB/issues/44
+  # optionally load phlabresults table
+  if (lab) {
+    phlabresults <- .get_phlabresults_data_from_NASIS_db(SS=SS)
+    horizons(h) <- phlabresults
+    #h <- join(h, phlabresults, by = "phiid", type = "left")
+  }
   
   # done
   return(h)

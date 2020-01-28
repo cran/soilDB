@@ -29,11 +29,11 @@ get_projectmapunit2_from_NASISWebReport(mlrassoarea, fiscalyear, projectname,
                                         stringsAsFactors = default.stringsAsFactors()
                                         )
 get_legend_from_NASISWebReport(areasymbol,
-                               drop.unused.levels = TRUE,
+                               droplevels = TRUE,
                                stringsAsFactors = default.stringsAsFactors()
                                )
 get_mapunit_from_NASISWebReport(areasymbol,
-                                drop.unused.levels = TRUE,
+                                droplevels = TRUE,
                                 stringsAsFactors = default.stringsAsFactors()
                                 )
 get_component_from_NASISWebReport(projectname, 
@@ -60,7 +60,7 @@ get_sitesoilmoist_from_NASISWebReport(usiteid)
   \item{fill}{should rows with missing component ids be removed NA (FALSE)}
   \item{rmHzErrors}{should pedons with horizonation errors be removed from the results? (default: FALSE)}
   \item{stringsAsFactors}{logical: should character vectors be converted to factors? This argument is passed to the uncode() function. It does not convert those vectors that have been set outside of uncode() (i.e. hard coded). The 'factory-fresh' default is TRUE, but this can be changed by setting options(stringsAsFactors = FALSE)}
-  \item{drop.unused.levels}{logical: indicating whether to drop unused levels in classifying factors. This is useful when a class has large number of unused classes, which can waste space in tables and figures.}
+  \item{droplevels}{logical: indicating whether to drop unused levels in classifying factors. This is useful when a class has large number of unused classes, which can waste space in tables and figures.}
 }
 
 
@@ -75,13 +75,14 @@ get_sitesoilmoist_from_NASISWebReport(usiteid)
 \donttest{
 
 
-if (
-  requireNamespace("soilDB", quietly = TRUE) & 
-  requireNamespace("ggplot2", quietly = TRUE) & 
-  requireNamespace("gridExtra", quietly = TRUE)
+if (requireNamespace("curl") &
+    curl::has_internet() &
+    require("aqp") &
+    require("ggplot2") & 
+    require("gridExtra")
 ) {
   # query soil components by projectname
-  test = fetchNASISWebReport_component(
+  test = fetchNASISWebReport(
     "EVAL - MLRA 111A - Ross silt loam, 0 to 2 percent slopes, frequently flooded"
   )
   test = test$spc

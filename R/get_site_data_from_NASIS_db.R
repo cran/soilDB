@@ -27,7 +27,7 @@ get_site_data_from_NASIS_db <- function(SS=TRUE, stringsAsFactors = default.stri
 utmzone, utmeasting, utmnorthing, -(longdegrees + CASE WHEN longminutes IS NULL THEN 0.0 ELSE longminutes / 60.0 END + CASE WHEN longseconds IS NULL THEN 0.0 ELSE longseconds / 60.0 / 60.0 END) as x, latdegrees + CASE WHEN latminutes IS NULL THEN 0.0 ELSE latminutes / 60.0 END + CASE WHEN latseconds IS NULL THEN 0.0 ELSE latseconds / 60.0 / 60.0 END as y, horizdatnm, longstddecimaldegrees as x_std, latstddecimaldegrees as y_std, 
 gpspositionalerror, descname as describer, pedonpurpose, pedontype, pedlabsampnum, labdatadescflag, 
 tsectstopnum, tsectinterval, utransectid, tsectkind, tsectselmeth, 
-elev as elev_field, slope as slope_field, aspect as aspect_field, plantassocnm, siteobs_View_1.earthcovkind1, siteobs_View_1.earthcovkind2, erocl, bedrckdepth, bedrckkind, bedrckhardness, hillslopeprof, geomslopeseg, shapeacross, shapedown, slopecomplex, drainagecl, geomposhill, geomposmntn, geomposflats
+elev as elev_field, slope as slope_field, aspect as aspect_field, plantassocnm, siteobs_View_1.earthcovkind1, siteobs_View_1.earthcovkind2, erocl, bedrckdepth, bedrckkind, bedrckhardness, hillslopeprof, geomslopeseg, shapeacross, shapedown, slopecomplex, drainagecl, geomposhill, geomposmntn, geomposflats, swaterdepth
 
 FROM 
 
@@ -44,8 +44,7 @@ WHERE sb.rn IS NULL OR sb.rn = 1
 
 ORDER BY pedon_View_1.peiid ;"
 	
-	# setup connection local NASIS
-	channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
+  channel <- .openNASISchannel()
 	
 	# toggle selected set vs. local DB
 	if(SS == FALSE) {
@@ -61,7 +60,7 @@ ORDER BY pedon_View_1.peiid ;"
 	
 	## this shouldn't happen, retain for debugging
 	# test for an error
-	if(class(d) == 'character')
+	if(inherits(d, 'character'))
 	  stop('error in SQL')
 	
 	# uncode domain columns

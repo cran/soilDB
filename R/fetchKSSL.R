@@ -86,7 +86,7 @@ fetchKSSL <- function(series=NULL, bbox=NULL, mlra=NULL, pedlabsampnum=NULL, ped
 	  ## TODO: consider simplification of fragment data here too
 	  
 	  # try to auto-simplify colors
-	  if(simplifyColors & class(m$phcolor) == 'data.frame') {
+	  if(simplifyColors & inherits(m$phcolor, 'data.frame')) {
 	    # extract horizon data from SPC
 	    hh <- horizons(h)
 	    
@@ -101,7 +101,12 @@ fetchKSSL <- function(series=NULL, bbox=NULL, mlra=NULL, pedlabsampnum=NULL, ped
 	} else m <- NULL
 	
 	# set KSSL-specific horizon identifier
-	hzidname(h) <- "labsampnum"
+	## WHOOPS -- turns out this is nonunique 0.1% of the time AGB 2019/11/14
+	#hzidname(h) <- "labsampnum"
+	
+	# set KSSL-specific hzdesgn/hztexcl fields
+	hzdesgnname(h) <- "hzn_desgn"
+	hztexclname(h) <- "lab_texture_class"
 	
 	## set metadata
 	h.metadata <- metadata(h)

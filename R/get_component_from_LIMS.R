@@ -3,15 +3,22 @@ get_component_from_NASISWebReport <- function(projectname, stringsAsFactors = de
   url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_component_from_NASISWebReport"
   
   d.component <- lapply(projectname, function(x) {
-    cat("getting project '", x, "' from NasisReportsWebSite \n", sep = "")
+    message("getting project '", x, "' from NasisReportsWebSite \n", sep = "")
     args = list(p_projectname = x)
-    d    =  parseWebReport(url, args)
+    d    =  tryCatch(parseWebReport(url, args), 
+                     error = function(e) {
+                                message(e)
+                                return(NULL)
+                              })
   })
+  
   d.component <- do.call("rbind", d.component)
+  
+  if(is.null(d.component))
+    return(NULL)  
   
   # set factor levels according to metadata domains
   d.component <- uncode(d.component, db = "LIMS", stringsAsFactors = stringsAsFactors)
-  
   
   # prep
   d.component <- .cogmd_prep(d.component, db = "LIMS")
@@ -20,7 +27,7 @@ get_component_from_NASISWebReport <- function(projectname, stringsAsFactors = de
   # return data.frame
   return(d.component)
   
-  }
+}
 
 
 get_chorizon_from_NASISWebReport <- function(projectname, fill = FALSE, stringsAsFactors = default.stringsAsFactors()) {
@@ -32,7 +39,7 @@ get_chorizon_from_NASISWebReport <- function(projectname, fill = FALSE, stringsA
     d    =  parseWebReport(url, args)
   })
   d.chorizon <- do.call("rbind", d.chorizon)
-
+  
   ## TODO: might be nice to abstract this into a new function
   # hacks to make R CMD check --as-cran happy:
   metadata <- NULL
@@ -40,33 +47,35 @@ get_chorizon_from_NASISWebReport <- function(projectname, fill = FALSE, stringsA
   load(system.file("data/metadata.rda", package="soilDB")[1])
   
   # transform variables and metadata
-  d.chorizon <- within(d.chorizon, {
-    texture = tolower(texture)
-    if (stringsAsFactors == TRUE) {
-      texcl = factor(texcl, 
-                     levels = metadata[metadata$ColumnPhysicalName == "texcl", "ChoiceValue"],
-                     labels = metadata[metadata$ColumnPhysicalName == "texcl", "ChoiceName"]
-                     )
-    }
+  if (!all(is.na(d.chorizon$chiid))) {
+    d.chorizon <- within(d.chorizon, {
+      texture = tolower(texture)
+      if (stringsAsFactors == TRUE) {
+        texcl = factor(texcl,
+                       levels = metadata[metadata$ColumnPhysicalName == "texcl", "ChoiceValue"],
+                       labels = metadata[metadata$ColumnPhysicalName == "texcl", "ChoiceName"]
+        )
+      }
     })
+  }
   
   # fill
   if (fill == FALSE) {
     d.chorizon <- d.chorizon[!is.na(d.chorizon$chiid), ]
-    }
+  }
   
   # return data.frame
   return(d.chorizon)
   
-  }
+}
 
 
 
-get_legend_from_NASISWebReport <- function(areasymbol, drop.unused.levels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
+get_legend_from_NASISWebReport <- function(areasymbol, droplevels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
   url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_legend_from_NASISWebReport"
   
   d.legend <- lapply(areasymbol, function(x) {
-    cat("getting legend for '", x, "' from NasisReportsWebSite \n", sep = "")
+    message("getting legend for '", x, "' from NasisReportsWebSite \n", sep = "")
     args = list(p_areasymbol = x)
     d    =  parseWebReport(url, args)
   })
@@ -76,9 +85,9 @@ get_legend_from_NASISWebReport <- function(areasymbol, drop.unused.levels = TRUE
   # set factor levels according to metadata domains
   # data is coming back uncoded from LIMS so db is set to "SDA"
   d.legend <- uncode(d.legend, 
-                      db = "SDA",
-                      drop.unused.levels = drop.unused.levels,
-                      stringsAsFactors = stringsAsFactors
+                     db = "SDA",
+                     droplevels = droplevels,
+                     stringsAsFactors = stringsAsFactors
   )
   
   # date
@@ -91,11 +100,11 @@ get_legend_from_NASISWebReport <- function(areasymbol, drop.unused.levels = TRUE
 
 
 
-get_lmuaoverlap_from_NASISWebReport <- function(areasymbol, drop.unused.levels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
+get_lmuaoverlap_from_NASISWebReport <- function(areasymbol, droplevels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
   url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_lmuaoverlap_from_NASISWebReport"
   
   d <- lapply(areasymbol, function(x) {
-    cat("getting legend for '", x, "' from NasisReportsWebSite \n", sep = "")
+    message("getting legend for '", x, "' from NasisReportsWebSite \n", sep = "")
     args = list(p_areasymbol = x)
     d    =  parseWebReport(url, args)
   })
@@ -106,22 +115,22 @@ get_lmuaoverlap_from_NASISWebReport <- function(areasymbol, drop.unused.levels =
   # data is coming back uncoded from LIMS so db is set to "SDA"
   d <- uncode(d, 
               db = "SDA",
-              drop.unused.levels = drop.unused.levels,
+              droplevels = droplevels,
               stringsAsFactors = stringsAsFactors
   )
   
-    # return data.frame
+  # return data.frame
   return(d)
   
 }
 
 
 
-get_mapunit_from_NASISWebReport <- function(areasymbol, drop.unused.levels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
+get_mapunit_from_NASISWebReport <- function(areasymbol, droplevels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
   url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_mapunit_from_NASISWebReport"
   
   d.mapunit <- lapply(areasymbol, function(x) {
-    cat("getting map units for '", x, "' from NasisReportsWebSite \n", sep = "")
+    message("getting map units for '", x, "' from NasisReportsWebSite \n", sep = "")
     args = list(p_areasymbol = x)
     d    =  parseWebReport(url, args)
   })
@@ -133,9 +142,9 @@ get_mapunit_from_NASISWebReport <- function(areasymbol, drop.unused.levels = TRU
   # data is coming back uncoded from LIMS so db is set to "SDA"
   d.mapunit <- uncode(d.mapunit, 
                       db = "SDA",
-                      drop.unused.levels = drop.unused.levels,
+                      droplevels = droplevels,
                       stringsAsFactors = stringsAsFactors
-                      )
+  )
   
   # return data.frame
   return(d.mapunit)
@@ -151,7 +160,7 @@ get_projectmapunit_from_NASISWebReport <- function(projectname, stringsAsFactors
   d.mapunit <- lapply(projectname, function(x) {
     args = list(p_projectname = x)
     d    =  parseWebReport(url, args)
-    })
+  })
   d.mapunit <- do.call("rbind", d.mapunit)
   
   d.mapunit$musym = as.character(d.mapunit$musym)
@@ -162,7 +171,7 @@ get_projectmapunit_from_NASISWebReport <- function(projectname, stringsAsFactors
   # return data.frame
   return(d.mapunit)
   
-  }
+}
 
 
 get_projectmapunit2_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projectname, stringsAsFactors = default.stringsAsFactors()) {
@@ -202,7 +211,7 @@ get_project_from_NASISWebReport <- function(mlrassoarea, fiscalyear) {
   # return data.frame
   return(d.project)
   
-  }
+}
 
 
 get_progress_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projecttypename) {
@@ -216,7 +225,7 @@ get_progress_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projecttyp
   # return data.frame
   return(d.progress)
   
-  }
+}
 
 
 get_project_correlation_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projectname) {
@@ -233,14 +242,14 @@ get_project_correlation_from_NASISWebReport <- function(mlrassoarea, fiscalyear,
   
   # compute musym_orig for additional lmapunits, necessary to catch changes to the original musym, due to a constraint on the lmapunit table that prevents duplicate musym for additional mapunits 
   d.rcor <- within(d.rcor, {
-
+    
     n         = nchar(musym)
     begin_1   = substr(musym, 2, n)
     end_1     = substr(musym, 1, n - 1)
     end_4     = substr(musym, 1, n - 4)
-
+    
     idx       = musym != new_musym & !is.na(new_musym)
-
+    
     orig_musym = ifelse(idx & musym != begin_1 & (new_musym == begin_1 | substr(musym, 1, 1) %in% c("x", "z")), begin_1, musym)
     # Joe recommended using |\\+${1}, but appears to be legit in some cases
     orig_musym = ifelse(idx & musym != end_1   & new_musym == end_1 , end_1   , orig_musym)
@@ -251,33 +260,43 @@ get_project_correlation_from_NASISWebReport <- function(mlrassoarea, fiscalyear,
   # return data.frame
   return(d.rcor)
   
-  }
+}
 
 
 fetchNASISWebReport <- function(projectname, rmHzErrors = FALSE, fill = FALSE,
-                                 stringsAsFactors = default.stringsAsFactors()
-                                 ) {
+                                stringsAsFactors = default.stringsAsFactors()
+) {
   
   # load data in pieces
   f.mapunit   <- get_projectmapunit_from_NASISWebReport(projectname, stringsAsFactors = stringsAsFactors)
   f.component <- get_component_from_NASISWebReport(projectname, stringsAsFactors = stringsAsFactors)
   f.chorizon  <- get_chorizon_from_NASISWebReport(projectname, fill, stringsAsFactors = stringsAsFactors)
   
+  # return NULL if one of the required pieces is missing
+  if(is.null(f.mapunit) | is.null(f.component) | is.null(f.chorizon)) {
+    message("One or more inputs for fetchNASISWebReport (mapunit, component, or horizon) is NULL, returning NULL.")
+    return(NULL)
+  }
+     
+  
   # optionally test for bad horizonation... flag, and remove
   if (rmHzErrors) {
-    f.chorizon.test <- plyr::ddply(f.chorizon, 'cokey', test_hz_logic, topcol='hzdept_r', bottomcol='hzdepb_r', strict=TRUE)
+    f.chorizon.test <- plyr::ddply(f.chorizon, 'coiid', function(d) {
+      res <- aqp::hzDepthTests(top=d[['hzdept_r']], bottom=d[['hzdepb_r']])
+      return(data.frame(hz_logic_pass=all(!res)))
+    })
     
     # which are the good (valid) ones?
-    good.ids <- as.character(f.chorizon.test$cokey[which(f.chorizon.test$hz_logic_pass)])
-    bad.ids  <- as.character(f.chorizon.test$cokey[which(! f.chorizon.test$hz_logic_pass)])
+    good.ids <- as.character(f.chorizon.test$coiid[which(f.chorizon.test$hz_logic_pass)])
+    bad.ids  <- as.character(f.chorizon.test$coiid[which(! f.chorizon.test$hz_logic_pass)])
     
     # keep the good ones
-    f.chorizon <- f.chorizon[which(f.chorizon$cokey %in% good.ids), ]
+    f.chorizon <- f.chorizon[which(f.chorizon$coiid %in% good.ids), ]
     
     # keep track of those components with horizonation errors
     if(length(bad.ids) > 0)
       assign('component.hz.problems', value=bad.ids, envir=soilDB.env)
-    }
+  }
   
   # upgrade to SoilProfilecollection
   depths(f.chorizon) <- coiid ~ hzdept_r + hzdepb_r
@@ -286,10 +305,10 @@ fetchNASISWebReport <- function(projectname, rmHzErrors = FALSE, fill = FALSE,
   ## TODO: this will fail in the presence of duplicates
   ## TODO: make this error more informative
   # add site data to object
-  site(f.chorizon) <- f.component # left-join via cokey
+  site(f.chorizon) <- f.component # left-join via coiid
   
-  # set SDA/SSURGO-specific horizon identifier
-  hzidname(f.chorizon) <- 'chkey'
+  # set NASIS-specific horizon identifier
+  hzidname(f.chorizon) <- 'chiid'
   
   # print any messages on possible data quality problems:
   if (exists('component.hz.problems', envir=soilDB.env))
@@ -298,6 +317,5 @@ fetchNASISWebReport <- function(projectname, rmHzErrors = FALSE, fill = FALSE,
   # done, return SPC
   return(list(spc = f.chorizon, mapunit = f.mapunit))
   
-  }
+}
 
-  

@@ -1,4 +1,4 @@
-get_phlabresults_data_from_NASIS_db <- function(SS=TRUE) {
+.get_phlabresults_data_from_NASIS_db <- function(SS=TRUE) {
   
   # hacks to make R CMD check --as-cran happy:
   sampledepthbottom <- NULL
@@ -9,14 +9,14 @@ get_phlabresults_data_from_NASIS_db <- function(SS=TRUE) {
   # must have RODBC installed
   if (!requireNamespace('RODBC')) stop('please install the `RODBC` package', call.=FALSE)
 
-  q <- "SELECT phiidref, seqnum, sampledepthtop, sampledepthbottom, sampleid, datacollector, claytotmeasured, claycarbmeasured, silttotmeasured, siltfinemeasured, siltcomeasured, sandtotmeasured, sandtotmethod, sandvcmeasured, sandcomeasured, sandmedmeasured, sandfinemeasured, sandvfmeasured, sandvfmethod, textureclfieldlab, fiberrubbedpct, fiberunrubbedpct, ph1to1h2o, ph01mcacl2, phnaf, phoxidized, phdeltah2o2, liquidlimitmeasured, plasticlimitmeasured, pi, atterbergsampcond, cole, esttotpotacidityetpa, camgmeh2, potassiummeh2, camgsatpaste, extractaciditykcl, basesatmeh2, cec7, cec82, ecec, phosphatephos, nitratenitrogen, ecmeasured, ecdeterminemeth, ec15, caco3equivmeasured, gypsumequiv, sodium, sar, gypsumreq, humiccolor, fulviccolor, humicfulviccolor, alummeasured, pyrophoshue, pyrophosvalue, pyrophoschroma, melanicindex
-  FROM phlabresults_View_1 
-  ORDER BY phiidref, sampledepthtop
-  ;"
+  q <- "SELECT peiidref AS peiid, phiid, phl.seqnum, phl.sampledepthtop, sampledepthbottom, sampleid, datacollector, claytotmeasured, claycarbmeasured, silttotmeasured, siltfinemeasured, siltcomeasured, sandtotmeasured, sandtotmethod, sandvcmeasured, sandcomeasured, sandmedmeasured, sandfinemeasured, sandvfmeasured, sandvfmethod, textureclfieldlab, fiberrubbedpct, fiberunrubbedpct, ph1to1h2o, ph01mcacl2, phnaf, phoxidized, phdeltah2o2, liquidlimitmeasured, plasticlimitmeasured, pi, atterbergsampcond, cole, esttotpotacidityetpa, camgmeh2, potassiummeh2, camgsatpaste, extractaciditykcl, basesatmeh2, cec7, cec82, ecec, phosphatephos, nitratenitrogen, ecmeasured, ecdeterminemeth, ec15, caco3equivmeasured, gypsumequiv, sodium, sar, gypsumreq, humiccolor, fulviccolor, humicfulviccolor, alummeasured, pyrophoshue, pyrophosvalue, pyrophoschroma, melanicindex
+FROM
+phorizon_View_1 ph 
+LEFT OUTER JOIN phlabresults_View_1 phl on phl.phiidref = ph.phiid
+  ORDER BY peiidref, phiid, sampledepthtop;"
   
   
-  # setup connection local NASIS
-  channel <- RODBC::odbcDriverConnect(connection=getOption('soilDB.NASIS.credentials'))
+  channel <- .openNASISchannel()
   
   # toggle selected set vs. local DB
   if(SS == FALSE) {
@@ -117,9 +117,9 @@ get_phlabresults_data_from_NASIS_db <- function(SS=TRUE) {
 
   names(d.phlabresults) <- gsub("measured|lab$", "", names(d.phlabresults))
   
-  vars <- c("phiidref")
+  vars <- c("peiid","phiid")
   idx <- names(d.phlabresults) %in% vars
-  names(d.phlabresults)[idx] <- c("phiid")
+  names(d.phlabresults)[idx] <- vars
   
   names(d.phlabresults)[!idx] <- paste0(names(d.phlabresults)[!idx], "_lab")
 

@@ -4,13 +4,19 @@ test_that("fetchKSSL() works", {
   
   skip_if_offline()
   
+  # hack for in-house testing only
+  # WWW services aren't always available and will cause CRAN to drop our package if tests fail
+  if(! soilDB:::.local_NASIS_defined()) {
+    skip("in-house testing only")
+  }
+  
   ## sample data
   x <<- fetchKSSL(series='sierra')
   x.morph <<- fetchKSSL(series='sierra', returnMorphologicData = TRUE)
   x.morp.simple.colors <<- fetchKSSL(series='sierra', returnMorphologicData = TRUE, simplifyColors = TRUE)
   
   # standard request
-  expect_match(class(x), 'SoilProfileCollection')
+  expect_true(inherits(x, 'SoilProfileCollection'))
   
   
 })
@@ -20,10 +26,16 @@ test_that("fetchKSSL() returns an SPC or list", {
   
   skip_if_offline()
   
+  # hack for in-house testing only
+  # WWW services aren't always available and will cause CRAN to drop our package if tests fail
+  if(! soilDB:::.local_NASIS_defined()) {
+    skip("in-house testing only")
+  }
+  
   # SPC + morphologic data
-  expect_match(class(x.morph), 'list')
-  expect_match(class(x.morph$SPC), 'SoilProfileCollection')
-  expect_match(class(x.morph$morph), 'list')
+  expect_true(inherits(x.morph, 'list'))
+  expect_true(inherits(x.morph$SPC, 'SoilProfileCollection'))
+  expect_true(inherits(x.morph$morph, 'list'))
   
   # simplified colors, merges into @horizons
   expect_false(is.null(x.morp.simple.colors$SPC$moist_soil_color))
@@ -34,6 +46,12 @@ test_that("fetchKSSL() returns an SPC or list", {
 test_that("fetchKSSL() returns reasonable data", {
   
   skip_if_offline()
+  
+  # hack for in-house testing only
+  # WWW services aren't always available and will cause CRAN to drop our package if tests fail
+  if(! soilDB:::.local_NASIS_defined()) {
+    skip("in-house testing only")
+  }
   
   # standard request
   expect_equal(nrow(site(x)) > 0, TRUE)
@@ -47,6 +65,12 @@ test_that("fetchKSSL() returns data associated with named series (sierra)", {
   
   skip_if_offline()
   
+  # hack for in-house testing only
+  # WWW services aren't always available and will cause CRAN to drop our package if tests fail
+  if(! soilDB:::.local_NASIS_defined()) {
+    skip("in-house testing only")
+  }
+  
   # all of the results should contain the search term
   f <- grepl('sierra', x$taxonname, ignore.case = TRUE)
   expect_equal(all(f), TRUE)
@@ -58,6 +82,12 @@ test_that("fetchKSSL() returns NULL with bogus query", {
   
   skip_if_offline()
   
+  # hack for in-house testing only
+  # WWW services aren't always available and will cause CRAN to drop our package if tests fail
+  if(! soilDB:::.local_NASIS_defined()) {
+    skip("in-house testing only")
+  }
+  
   # a message is printed and NULL returned when no results
   res <- suppressMessages(fetchKSSL(series='XXX'))
   expect_null(res)
@@ -68,6 +98,12 @@ test_that("fetchKSSL() returns NULL with bogus query", {
 test_that("fetchKSSL() fails gracefully when morphology data are missing", {
   
   skip_if_offline()
+  
+  # hack for in-house testing only
+  # WWW services aren't always available and will cause CRAN to drop our package if tests fail
+  if(! soilDB:::.local_NASIS_defined()) {
+    skip("in-house testing only")
+  }
   
   # pedon_key 37457 is missing:
   # * most lab data

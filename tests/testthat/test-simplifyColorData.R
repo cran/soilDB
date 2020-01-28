@@ -74,15 +74,13 @@ test_that("simplifyColorData: single color / moisture state / horizon", {
   expect_equal(res$m_g, res.rgb$g[2])
   expect_equal(res$m_b, res.rgb$b[2])
   
-  # TODO: ???
-  
 })
 
 
 test_that("simplifyColorData: two colors / moisture state, color percentages provided", {
   
-  # single color / moisture state / horizon
-  res <- simplifyColorData(x.multiple)
+  # two colors / moisture state, color percentages provided
+  suppressMessages(res <- simplifyColorData(x.multiple))
   
   # should be 2 rows
   expect_equal(nrow(res), 2)
@@ -99,5 +97,5 @@ test_that("simplifyColorData: two colors / moisture state, color percentages pro
   expect_equal(res$m_value[2], 5)
   expect_equal(res$m_chroma[2], 5)
   
-  
 })
+

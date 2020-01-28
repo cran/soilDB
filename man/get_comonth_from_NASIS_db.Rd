@@ -23,13 +23,13 @@ get_comonth_from_NASIS_db(SS = TRUE, fill = FALSE,
 
 
 \seealso{
-\code{\link{fetchNASIS}}, \code{\link{fetchNASIS_components}}
+\code{\link{fetchNASIS}}
 }
 
 \examples{
 \donttest{
 # query text note data
-cm <- get_comonth_from_NASIS_db()
+cm <- try(get_comonth_from_NASIS_db())
 
 # show structure of component month data
 str(cm)

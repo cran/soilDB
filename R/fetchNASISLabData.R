@@ -1,7 +1,5 @@
-# updated to NASIS 6.3
-
 # convenience function for loading most commonly used information from local NASIS database
-fetchNASISLabData <- function() {
+fetchNASISLabData <- function(SS = TRUE) {
   # must have RODBC installed
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
@@ -11,11 +9,12 @@ fetchNASISLabData <- function() {
 			stop('Local NASIS ODBC connection has not been setup. Please see the `setup_ODBC_local_NASIS.pdf` document included with this package.')
 	
 	# 1. load data in pieces, results are DF objects
-	s <- get_labpedon_data_from_NASIS_db()
-	h <- get_lablayer_data_from_NASIS_db()
+	s <- get_labpedon_data_from_NASIS_db(SS)
+	h <- get_lablayer_data_from_NASIS_db(SS)
 	
-  # test to see if the selected set is loaded
-  if (nrow(h) == 0 | nrow(s) == 0) message('your selected set is missing either the lab or site table, please load and try again :)')
+  # stop if selected set is not loaded
+  if (nrow(h) == 0 | nrow(s) == 0) 
+    stop('Selected set is missing either the Pedon or Layer NCSS Lab Data table, please load and try again :)')
 		
 	# fix some common problems
 	# replace missing lower boundaries
@@ -25,30 +24,28 @@ fetchNASISLabData <- function() {
     h$hzdepb[missing.lower.depth.idx] <- h$hzdept[missing.lower.depth.idx] + 1
   }
 	
-	
   ## TODO: what to do with multiple samples / hz?
 	# test for bad horizonation... flag
 	message('finding horizonation errors ...')
-	h.test <- ddply(h, 'labpeiid', test_hz_logic, topcol='hzdept', bottomcol='hzdepb', strict=TRUE)
+	h.test <-	ddply(h, 'labpeiid', function(d) {
+	  res <- aqp::hzDepthTests(top=d[['hzdept']], bottom=d[['hzdepb']])
+	  return(data.frame(hz_logic_pass=all(!res)))
+	})
 	
 	# which are the good (valid) ones?
 	good.ids <- as.character(h.test$labpeiid[which(h.test$hz_logic_pass)])
 	bad.ids <- as.character(h.test$labpeiid[which(!h.test$hz_logic_pass)])
   bad.pedon.ids <- s$upedonid[which(s$labpeiid %in% bad.ids)]
 	
-  # subset ?
-  
-	
 	# upgrade to SoilProfilecollection
 	depths(h) <- labpeiid ~ hzdept + hzdepb
-	
 	
 	## TODO: this will fail in the presence of duplicates
 	# add site data to object
 	site(h) <- s # left-join via labpeiid
 	
 	# set NASIS-specific horizon identifier
-	hzidname(h) <- 'phiid'
+	hzidname(h) <- 'labphiid'
   
 	# 7. save and mention bad pedons
 	assign('bad.labpedon.ids', value=bad.pedon.ids, envir=soilDB.env)

@@ -10,7 +10,7 @@ simplifyColorData <- function(d, id.var='phiid', ...) {
   
   # sanity check: must contain 1 row
   if(nrow(d) < 1) {
-    warning('0 rows of colors data, doing nothing', call. = FALSE)
+    warning('simplifyColorData: 0 rows of colors data, doing nothing', call. = FALSE)
     return(d)
   }
   
@@ -19,7 +19,7 @@ simplifyColorData <- function(d, id.var='phiid', ...) {
   d <- cbind(d, d.rgb)
   
   # add a fake column for storing `sigma`
-  # this is the error associated with the rgb -> munsell transformation
+  # this is the error associated with the sRGB -> munsell transformation
   d$sigma <- NA
   
   # perform lower-case comparison, values differ based on interpretation of NASIS metadata
@@ -54,7 +54,7 @@ simplifyColorData <- function(d, id.var='phiid', ...) {
     # < move id.var -> from rownames to column and fix order >
     mixed.dry <- ddply(dry.colors[dry.mix.idx, ], id.var, mix_and_clean_colors, ...)
     
-    # back-transform mixture to Munsell
+    # back-transform mixture to Munsell using best-available method
     m <- rgb2munsell(mixed.dry[, c('r', 'g', 'b')])
 
     # adjust names to match NASIS
@@ -83,7 +83,7 @@ simplifyColorData <- function(d, id.var='phiid', ...) {
     ## BUG: for some reason ddply carries over some of the original columns in the result
     mixed.moist <- ddply(moist.colors[moist.mix.idx, ], id.var, mix_and_clean_colors, ...)
     
-    # back-transform mixture to Munsell
+    # back-transform mixture to Munsell using best-available metric
     m <- rgb2munsell(mixed.moist[, c('r', 'g', 'b')])
     
     # adjust names to match NASIS

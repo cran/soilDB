@@ -4,11 +4,17 @@ test_that("OSDquery() works", {
   
   skip_if_offline()
   
+  # hack for in-house testing only
+  # WWW services aren't always available and will cause CRAN to drop our package if tests fail
+  if(! soilDB:::.local_NASIS_defined()) {
+    skip("in-house testing only")
+  }
+  
   # a message is printed and NULL returned when no results
   res <- suppressMessages(OSDquery(geog_assoc_soils = 'pardee'))
   
   # standard request
-  expect_match(class(res), 'data.frame')
+  expect_true(inherits(res, 'data.frame'))
   
 })
 
@@ -16,6 +22,12 @@ test_that("OSDquery() works", {
 test_that("OSDquery() returns NULL with bogus query", {
   
   skip_if_offline()
+  
+  # hack for in-house testing only
+  # WWW services aren't always available and will cause CRAN to drop our package if tests fail
+  if(! soilDB:::.local_NASIS_defined()) {
+    skip("in-house testing only")
+  }
   
   # a message is printed and NULL returned when no results
   res <- suppressMessages(OSDquery(geog_assoc_soils = 'XXX'))

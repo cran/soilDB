@@ -2,7 +2,7 @@
 # https://github.com/ncss-tech/soilDB/issues/50
 ## TODO: this will not ID horizons with no depths
 ## TODO: better error checking / reporting is needed: coiid, dmu id, component name
-fetchNASIS_components <- function(SS=TRUE, rmHzErrors=TRUE, fill = FALSE, stringsAsFactors = default.stringsAsFactors()) {
+.fetchNASIS_components <- function(SS=TRUE, rmHzErrors=TRUE, fill = FALSE, stringsAsFactors = default.stringsAsFactors()) {
   # must have RODBC installed
   if(!requireNamespace('RODBC'))
     stop('please install the `RODBC` package', call.=FALSE)
@@ -19,10 +19,14 @@ fetchNASIS_components <- function(SS=TRUE, rmHzErrors=TRUE, fill = FALSE, string
   f.otherveg   <- get_component_otherveg_data_from_NASIS_db(SS=SS)
   f.ecosite    <- get_component_esd_data_from_NASIS_db(SS=SS, stringsAsFactors = stringsAsFactors)
   f.diaghz     <- get_component_diaghz_from_NASIS_db(SS=SS)
+  f.restrict   <- get_component_restrictions_from_NASIS_db(SS=SS)
 
   # optionally test for bad horizonation... flag, and remove
   if(rmHzErrors & nrow(f.chorizon)) {
-    f.chorizon.test <- plyr::ddply(f.chorizon, 'coiid', test_hz_logic, topcol='hzdept_r', bottomcol='hzdepb_r', strict=TRUE)
+    f.chorizon.test <- plyr::ddply(f.chorizon, 'coiid', function(d) {
+      res <- aqp::hzDepthTests(top=d[['hzdept_r']], bottom=d[['hzdepb_r']])
+      return(data.frame(hz_logic_pass=all(!res)))
+    })
 
     # which are the good (valid) ones?
     good.ids <- as.character(f.chorizon.test$coiid[which(f.chorizon.test$hz_logic_pass)])
@@ -40,7 +44,7 @@ fetchNASIS_components <- function(SS=TRUE, rmHzErrors=TRUE, fill = FALSE, string
     # upgrade to SoilProfilecollection
     depths(f.chorizon) <- coiid ~ hzdept_r + hzdepb_r
   } else {
-    stop("No horizon data in NASIS component query result.")
+    warning("No horizon data in NASIS component query result.", call.=FALSE)
   }
   
   # add site data to object
@@ -72,6 +76,10 @@ fetchNASIS_components <- function(SS=TRUE, rmHzErrors=TRUE, fill = FALSE, string
 
   # add diagnostic features to SPC
   diagnostic_hz(f.chorizon) <- f.diaghz
+  
+  # add restrictions to SPC
+  # required new setter in aqp SPC object (AGB added 2019/12/23)
+  restrictions(f.chorizon) <- f.restrict
 
   # print any messages on possible data quality problems:
   if(exists('component.hz.problems', envir=soilDB.env))
@@ -85,7 +93,11 @@ fetchNASIS_components <- function(SS=TRUE, rmHzErrors=TRUE, fill = FALSE, string
   m <- metadata(f.chorizon)
   m$origin <- 'NASIS components'
   metadata(f.chorizon) <- m
-
+  
+  # set optional hz designation and texture slots
+  hzdesgnname(f.chorizon) <- "hzname"
+  hztexclname(f.chorizon) <- "texture"
+  
   # done, return SPC
   return(f.chorizon)
 
