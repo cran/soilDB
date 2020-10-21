@@ -7,6 +7,9 @@
 # wt: fractional weights, usually area of hz face
 mix_and_clean_colors <- function(x, wt='pct', backTransform=FALSE) {
   
+  ## TODO finish this
+  .Deprecated('estimateColorMixture', msg = '')
+  
   # sanity check: no NA
   if(any(c(is.na(x$r), is.na(x$g), is.na(x$b))))
     return(data.frame(r=NA, g=NA, b=NA, colorhue=NA, colorvalue=NA, colorchroma=NA, sigma=NA))

@@ -1,6 +1,138 @@
 
+## tabulte the number of records within each geomorphic table
+## there could be some cases where there are no records, resulting in FALSE
+# x: object returned by fetchOSD
+.tabulateGeomorphRecords <- function(x) {
+  
+  vars <- c('series', 'n')
+  
+  ## TODO: [] style indexing will break when a table is empty (FALSE)
+  ## temporary short-circuit
+  ## consider returning empty tables in fetchOSD()
+  if(
+    any(
+      isFALSE(x$hillpos) | 
+      isFALSE(x$geomcomp) | 
+      isFALSE(x$terrace) |
+      isFALSE(x$flats)
+      )
+  ) {
+    return(NULL)
+  }
+  
+  m1 <- merge(x$hillpos[, vars], x$geomcomp[, vars], by = 'series', all.x = TRUE, all.y = TRUE, sort = FALSE)
+  names(m1)[2:3] <- c('hillpos.records', 'geomcomp.records')
+  
+  m2 <- merge(m1, x$terrace[, vars], by = 'series', all.x = TRUE, all.y = TRUE, sort = FALSE)
+  names(m2)[4] <- 'terrace.records'
+  
+  m3 <- merge(m2, x$flats[, vars], by = 'series', all.x = TRUE, all.y = TRUE, sort = FALSE)
+  names(m3)[5] <- 'flats.records'
+  
+  m4 <- lapply(m3, function(i) {
+    ifelse(is.na(i), 0, i)
+  })
+  
+  m5 <- as.data.frame(m4, stringsAsFactors = FALSE)
+  
+  return(m5)
+}
+
 # 2018-10-11: updated to new API, URL subject to change
 # fetch basic OSD, SC, and SoilWeb summaries from new API
+#' Fetch Official Series Descriptions and summaries from SoilWeb API
+#' 
+#' @description This function fetches a variety of data associated with named soil series, extracted from the USDA-NRCS Official Series Description text files and detailed soil survey (SSURGO). These data are periodically updated and made available via SoilWeb.
+#' 
+#' @param soils a character vector of named soil series; case-insensitive
+#' @param colorState color state for horizon soil color visualization: "moist" or "dry"
+#' @param extended if \code{TRUE} additional soil series summary data are returned, see details
+#' 
+#' @details {
+#' \itemize{
+#'   \item{\href{https://ncss-tech.github.io/AQP/soilDB/soil-series-query-functions.html}{overview of all soil series query functions}}
+#'   
+#'   \item{\href{https://ncss-tech.github.io/AQP/soilDB/competing-series.html}{competing soil series}}
+#'   
+#'   \item{\href{https://ncss-tech.github.io/AQP/soilDB/siblings.html}{siblings}}
+#' }
+#' 
+#' 
+#' The standard set of "site" and "horizon" data are returned as a \code{SoilProfileCollection} object (\code{extended=FALSE}. The "extended" suite of summary data can be requested by setting \code{extended=TRUE}. The resulting object will be a \code{list} with the following elements:)
+#' 
+#' \describe{
+#'   \item{SPC}{\code{SoilProfileCollection} containing standards "site" and "horizon" data}
+#'   \item{competing}{competing soil series from the SC database snapshot}
+#'   \item{geomcomp}{empirical probabilities for geomorphic component, derived from the current SSURGO snapshot}
+#'   \item{hillpos}{empirical probabilities for hillslope position, derived from the current SSURGO snapshot}
+#'   \item{mtnpos}{empirical probabilities for mountain slope position, derived from the current SSURGO snapshot}
+#'   \item{terrace}{empirical probabilities for river terrace position, derived from the current SSURGO snapshot}
+#'   \item{flats}{empirical probabilities for flat landscapes, derived from the current SSURGO snapshot}
+#'   \item{pmkind}{empirical probabilities for parent material kind, derived from the current SSURGO snapshot}
+#'   \item{pmorigin}{empirical probabilities for parent material origin, derived from the current SSURGO snapshot}
+#'   \item{mlra}{empirical MLRA membership values, derived from the current SSURGO snapshot}
+#'   \item{climate}{experimental climate summaries from PRISM stack}
+#'   \item{metadata}{metadata associated with SoilWeb cached summaries}
+#' } 
+#' 
+#' 
+#' When using `extended=TRUE`, there are a couple of scenarios in which series morphology contained in `SPC` do not fully match records in the associated series summaries (e.g. `competing`).
+#' 
+#' \describe{
+#' 
+#'   \item{1. A query for soil series that exist entirely outside of CONUS (e.g. PALAU).}{ - Climate summaries are empty \code{data.frames} because these summaries are currently generated from PRISM. We are working on a solution.}
+#'   
+#'   \item{2. A query for data within CONUS, but OSD morphology missing due to parsing error (e.g. formatting, typos).}{ - Extended summaries are present but morphology missing from `SPC`. A warning is issued.}
+#'   
+#'   \item{3. A query for multiple soil series, with one more more listed as "inactive" (e.g. BREADSPRINGS).}{ - Extended summaries are present but morphology missing from `SPC`. A warning is issued.}
+#'   
+#' } 
+#' 
+#' These last two cases are problematic for analysis that makes use of morphology and extended data, such as outlined in this tutorial on \href{https://ncss-tech.github.io/AQP/soilDB/competing-series.html}{competing soil series}.
+#'
+#'}
+#'
+#' @return a \code{SoilProfileCollection} object containing basic soil morphology and taxonomic information.
+#' 
+#' @references USDA-NRCS OSD search tools: \url{https://www.nrcs.usda.gov/wps/portal/nrcs/detailfull/soils/home/?cid=nrcs142p2_053587}
+#' 
+#' @author D.E. Beaudette
+#' @seealso \link{OSDquery}, \link{siblings}
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' if(requireNamespace("curl") &
+#'    curl::has_internet()) {
+#'   
+#'   # soils of interest
+#'   s.list <- c('musick', 'cecil', 'drummer', 'amador', 'pentz', 
+#'               'reiff', 'san joaquin', 'montpellier', 'grangeville', 'pollasky', 'ramona')
+#'   
+#'   # fetch and convert data into an SPC
+#'   s.moist <- fetchOSD(s.list, colorState='moist')
+#'   s.dry <- fetchOSD(s.list, colorState='dry')
+#'   
+#'   # plot profiles
+#'   # moist soil colors
+#'   if(require("aqp")) {
+#'     
+#'     par(mar=c(0,0,0,0), mfrow=c(2,1))
+#'     plot(s.moist, name='hzname', 
+#'          cex.names=0.85, axis.line.offset=-4)
+#'     plot(s.dry, name='hzname', 
+#'          cex.names=0.85, axis.line.offset=-4)
+#'     
+#'     # extended mode: return a list with SPC + summary tables
+#'     x <- fetchOSD(s.list, extended = TRUE, colorState = 'dry')
+#'     
+#'     par(mar=c(0,0,1,1))
+#'     plot(x$SPC)
+#'     str(x, 1)
+#'   }
+#' }
+#' }
+#' @keywords manip
 fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	
   # sanity check
@@ -44,7 +176,7 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	# report missing data
   # no data condition: s == FALSE | h == FALSE
   # otherwise both will be a data.frame
-	if( (is.logical(s) & length(s) == 1) | (is.logical(h) & length(s) == 1)) {
+	if( (is.logical(s) & length(s) == 1) | (is.logical(h) & length(h) == 1)) {
 		message('query returned no data')
 	  return(NULL)
 	}
@@ -57,6 +189,7 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	                          chroma=matrix_wet_color_chroma, dry_hue=matrix_dry_color_hue,
 	                          dry_value=matrix_dry_color_value, dry_chroma=matrix_dry_color_chroma,
 	                          texture_class=texture_class, cf_class=cf_class, pH=ph, pH_class=ph_class,
+	                          distinctness=distinctness, topography=topography,
 	                          narrative=narrative,
 	                          stringsAsFactors=FALSE)) 
 	}
@@ -68,6 +201,7 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	                          chroma=matrix_dry_color_chroma, moist_hue=matrix_wet_color_hue,
 	                          moist_value=matrix_wet_color_value, moist_chroma=matrix_wet_color_chroma,
 	                          texture_class=texture_class, cf_class=cf_class, pH=ph, pH_class=ph_class,
+	                          distinctness=distinctness, topography=topography,
 	                          narrative=narrative,
 	                          stringsAsFactors=FALSE))
 	}
@@ -76,32 +210,59 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	# upgrade to SoilProfileCollection
 	depths(h) <- id ~ top + bottom
 	
-	## borrowed from OSD parsing code
-	## TODO: merge into aqp
-	textures <- c('coarse sand', 'sand', 'fine sand', 'very fine sand', 'loamy coarse sand', 'loamy sand', 'loamy fine sandy', 'loamy very fine sand', 'coarse sandy loam', 'sandy loam', 'fine sandy loam', 'very fine sandy loam', 'loam', 'silt loam', 'silt', 'sand clay loam', 'clay loam', 'silty clay loam', 'sandy clay', 'silty clay', 'clay')
-	pH_classes <- c('ultra acid', 'extremely acid', 'vert strongly acid', 'strongly acid', 'moderately acid', 'slightly acid', 'neutral', 'slightly alkaline', 'mildly alkaline', 'moderately alkaline', 'strongly alkaline', 'very strongly alkaline')
+	# texture clases, in order
+	textures <- SoilTextureLevels(which = 'names')
+	
+	pH_classes <- c('ultra acid', 'extremely acid', 'very strongly acid', 'strongly acid', 'moderately acid', 'slightly acid', 'neutral', 'slightly alkaline', 'mildly alkaline', 'moderately alkaline', 'strongly alkaline', 'very strongly alkaline')
 	
 	# convert some columns into factors
 	h$texture_class <- factor(h$texture_class, levels=textures, ordered = TRUE)
 	h$pH_class <- factor(h$pH_class, levels=pH_classes, ordered = TRUE)
 	
-	# merge-in site data
+	# safely LEFT JOIN to @site
 	s$id <- s$seriesname
 	s$seriesname <- NULL
 	site(h) <- s
 	
-	## set metadata
-	h.metadata <- metadata(h)
-	h.metadata$origin <- 'OSD via Soilweb / fetchOSD'
-	metadata(h) <- h.metadata
+	## safely set metadata
+	# TODO: check before clobbering / consider standard var name
+	metadata(h)$origin <- 'OSD via Soilweb / fetchOSD'
 	
 	# set optional hz designation and texture slots
 	hzdesgnname(h) <- "hzname"
 	hztexclname(h) <- "texture_class"
 	
-	# standard or extended version?
+	# mode: standard (SPC returned) or extended (list returned)
 	if(extended) {
-	  # extended
+	  
+	  
+	  ## TODO: finish this and decide: report or filter
+	  # https://github.com/ncss-tech/soilDB/issues/128
+	  
+	  # profile IDs for reference, done outside of loop for efficiency
+	  pIDs <- profile_id(h)
+	  # iterate over extended tables
+	  # finding all cases where a series is missing from SPC
+	  missing.series <- unique(
+	    as.vector(
+	      unlist(
+	        lapply(res, function(i) {
+	          if(inherits(i, 'data.frame')) {
+	            setdiff(unique(i[['series']]), pIDs)
+	          }
+	        })
+	      )
+	    )
+	  )
+	  
+	  
+	  # generate a warning if there is a difference between profile IDs in SPC
+	  if(length(missing.series) > 0) {
+	    msg <- sprintf("%s missing from SPC, see ?fetchOSD for suggestions", paste(missing.series, collapse = ','))
+	    warning(msg, call. = FALSE)
+	  }
+	  
+	  
 	  # if available, split climate summaries into annual / monthly and add helper columns
 	  # FALSE if missing
 	  if(inherits(res$climate, 'data.frame')) {
@@ -143,6 +304,8 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	    geomcomp=res$geomcomp,
 	    hillpos=res$hillpos,
 	    mtnpos=res$mtnpos,
+	    terrace=res$terrace,
+	    flats=res$flats,
 	    pmkind=res$pmkind,
 	    pmorigin=res$pmorigin,
 	    mlra=res$mlra,
@@ -154,7 +317,7 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	  return(data.list)
 	  
 	} else {
-	  # standard
+	  # extended = FALSE, return SPC
 	  return(h) 
 	}
 

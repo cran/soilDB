@@ -302,6 +302,24 @@
 }
 
 
+## TODO add .formatcoLandscapeString
+# g <- split(geo, geo$coiid)
+# 
+# gg <- lapply(g, function(i) {
+#   
+#   idx <- which(i$geomftname == 'landscape')
+#   id <- i$coiid[1]
+#   
+#   res <- data.frame(
+#     coiid = id,
+#     geomfname = paste(i$geomfname[idx], collapse = '/'),
+#     stringsAsFactors = FALSE
+#   )
+#   
+#   return(res)
+# })
+
+
 ## https://github.com/ncss-tech/soilDB/issues/84
 # 2017-03-13: attempt to format COMPONENT "landform" records into a single string
 # note: there are several assumptions made about the data, 
@@ -314,9 +332,9 @@
   # get the current 
   u.coiid <- unique(i.gm$coiid)
   
-  # sanity check: this function can only be applied to data from a single pedon
+  # sanity check: this function can only be applied to data from a single component
   if(length(u.coiid) > 1)
-    stop('data are from multiple pedon records')
+    stop('data are from multiple component records')
   
   # subset geomorph data to landforms
   i.gm <- i.gm[which(i.gm$geomftname == 'landform'), ]
@@ -582,6 +600,18 @@
   names(df)[names(df) %in% old_names] <- new_names
   
   
+  # refactoring frequency levels, not sure why these aren't sorted naturally
+  flod_lev <- levels(df$flodfreqcl)
+  pond_lev <- levels(df$pondfreqcl)
+  idx      <- c(1, 5, 2, 7, 3, 4, 6)
+  df <- within(df, {
+    flodfreqcl = levels(flodfreqcl)[as.integer(flodfreqcl)]
+    flodfreqcl = factor(flodfreqcl, levels = flod_lev[idx])
+    pondfreqcl = levels(pondfreqcl)[as.integer(pondfreqcl)]
+    pondfreqcl = factor(pondfreqcl, levels = pond_lev[idx])
+  })
+  
+  
   # impute NA freqcl values, default = "not populated"
   if (impute == TRUE) {
     
@@ -633,7 +663,7 @@
     # flatten
     idx <- duplicated(df$cokey)
     
-    if (any(idx)) {
+    if (any(idx) & nrow(df) > 0) {
       dups_idx <- df$cokey %in% df[idx, "cokey"]
       dups     <- df[dups_idx, ]
       nodups   <- df[!dups_idx, ]
@@ -655,12 +685,12 @@
           )}) ->.
         do.call("rbind", .) ->.;
       }
-      nodups[c("copmgrpkey", "pmorder")] <- NULL
+      nodups <- nodups[! names(df) %in% c("copmgrpkey", "pmorder")]
       
       df <- rbind(nodups, dups_clean)  
       df <- df[order(df$cokey), ]
       row.names(df) <- 1:nrow(df)
-      }
+      } else df <- df[! names(df) %in% c("copmgrpkey", "pmorder")]
     
     
     # replace "" with NA
@@ -717,7 +747,7 @@
     # flatten
     idx <- duplicated(df$cokey)
     
-    if (any(idx)) {
+    if (any(idx) & nrow(df) > 0) {
       dups_idx <- df$cokey %in% df[idx, "cokey"]
       dups     <- df[dups_idx, ]
       nodups   <- df[!dups_idx, ]
@@ -739,12 +769,12 @@
         )}) ->.
         do.call("rbind", .) ->.
       }
-      nodups[c("geomfeatid", "existsonfeat")] <- NULL
+      nodups <- nodups[! names(nodups) %in% c("geomfeatid", "existsonfeat")]
       
       df <- rbind(nodups, dups_clean)  
       df <- df[order(df$cokey), ]
       row.names(df) <- 1:nrow(df)
-      }
+      } else df <- df[! names(df) %in% c("geomfeatid", "existsonfeat")]
     }
   
   vars <- c("landscape", "landform", "mntn", "hill", "trce", "flats", "hillslopeprof")
@@ -756,30 +786,32 @@
   mntn = NA; hill = NA; trce = NA; flats = NA; shapeacross = NA; shapedown = NA;
   
   # combine geompos and shapes
-  df <- within(df, {
-    geompos = NA
-    geompos = paste(mntn, hill, trce, flats, sep = ", ")
-    geompos = gsub("NA", "", geompos)
-    geompos = gsub("^, |^, , |^, , , |, $|, , $|, , , $", "", geompos)
-    geompos = gsub(", , ", ", ", geompos)
-    geompos[geompos == ""] = NA
-    
-    ssa = NA # slope shape across
-    ssd = NA # slope shape down
-    slopeshape = NA
+  if (nrow(df) > 0) {
+    df <- within(df, {
+      geompos = NA
+      geompos = paste(mntn, hill, trce, flats, sep = ", ")
+      geompos = gsub("NA", "", geompos)
+      geompos = gsub("^, |^, , |^, , , |, $|, , $|, , , $", "", geompos)
+      geompos = gsub(", , ", ", ", geompos)
+      geompos[geompos == ""] = NA
+      
+      ssa = NA # slope shape across
+      ssd = NA # slope shape down
+      slopeshape = NA
 
-    ssa = gsub("Concave", "C", shapeacross)
-    ssa = gsub("Linear",  "L", ssa)
-    ssa = gsub("Convex",  "V", ssa)
+      ssa = gsub("Concave", "C", shapeacross)
+      ssa = gsub("Linear",  "L", ssa)
+      ssa = gsub("Convex",  "V", ssa)
 
-    ssd = gsub("Concave", "C", shapedown)
-    ssd = gsub("Linear",  "L", ssd)
-    ssd = gsub("Convex",  "V", ssd)
+      ssd = gsub("Concave", "C", shapedown)
+      ssd = gsub("Linear",  "L", ssd)
+      ssd = gsub("Convex",  "V", ssd)
 
-    slopeshape = paste0(ssd, ssa, sep = "")
-    slopeshape[slopeshape %in% c("NANA", "")] = NA
-  })
-  df[c("ssa", "ssd")] <- NULL
+      slopeshape = paste0(ssd, ssa, sep = "")
+      slopeshape[slopeshape %in% c("NANA", "")] = NA
+      })
+    df[c("ssa", "ssd")] <- NULL
+  } else df <- cbind(df, geompos = as.character(NULL))
   
   ss_vars <- c("CC", "CV", "CL", "LC", "LL", "LV", "VL", "VC", "VV")
   if (all(df$slopeshape[!is.na(df$slopeshape)] %in% ss_vars)) {

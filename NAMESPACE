@@ -10,12 +10,20 @@ importFrom("utils", "URLencode", "download.file", "object.size",
              "read.csv", "read.table", "setTxtProgressBar",
              "txtProgressBar", "write.table", "type.convert")
 
+importFrom("methods", "slot<-")
+
+importFrom(data.table, 
+           data.table,
+           as.data.table)
+
 importFrom(reshape2, 
   dcast,
   melt
 )
 
-importFrom(raster, 
+importFrom(raster,
+  readAll,
+  raster,
   extent
 )
 
@@ -45,7 +53,6 @@ importFrom(sp,
   spChFIDs
 )
 
-
 importFrom(curl,
   curl,
   new_handle
@@ -68,7 +75,7 @@ importFrom(aqp,
   "diagnostic_hz<-",
   restrictions,
   "restrictions<-",
-  #test_hz_logic, #deprecated, use aqp::hzDepthTests internally
+  SoilTextureLevels,
   hzDepthTests, 
   munsell2rgb,
   rgb2munsell,
@@ -81,14 +88,15 @@ importFrom(aqp,
   hzdesgnname,
   'hzdesgnname<-',
   hztexclname,
-  'hztexclname<-'
+  'hztexclname<-',
+  profile_id,
+  aqp_df_class,
+  'aqp_df_class<-'
 )
 
 importMethodsFrom(aqp, "plot")
 importMethodsFrom(aqp, "length")
 importMethodsFrom(aqp, "nrow")
 importClassesFrom(aqp, "SoilProfileCollection")
-
-
 
 exportPattern("^[^\\.]")

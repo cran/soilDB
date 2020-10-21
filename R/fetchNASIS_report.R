@@ -41,7 +41,7 @@
       # remove
       x2 <- x2[!is.na(x2$peiid), - ncol(x2)]
       idx <- names(x2) %in% c("pmkind", "pmorigin")
-      x2[!idx] <- uncode(x2[!idx])
+      x2[!idx] <- uncode(x2[!idx], db = "LIMS")
       idx <- sapply(x2, is.character)
       x2[idx] <- lapply(x2[idx], function(x) ifelse(x == "", NA, x))
       return(x2)
@@ -54,8 +54,8 @@
   
   
   # fix problems
-  .$phorizon <- .fix_problems(site_data  = .$site,
-                              hz_data    = .$phorizon,
+  .$phorizon <- .fix_problems(hz_data    = .$phorizon,
+                              site_data  = .$site,
                               pedon_id   = "peiid",
                               hzdept     = "hzdept",
                               hzdepb     = "hzdepb",
@@ -72,6 +72,7 @@
   
   # left-join via peiid
   # < 0.1 second for ~ 4k pedons
+  .$site = .fix_site_problems(.$site, nullFragsAreZero = nullFragsAreZero)
   site(h) <- .$site
   
   
@@ -96,7 +97,8 @@
     suppressWarnings(featdepb <- unlist(lapply(x, function(x) as.integer(x[2]))))
     data.frame(featdept, featdepb)
   }
-  pediagfeatures <- cbind(pediagfeatures[c("peiid", "featkind")], featdep)  
+  pediagfeatures <- cbind(pediagfeatures[c("peiid", "featkind")], featdep)
+  pediagfeatures$featkind <- gsub("\\.", " ", pediagfeatures$featkind)
   
   diagnostic_hz(h) <- pediagfeatures
   
@@ -129,7 +131,7 @@
 
 # temp <- .fetchNASISTemp()
 
-.get_site_from_NASISReport <- function(url = NULL, stringsAsFactors = default.stringsAsFactors()
+.get_site_from_NASISReport <- function(url = NULL, nullFragsAreZero = TRUE, stringsAsFactors = default.stringsAsFactors()
 ) {
   
   tf = "C:/ProgramData/USDA/NASIS/Temp/get_site_from_NASIS.txt"
@@ -154,7 +156,7 @@
   # remove
   temp = temp[!is.na(temp$peiid), - ncol(temp)]
   idx  = names(temp) %in% c("pmkind", "pmorigin")
-  temp[!idx] = uncode(temp[!idx])
+  temp[!idx] = uncode(temp[!idx], db = "LIMS")
   idx  = sapply(temp, is.character)
   temp[idx] = lapply(temp[idx], function(x) ifelse(x == "", NA, x))
   # temp = within(temp, {
@@ -162,6 +164,7 @@
   #   classdate = as.Date(as.character(classdate))
   # })
   
+  temp = .fix_site_problems(temp, nullFragsAreZero = nullFragsAreZero)
   
   # impute missing x_std & y_std if utm are present
   # idx <- with(temp, ! complete.cases(x_std, y_std) & complete.cases(utmzone, utmeasting, utmnorthing, horizdatnm))
@@ -193,7 +196,7 @@
   # NASIS text reports return empty columns
   # remove
   temp = temp[!is.na(temp$peiid), - ncol(temp)]
-  temp = uncode(temp)
+  temp = uncode(temp, db = "LIMS")
   # temp = within(temp, {
   #   obsdate   = as.Date(as.character(obsdate))
   #   classdate = as.Date(as.character(classdate))
@@ -309,8 +312,9 @@
   bad.pedon.ids <- site_data[[pedon_id]][which(site_data[[pedon_id]] %in% bad.ids)]
   
   # optionally filter pedons WITH NO horizonation inconsistencies
-  if (rmHzErrors)
+  if (rmHzErrors) {
     hz_data <- hz_data[which(hz_data[[pedon_id]] %in% good.ids), ]
+  }
   
   # keep track of those pedons with horizonation errors
   assign('bad.pedon.ids', 
@@ -337,3 +341,16 @@
 }
 
 
+
+.fix_site_problems <- function(site_data, nullFragsAreZero = nullFragsAreZero) {
+  
+  if (nullFragsAreZero == TRUE) {
+    idx <- grep("fragvol|frags_|gravel|cobbles|stones|boulders|channers|unspecified", names(site_data))
+    vars <- names(site_data)[idx]
+    site_data[idx] <-lapply(site_data[idx], function(x) {
+      ifelse(is.na(x), 0, x)
+      })
+  } else site_data
+  
+  return(site_data)
+}

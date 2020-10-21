@@ -20,18 +20,34 @@
   f.ecosite    <- get_component_esd_data_from_NASIS_db(SS=SS, stringsAsFactors = stringsAsFactors)
   f.diaghz     <- get_component_diaghz_from_NASIS_db(SS=SS)
   f.restrict   <- get_component_restrictions_from_NASIS_db(SS=SS)
+  
+  filled.ids <- character(0)
 
   # optionally test for bad horizonation... flag, and remove
-  if(rmHzErrors & nrow(f.chorizon)) {
+  if(rmHzErrors & nrow(f.chorizon) > 0) {
     f.chorizon.test <- plyr::ddply(f.chorizon, 'coiid', function(d) {
       res <- aqp::hzDepthTests(top=d[['hzdept_r']], bottom=d[['hzdepb_r']])
       return(data.frame(hz_logic_pass=all(!res)))
     })
 
+    # fill=TRUE adds horizons with NA chiid will have NA depths -- will not pass hzDepthTests
+    # therefore, only way to use fill effectively was with rmHzErrors=FALSE
+    # which runs the risk of duplication in the case of data entry errors or other many:1 issues in comp
+    filled.idx <- which(is.na(f.chorizon$chiid))
+    if(length(filled.idx) > 0) {
+      filled.ids <- as.character(f.chorizon$coiid[filled.idx])
+      #print(dput(filled.ids))
+    }
+    
     # which are the good (valid) ones?
     good.ids <- as.character(f.chorizon.test$coiid[which(f.chorizon.test$hz_logic_pass)])
-    bad.ids <- as.character(f.chorizon.test$coiid[which(! f.chorizon.test$hz_logic_pass)])
+    bad.ids <- as.character(f.chorizon.test$coiid[which(!f.chorizon.test$hz_logic_pass)])
 
+    if(length(filled.ids) > 0) {
+      good.ids <- unique(c(good.ids, filled.ids))
+      bad.ids <- unique(bad.ids[!bad.ids %in% filled.ids])
+    }
+    
     # keep the good ones
     f.chorizon <- f.chorizon[which(f.chorizon$coiid %in% good.ids), ]
 
@@ -40,16 +56,18 @@
     assign('component.hz.problems', value=bad.ids, envir=soilDB.env)
   } 
   
-  if(nrow(f.chorizon)) {
+  if(nrow(f.chorizon) > 0) {
     # upgrade to SoilProfilecollection
     depths(f.chorizon) <- coiid ~ hzdept_r + hzdepb_r
   } else {
-    warning("No horizon data in NASIS component query result.", call.=FALSE)
+    stop("No horizon data in NASIS component query result.", call.=FALSE)
   }
   
   # add site data to object
   site(f.chorizon) <- f.comp # left-join via coiid
-
+  
+  ## TODO: convert all ddply() calls into split() -> lapply() -> do.call('rbind')
+  
   # join-in copm strings
   ## 2017-3-13: short-circuts need testing, consider pre-marking mistakes before parsing
   pm <- plyr::ddply(f.copm, 'coiid', .formatcoParentMaterialString, name.sep=' & ')
@@ -87,7 +105,18 @@
       message("-> QC: horizon errors detected, use `get('component.hz.problems', envir=soilDB.env)` for related coiid values")
   
   # set NASIS component specific horizon identifier
-  hzidname(f.chorizon) <- 'chiid'
+  if(!fill & length(filled.ids) == 0) {
+    res <- try(hzidname(f.chorizon) <- 'chiid')
+    if(inherits(res, 'try-error')) {
+      if(!rmHzErrors) {
+        warning("cannot set `chiid` as unique component horizon key -- duplicate horizons present with rmHzErrors=FALSE")
+      } else {
+        warning("cannot set `chiid` as unique component horizon key -- defaulting to `hzID`")
+      }
+    } 
+  } else {
+    warning("cannot set `chiid` as unique component horizon key - `NA` introduced by fill=TRUE", call.=F)
+  }
   
   # set metadata
   m <- metadata(f.chorizon)
