@@ -108,7 +108,7 @@ format_SQL_in_statement <- function(x) {
 #'   
 #'   ## get SSURGO export date for all soil survey areas in California
 #'   # there is no need to filter STATSGO 
-#'   # because we are filtering on SSURGO areasymbols
+#'   # because we are filtering on SSURGO area symbols
 #'   q <- "SELECT areasymbol, saverest FROM sacatalog WHERE areasymbol LIKE 'CA%';"
 #'   x <- SDA_query(q)
 #'   head(x)
@@ -168,7 +168,7 @@ SDA_query <- function(q) {
   if (!requireNamespace('httr', quietly = TRUE) | !requireNamespace('jsonlite', quietly = TRUE))
     stop('please install the `httr` and `jsonlite` packages', call. = FALSE)
   
-   # submit request
+  # submit request
   r <- httr::POST(url = "https://sdmdataaccess.sc.egov.usda.gov/tabular/post.rest",
                   body = list(query = q,
                               format = "JSON+COLUMNNAME"),

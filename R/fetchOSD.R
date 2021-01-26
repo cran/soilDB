@@ -38,6 +38,12 @@
   return(m5)
 }
 
+
+
+## TODO: consider adding an argument for "growing" very thin bottom R|Cr|Cd horizons
+# https://github.com/ncss-tech/aqp/issues/173
+
+
 # 2018-10-11: updated to new API, URL subject to change
 # fetch basic OSD, SC, and SoilWeb summaries from new API
 #' Fetch Official Series Descriptions and summaries from SoilWeb API
@@ -63,6 +69,7 @@
 #' \describe{
 #'   \item{SPC}{\code{SoilProfileCollection} containing standards "site" and "horizon" data}
 #'   \item{competing}{competing soil series from the SC database snapshot}
+#'   \item{geog_assoc_soils}{geographically associated soils, extracted from named section in the OSD}
 #'   \item{geomcomp}{empirical probabilities for geomorphic component, derived from the current SSURGO snapshot}
 #'   \item{hillpos}{empirical probabilities for hillslope position, derived from the current SSURGO snapshot}
 #'   \item{mtnpos}{empirical probabilities for mountain slope position, derived from the current SSURGO snapshot}
@@ -301,6 +308,7 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	  data.list <- list(
 	    SPC=h,
 	    competing=res$competing,
+	    geog_assoc_soils=res$geog_assoc_soils,
 	    geomcomp=res$geomcomp,
 	    hillpos=res$hillpos,
 	    mtnpos=res$mtnpos,
