@@ -6,28 +6,28 @@
 
 ## TODO: consider toggling paralithic contact to FALSE when lithic contact is TRUE
 # convert diagnostic horizon info into wide-formatted, boolean table
-.diagHzLongtoWide <- function(d) {
+.diagHzLongtoWide <- function(d, feature = 'featkind', id = 'peiid') {
 	
 	# get unique vector of diagnostic hz
-	d.unique <- na.omit(unique(as.character(d$featkind)))
+	d.unique <- na.omit(unique(as.character(d[[feature]])))
 	
-	# init list for storing initial FALSE for each peiid / diag kind
+	# init list for storing initial FALSE for each ID / diag kind
 	l <- vector(mode='list')
 	
-	# add unique peiid
-	l[['peiid']] <- unique(d$peiid)
+	# add unique id
+	l[[id]] <- unique(d[[id]])
 	
-	# make a vector of FALSE, matching the length of unique peiid
-	f <- rep(FALSE, times=length(l[['peiid']]))
+	# make a vector of FALSE, matching the length of unique ID
+	f <- rep(FALSE, times=length(l[[id]]))
 	
 	# iterate over diagnostic hz kind
 	for(i in d.unique) {
 		# fill this list element with FALSE
 		l[[i]] <- f
-		# lookup those peiid with this feature
-		matching.peiid <- d$peiid[which(d$featkind == i)]
+		# lookup those ID with this feature
+		matching.id <- d[[id]][which(d[[feature]] == i)]
 		# toggle FALSE-->TRUE for these pedons
-		l[[i]][which(l[['peiid']] %in% matching.peiid)] <- TRUE
+		l[[i]][which(l[[id]] %in% matching.id)] <- TRUE
 	}
 	
 	# convert to DF
@@ -72,8 +72,8 @@
 ## try and pick the best possible taxhistory record
 .pickBestTaxHistory <- function(d) {
 	
-	# add a method field
-	d$selection_method <- NA
+	# add a method field (a character)
+	d$selection_method <- NA_character_
 	
 	# short-circuit: 1 row
 	if(nrow(d) < 2) {
@@ -106,7 +106,7 @@
 .pickBestEcosite <- function(d) {
 	
 	# add a method field
-	d$es_selection_method <- NA
+	d$es_selection_method <- NA_character_
 	
 	# try to get the most recent:
 	d.order <- order(d$ecositecorrdate, decreasing=TRUE)
@@ -157,21 +157,31 @@
 # attempt to format "landform" records into a single string
 # note: there are several assumptions made about the data, 
 # see "short-circuits" used when there are funky data
-.formatLandformString <- function(i.gm, name.sep='|') {
-  # get the current 
-  u.peiid <- unique(i.gm$peiid)
-    
+.formatLandformString <- function(i.gm, uid = NULL, name.sep='|') {
+
+  # get the current group of rows by unique ID (either passed by caller or calculated)
+  if (is.null(uid) | length(uid) == 0)
+    u.peiid <- unique(i.gm$peiid)
+  else 
+    u.peiid <- uid
+  
+  if (is.null(u.peiid))
+    return(NULL)
+  
   # sanity check: this function can only be applied to data from a single pedon
-  if(length(u.peiid) > 1)
+  if (length(u.peiid) > 1)
     stop('data are from multiple pedon records')
   
   # subset geomorph data to landforms
   i.gm <- i.gm[which(i.gm$geomftname == 'landform'), ]
   
   # allow for NA's
-  if(nrow(i.gm) == 0)
-    return(data.frame(peiid=u.peiid, landform_string=NA, stringsAsFactors=FALSE))
-  
+  if (nrow(i.gm) == 0) {
+    return(data.frame(peiid = u.peiid,
+                      landform_string = NA_character_,
+                      stringsAsFactors = FALSE))
+  }
+
   # short-circuit: if any geomfeatid are NA, then we don't know the order
   # string together as-is, in row-order
   if(any(is.na(i.gm$geomfeatid))) {
@@ -268,24 +278,35 @@
 
 ## https://github.com/ncss-tech/soilDB/issues/84
 # attempt to flatten site parent material data into 2 strings
-.formatParentMaterialString <- function(i.pm, name.sep='|') {
-  # get the current site
-  u.siteiid <- unique(i.pm$siteiid)
+.formatParentMaterialString <- function(i.pm, uid = NULL, name.sep='|') {
+  
+  # get the current group of rows by unique ID (either passed by caller or calculated)
+  if (is.null(uid))
+    u.siteiid <- unique(i.pm$siteiid)
+  else 
+    u.siteiid <- uid
+  
+  if (is.null(u.siteiid))
+    return(NULL)
   
   # sanity check: this function can only be applied to data from a single site
-  if(length(u.siteiid) > 1)
+  if (length(u.siteiid) > 1)
     stop('data are from multiple site records')
   
-  # subset sitepm data to remove any with NA for pm_kind
+  # subset sitepm data to remove any with NA for pmkind
   i.pm <- i.pm[which(!is.na(i.pm$pmkind)), ]
   
-  # if there is no data, then return a DF formatted as if there were data
-  if(nrow(i.pm) == 0)
-    return(data.frame(siteiid=u.siteiid, pmkind=NA, pmorigin=NA, stringsAsFactors=FALSE))
+  # if there is no data, then return NULL
+  if (nrow(i.pm) == 0) {
+    return(data.frame(siteiid = u.siteiid,
+                      pmkind = NA_character_[length(u.siteiid)],
+                      pmorigin = NA_character_[length(u.siteiid)],
+                      stringsAsFactors = FALSE))
+  }
   
   # short-circuit: if any pmorder are NA, then we don't know the order
   # string together as-is, in row-order
-  if(any(is.na(i.pm$pmorder))) {
+  if (any(is.na(i.pm$pmorder))) {
     # optional information on which sites have issues
     if(getOption('soilDB.verbose', default=FALSE))
       warning(paste0('Using row-order. NA in pmorder:', u.siteiid), call.=FALSE)

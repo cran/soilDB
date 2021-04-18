@@ -12,11 +12,19 @@ importFrom("utils", "URLencode", "download.file", "object.size",
 
 importFrom("methods", "slot<-", "as")
 
-importFrom(data.table, 
+importFrom(data.table,
+           rbindlist,
            data.table,
            as.data.table)
 
-importFrom(reshape2, 
+importFrom(DBI,
+  dbGetQuery,
+  dbConnect,
+  dbSendQuery,
+  dbFetch
+)
+
+importFrom(reshape2,
   dcast,
   melt
 )
@@ -31,7 +39,7 @@ importFrom(raster,
   levels
 )
 
-importFrom(plyr, 
+importFrom(plyr,
   ddply,
   llply,
   ldply,
@@ -64,8 +72,8 @@ importFrom(xml2,
 )
 
 
-importFrom(aqp, 
-  "depths<-", 
+importFrom(aqp,
+  "depths<-",
   "site<-",
   site,
   idname,
@@ -76,7 +84,7 @@ importFrom(aqp,
   restrictions,
   "restrictions<-",
   SoilTextureLevels,
-  hzDepthTests, 
+  checkHzDepthLogic,
   munsell2rgb,
   rgb2munsell,
   horizons,
@@ -91,7 +99,8 @@ importFrom(aqp,
   'hztexclname<-',
   profile_id,
   aqp_df_class,
-  'aqp_df_class<-'
+  'aqp_df_class<-',
+  pbindlist
 )
 
 importMethodsFrom(aqp, "plot")

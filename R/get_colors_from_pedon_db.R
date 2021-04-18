@@ -1,9 +1,24 @@
 # 2013-01-08: now much faster since we only mix/clean data with > 1 color / horizon
 
+
+
+#' Extract Soil Color Data from a PedonPC Database
+#' 
+#' Get, format, mix, and return color data from a PedonPC database.
+#' 
+#' This function currently works only on Windows.
+#' 
+#' @param dsn The path to a 'pedon.mdb' database.
+#' @return A data.frame with the results.
+#' @author Dylan E. Beaudette and Jay M. Skovlin
+#' @seealso \code{\link{get_hz_data_from_pedon_db}},
+#' \code{\link{get_site_data_from_pedon_db}}
+#' @keywords manip
+#' @export get_colors_from_pedon_db
 get_colors_from_pedon_db <- function(dsn) {
-  # must have RODBC installed
-  if(!requireNamespace('RODBC'))
-    stop('please install the `RODBC` package', call.=FALSE)
+  # must have odbc installed
+  if(!requireNamespace('odbc'))
+    stop('please install the `odbc` package', call.=FALSE)
   
 	# color data... check
 	q <- "SELECT phorizon.phiid as phiid, colormoistst, colorpct as pct, colorhue, colorvalue, colorchroma
@@ -13,13 +28,14 @@ FROM (
 	ORDER BY phorizon.phiid, colormoistst;"
   
 	# setup connection to our pedon database
-	channel <- RODBC::odbcConnectAccess2007(dsn, readOnlyOptimize=TRUE)
+	channel <- DBI::dbConnect(drv = odbc::odbc(), 
+	                     .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)}; Dbq=", dsn))
 	
 	# exec query
-	d <- RODBC::sqlQuery(channel, q, stringsAsFactors=FALSE)
+	d <- DBI::dbGetQuery(channel, q)
 	
 	# close connection
-	RODBC::odbcClose(channel)
+	DBI::dbDisconnect(channel)
 
 	# uncode domained columns
 	d <- uncode(d)

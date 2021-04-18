@@ -1,4 +1,17 @@
-# soilDB 2.5.9 (2021-01-13)
+# soilDB 2.6.1 (2021-04-07)
+ * Connections to local NASIS and various MS Access databases now use `DBI` and `odbc`, replacing `RODBC`
+ * New methods `dbConnectNASIS` and `dbQueryNASIS` for NASIS access with read-only credentials, fetching query results, and closing the _DBIConnection_ upon completion
+ * NASIS methods use `dsn` argument to specify a local "static" SQLite file containing NASIS tables, or custom _DBIConnection_ to a database with NASIS schema
+   * Default `dsn = NULL` uses `"nasis_local"` [ODBC connection](http://ncss-tech.github.io/AQP/soilDB/setup_local_nasis.html) to local NASIS SQL Server 
+ * Horizon depth logic checking is now done with `aqp::checkHzDepthLogic()`, powered by {data.table}
+ * Added several new SDA query methods based on https://github.com/ncss-tech/ssurgoOnDemand by @jneme910 and @cferguso:
+   * `get_SDA_property`, `get_SDA_interpretation`, `get_SDA_muaggatt`, `get_SDA_hydric`, `get_SDA_pmgroupname`
+   
+# soilDB 2.6.0 (2021-02-18)
+ * `OSDquery` gets a new argument (`everything`) for searching the entire document
+ * `fetchNASIS(..., rmHzErrors=TRUE)` -- spurious removals of data due to missing "extended" records. `fetchNASIS` now uses `aqp::horizons<-` after building a minimal `SoilProfileCollection` from NASIS site and horizon tables. This allows `aqp` integrity methods to trigger where needed--preventing unintentional re-ordering or removals of "valid" horizon data.
+
+# soilDB 2.5.9 (2021-01-26)
  * `HenryTimeLine` moved to {sharpshootR} package
  * new functions `mukey.wcs()` and `ISSR800.wcs()` for hitting web coverage service (WCS) for gSSURGO, gNATSGO, and ISSR-800 grids
  * new function `ROSETTA()` for accessing the new ROSETTA model API (c/o Todd Skaggs, USDA-ARS)

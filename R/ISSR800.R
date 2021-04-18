@@ -7,7 +7,7 @@
 #' 
 #' 
 #' 
-#' @param aoi area of interest (AOI) defined using a \code{Spatial*}, a \code{sf}, \code{sfc} or \code{bbox} object or a \code{list}, see details
+#' @param aoi area of interest (AOI) defined using a \code{Spatial*}, \code{RasterLayer}, \code{sf}, \code{sfc} or \code{bbox} object or a \code{list}, see details
 #' 
 #' @param var ISSR-800 grid name, see details
 #' 
@@ -15,7 +15,7 @@
 #' 
 #' @param quiet logical, passed to \code{download.file} to enable / suppress URL and progress bar for download.
 #'  
-#' @details \code{aoi} should be specified as either a \code{Spatial*}, \code{sf}, \code{sfc} or \code{bbox} object or a \code{list} containing:
+#'  #' @details \code{aoi} should be specified as a \code{Spatial*}, \code{RasterLayer}, \code{sf}, \code{sfc}, or \code{bbox} object or a \code{list} containing:
 #' 
 #' \describe{
 #'   \item{\code{aoi}}{bounding-box specified as (xmin, ymin, xmax, ymax) e.g. c(-114.16, 47.65, -114.08, 47.68)}
@@ -37,7 +37,7 @@ ISSR800.wcs <- function(aoi, var, res = 800, quiet = FALSE) {
     stop('please install the `rgdal` package', call.=FALSE)
   
   # sanity check: aoi specification
-  if(!inherits(aoi, c('list', 'Spatial', 'sf', 'sfc', 'bbox'))) { # TODO:  'wk_rct'?
+  if(!inherits(aoi, c('list', 'Spatial', 'sf', 'sfc', 'bbox', 'RasterLayer'))) { 
     stop('invalid `aoi` specification', call. = FALSE)
   }
   
@@ -46,7 +46,7 @@ ISSR800.wcs <- function(aoi, var, res = 800, quiet = FALSE) {
     stop('`res` should be within 400 <= res <= 1600 meters')
   }
   
-  # match variable name in catalogue
+  # match variable name in catalog
   var.cat <- sapply(.ISSR800.spec, '[[', 'dsn')
   match.arg(var, var.cat)
   
