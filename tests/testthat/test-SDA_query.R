@@ -71,13 +71,24 @@ test_that("SDA_spatialQuery() simple spatial query, tabular results", {
 
   skip_on_cran()
 
-  res <- suppressWarnings(SDA_spatialQuery(p, what = 'mukey'))
-
-  # testing known values
+  # test first using an sf object converted internally to sp
+  skip_if_not_installed("sf")
+  
+  if (requireNamespace("sf")) {
+    res <- suppressWarnings(SDA_spatialQuery(sf::st_as_sf(p), what = 'mukey'))
+  
+    # testing known values
+    expect_true(inherits(res, 'data.frame'))
+    expect_equal(nrow(res), 1)
+    expect_match(res$muname, 'Diablo')
+  }
+  
+  # test with what = "sapolygon" 
+  res <- suppressWarnings(SDA_spatialQuery(p, what = "areasymbol"))
   expect_true(inherits(res, 'data.frame'))
   expect_equal(nrow(res), 1)
-  expect_match(res$muname, 'Diablo')
-
+  expect_match(res$areasymbol, 'CA641')
+  
 })
 
 
@@ -98,6 +109,13 @@ test_that("SDA_spatialQuery() simple spatial query, spatial results", {
   # test with db = "STATSGO"
   res <- suppressWarnings(SDA_spatialQuery(p, what = 'geom', db = "STATSGO"))
 
+  # testing known values
+  expect_true(inherits(res, 'SpatialPolygonsDataFrame'))
+  expect_equal(nrow(res), 1)
+  
+  # test with what = "sapolygon" 
+  res <- suppressWarnings(SDA_spatialQuery(p, what = "sapolygon"))
+  
   # testing known values
   expect_true(inherits(res, 'SpatialPolygonsDataFrame'))
   expect_equal(nrow(res), 1)
@@ -132,10 +150,10 @@ test_that("SDA_query() interprets data type correctly", {
   expect_true(inherits(x.3$compkind, 'character'))
   expect_true(inherits(x.3$comppct_r, 'integer'))
   expect_true(inherits(x.3$majcompflag, 'character'))
-  expect_true(inherits(x.3$elev_r, 'integer'))
-  expect_true(inherits(x.3$slope_r, 'integer'))
-  expect_true(inherits(x.3$wei, 'integer'))
-  expect_true(inherits(x.3$weg, 'integer'))
+  expect_true(inherits(x.3$elev_r, 'numeric'))
+  expect_true(inherits(x.3$slope_r, 'numeric'))
+  expect_true(inherits(x.3$wei, 'character'))
+  expect_true(inherits(x.3$weg, 'character'))
 
 })
 

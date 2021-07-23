@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_veg_other_from_MT_veg_db.R
 \name{get_veg_other_from_MT_veg_db}
 \alias{get_veg_other_from_MT_veg_db}
-\title{Extract cover composition data from a Montana RangeDB database}
+\title{Get cover composition data from a Montana RangeDB database}
 \usage{
 get_veg_other_from_MT_veg_db(dsn)
 }
@@ -15,9 +15,6 @@ A data.frame.
 }
 \description{
 Get cover composition data from a Montana RangeDB database.
-}
-\details{
-This function currently works only on Windows.
 }
 \seealso{
 \code{\link{get_veg_from_MT_veg_db}},

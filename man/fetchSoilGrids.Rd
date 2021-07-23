@@ -2,7 +2,7 @@
 % Please edit documentation in R/fetchSoilGrids.R
 \name{fetchSoilGrids}
 \alias{fetchSoilGrids}
-\title{Fetch SoilGrids 250m properties information from point locations}
+\title{Get SoilGrids 250m properties information from point locations}
 \usage{
 fetchSoilGrids(locations, loc.names = c("id", "lat", "lon"))
 }
@@ -18,7 +18,7 @@ A SoilProfileCollection
 This function obtains SoilGrids properties information (250m raster resolution) given a \code{data.frame} containing site IDs, latitudes and longitudes.
 }
 \details{
-The depth intervals returned are: \code{"0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm"} and the properties returned are \code{"bdod", "cec", "cfvo", "clay", "nitrogen", "phh2o", "sand", "silt", "soc"} -- each with 5th, 50th, 95th, mean and uncertainty values. Point data requests are made through \code{properties/query} endpoint of the SoilGrids v2.0 REST API: https://rest.soilgrids.org/soilgrids/v2.0/docs
+The depth intervals returned are: \code{"0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm"} and the properties returned are \code{"bdod", "cec", "cfvo", "clay", "nitrogen", "phh2o", "sand", "silt", "soc"} -- each with 5th, 50th, 95th, mean and uncertainty values. Point data requests are made through \code{properties/query} endpoint of the SoilGrids v2.0 REST API: https://rest.isric.org/soilgrids/v2.0/docs/
 }
 \examples{
 \donttest{
@@ -32,9 +32,10 @@ The depth intervals returned are: \code{"0-5cm", "5-15cm", "15-30cm", "30-60cm",
                            lon = c(-120.3, -121.5), 
                            stringsAsFactors = FALSE)
 
-  x <- fetchSoilGrids(your.points)
+  x <- try(fetchSoilGrids(your.points))
  
-  plotSPC(x, name = NA, color = "socQ50")
+  if (!inherits(x, 'try-error'))
+   plotSPC(x, name = NA, color = "socQ50")
  }
 }
 }

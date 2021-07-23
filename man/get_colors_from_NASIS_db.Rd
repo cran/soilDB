@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_colors_from_NASIS_db.R
 \name{get_colors_from_NASIS_db}
 \alias{get_colors_from_NASIS_db}
-\title{Extract Soil Color Data from a local NASIS Database}
+\title{Get Soil Color Data from a local NASIS Database}
 \usage{
 get_colors_from_NASIS_db(SS = TRUE, dsn = NULL)
 }
@@ -18,9 +18,6 @@ A data.frame with the results.
 }
 \description{
 Get, format, mix, and return color data from a NASIS database.
-}
-\details{
-This function currently works only on Windows.
 }
 \seealso{
 \code{\link{simplifyColorData}},

@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_site_data_from_pedon_db.R
 \name{get_site_data_from_pedon_db}
 \alias{get_site_data_from_pedon_db}
-\title{Extract Site Data from a PedonPC Database}
+\title{Get Site Data from a PedonPC Database}
 \usage{
 get_site_data_from_pedon_db(dsn)
 }
@@ -14,9 +14,6 @@ A data.frame.
 }
 \description{
 Get site-level data from a PedonPC database.
-}
-\note{
-This function currently works only on Windows.
 }
 \seealso{
 \code{\link{get_hz_data_from_pedon_db}},

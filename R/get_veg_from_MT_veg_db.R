@@ -1,8 +1,6 @@
-#' Extract Site and Plot-level Data from a Montana RangeDB database
+#' Get Site and Plot-level Data from a Montana RangeDB database
 #' 
 #' Get Site and Plot-level data from a Montana RangeDB database.
-#' 
-#' This function currently works only on Windows.
 #' 
 #' @param dsn The name of the Montana RangeDB front-end database connection
 #' (see details).

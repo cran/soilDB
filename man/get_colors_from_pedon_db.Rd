@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_colors_from_pedon_db.R
 \name{get_colors_from_pedon_db}
 \alias{get_colors_from_pedon_db}
-\title{Extract Soil Color Data from a PedonPC Database}
+\title{Get Soil Color Data from a PedonPC Database}
 \usage{
 get_colors_from_pedon_db(dsn)
 }
@@ -14,9 +14,6 @@ A data.frame with the results.
 }
 \description{
 Get, format, mix, and return color data from a PedonPC database.
-}
-\details{
-This function currently works only on Windows.
 }
 \seealso{
 \code{\link{get_hz_data_from_pedon_db}},

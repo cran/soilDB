@@ -2,11 +2,9 @@
 
 
 
-#' Extract Soil Color Data from a PedonPC Database
+#' Get Soil Color Data from a PedonPC Database
 #' 
 #' Get, format, mix, and return color data from a PedonPC database.
-#' 
-#' This function currently works only on Windows.
 #' 
 #' @param dsn The path to a 'pedon.mdb' database.
 #' @return A data.frame with the results.

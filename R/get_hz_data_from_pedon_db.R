@@ -8,11 +8,9 @@
 
 
 
-#' Extract Horizon Data from a PedonPC Database
+#' Get Horizon Data from a PedonPC Database
 #' 
 #' Get horizon-level data from a PedonPC database.
-#' 
-#' This function currently works only on Windows.
 #' 
 #' @param dsn The path to a 'pedon.mdb' database.
 #' @return A data.frame.

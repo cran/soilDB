@@ -46,7 +46,7 @@
 
 # 2018-10-11: updated to new API, URL subject to change
 # fetch basic OSD, SC, and SoilWeb summaries from new API
-#' Fetch Official Series Descriptions and summaries from SoilWeb API
+#' Get Official Series Descriptions and summaries from SoilWeb API
 #' 
 #' @description This function fetches a variety of data associated with named soil series, extracted from the USDA-NRCS Official Series Description text files and detailed soil survey (SSURGO). These data are periodically updated and made available via SoilWeb.
 #' 
@@ -191,26 +191,58 @@ fetchOSD <- function(soils, colorState='moist', extended=FALSE) {
 	# reformatting and color conversion
 	if(colorState == 'moist') {
 	  h$soil_color <- with(h, munsell2rgb(matrix_wet_color_hue, matrix_wet_color_value, matrix_wet_color_chroma))
-	  h <- with(h, data.frame(id=series, top, bottom, hzname, soil_color, 
-	                          hue=matrix_wet_color_hue, value=matrix_wet_color_value, 
-	                          chroma=matrix_wet_color_chroma, dry_hue=matrix_dry_color_hue,
-	                          dry_value=matrix_dry_color_value, dry_chroma=matrix_dry_color_chroma,
-	                          texture_class=texture_class, cf_class=cf_class, pH=ph, pH_class=ph_class,
-	                          distinctness=distinctness, topography=topography,
-	                          narrative=narrative,
-	                          stringsAsFactors=FALSE)) 
+	  
+	  h <- with(h, data.frame(
+	    id = series, 
+	    top, bottom, 
+	    hzname, 
+	    soil_color, 
+	    hue = matrix_wet_color_hue, 
+	    value = matrix_wet_color_value, 
+	    chroma = matrix_wet_color_chroma, 
+	    dry_hue = matrix_dry_color_hue,
+	    dry_value = matrix_dry_color_value, 
+	    dry_chroma = matrix_dry_color_chroma,
+	    texture_class = texture_class, 
+	    cf_class = cf_class, 
+	    pH = ph, 
+	    pH_class = ph_class,
+	    distinctness = distinctness, 
+	    topography = topography,
+	    dry_color_estimated = as.logical(dry_color_estimated),
+	    moist_color_estimated = as.logical(moist_color_estimated),
+	    narrative = narrative,
+	    stringsAsFactors = FALSE
+	  )
+	  ) 
 	}
 	
 	if(colorState == 'dry') {
 	  h$soil_color <- with(h, munsell2rgb(matrix_dry_color_hue, matrix_dry_color_value, matrix_dry_color_chroma))
-	  h <- with(h, data.frame(id=series, top, bottom, hzname, soil_color, 
-	                          hue=matrix_dry_color_hue, value=matrix_dry_color_value, 
-	                          chroma=matrix_dry_color_chroma, moist_hue=matrix_wet_color_hue,
-	                          moist_value=matrix_wet_color_value, moist_chroma=matrix_wet_color_chroma,
-	                          texture_class=texture_class, cf_class=cf_class, pH=ph, pH_class=ph_class,
-	                          distinctness=distinctness, topography=topography,
-	                          narrative=narrative,
-	                          stringsAsFactors=FALSE))
+	  
+	  h <- with(h, data.frame(
+	    id = series, 
+	    top, bottom, 
+	    hzname, 
+	    soil_color, 
+	    hue = matrix_dry_color_hue, 
+	    value = matrix_dry_color_value, 
+	    chroma = matrix_dry_color_chroma, 
+	    moist_hue = matrix_wet_color_hue,
+	    moist_value = matrix_wet_color_value, 
+	    moist_chroma = matrix_wet_color_chroma,
+	    texture_class = texture_class, 
+	    cf_class = cf_class, 
+	    pH = ph, 
+	    pH_class = ph_class,
+	    distinctness = distinctness, 
+	    topography = topography,
+	    dry_color_estimated = as.logical(dry_color_estimated),
+	    moist_color_estimated = as.logical(moist_color_estimated),
+	    narrative = narrative,
+	    stringsAsFactors = FALSE
+	  )
+	  )
 	}
 	
 	
