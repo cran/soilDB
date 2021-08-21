@@ -2,39 +2,39 @@
 % Please edit documentation in R/siblings.R
 \name{siblings}
 \alias{siblings}
-\title{Get tabular "siblings" and "cousins" for a soil series}
+\title{Get "siblings" and "cousins" for a given soil series}
 \usage{
 siblings(s, only.major = FALSE, component.data = FALSE, cousins = FALSE)
 }
 \arguments{
-\item{s}{character vector, the name of a single soil series,
-case-insensitive.}
+\item{s}{character vector, the name of a single soil series, case-insensitive.}
 
-\item{only.major}{logical, should only return siblings that are major
-components}
+\item{only.major}{logical, should only return siblings that are major components}
 
-\item{component.data}{logical, should component data for siblings (and
-optionally cousins) be returned?}
+\item{component.data}{logical, should component data for siblings (and optionally cousins) be returned?}
 
 \item{cousins}{logical, should siblings-of-siblings (cousins) be returned?}
 }
 \value{
-\describe{ \item{sib}{\code{data.frame} containing siblings, major
-component flag, and number of co-occurrences}
-\item{sib.data}{\code{data.frame} containing sibling component data}
-\item{cousins}{\code{data.frame} containing cousins, major component flag,
-and number of co-occurrences} \item{cousin.data}{\code{data.frame}
-containing cousin component data} }
+A \code{list} containing:
+\itemize{
+\item sib: \code{data.frame} containing siblings, major component flag, and number of co-occurrences
+\item sib.data: \code{data.frame} containing sibling component data (only when \code{component.data = TRUE})
+\item cousins: \code{data.frame} containing cousins, major component flag, and number of co-occurrences (only when \code{cousins = TRUE})
+\item cousin.data: \code{data.frame} containing cousin component data (only when \verb{cousins = TRUE, component.data = TRUE})
+}
 }
 \description{
-Look up siblings and cousins for a given soil series from the current fiscal
-year SSURGO snapshot via SoilWeb.
+Look up siblings and cousins for a given soil series from the current fiscal year SSURGO snapshot via SoilWeb.
+
+The siblings of any given soil series are defined as those soil components (major and minor) that share a parent map unit with the named series (as a major component). Component names are filtered using a snapshot of the Soil Classification database to ensure that only valid soil series names are included. Cousins are siblings of siblings. Data are sourced from SoilWeb which maintains a copy of the current SSURGO snapshot. Visualizations of soil "siblings"-related concepts can be found in the "Sibling Summary" tab of Soil Data Explorer app: \url{https://casoilresource.lawr.ucdavis.edu/sde/}.
+
+Additional resources:
+\itemize{
+\item \href{http://ncss-tech.github.io/AQP/soilDB/soil-series-query-functions.html}{Soil Series Query Functions}
+\item \href{http://ncss-tech.github.io/AQP/soilDB/siblings.html}{Soil "Siblings" Tutorial}
+\item \href{http://ncss-tech.github.io/AQP/presentations/beaudette-soil-networks-2019-www.pdf}{SSSA 2019 Presentation - Mapping Soilscapes Using Soil Co-Occurrence Networks}
 }
-\details{
-The siblings of any given soil series are defined as those soil series
-(major and minor component) that share a parent map unit with the named
-series (as a major component). Cousins are siblings of siblings. Data are
-sourced from SoilWeb which maintains a copy of the current SSURGO snapshot.
 }
 \examples{
 
@@ -55,10 +55,7 @@ if(requireNamespace("curl") &
 
 }
 \references{
-\itemize{
-\item \href{http://ncss-tech.github.io/AQP/soilDB/soil-series-query-functions.html}{Soil Series Query Functions}
-\item \href{http://ncss-tech.github.io/AQP/soilDB/siblings.html}{Soil "Siblings" Tutorial}
-}
+O'Geen, A., Walkinshaw, M. and Beaudette, D. (2017), SoilWeb: A Multifaceted Interface to Soil Survey Information. Soil Science Society of America Journal, 81: 853-862. \doi{https://doi.org/10.2136/sssaj2016.11.0386n}
 }
 \seealso{
 \link{OSDquery}, \link{siblings}, \link{fetchOSD}

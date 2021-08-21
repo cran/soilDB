@@ -1,3 +1,17 @@
+# soilDB 2.6.5 (2021-08-19)
+ * API calls that return geometry in projected coordinates (AEA/NAD83) now use ESPG:5070 instead of EPSG:6350
+
+# soilDB 2.6.4 (2021-08-06)
+ * `fetchNASIS(from="pedons")` now supports `fill=TRUE` argument just like `from="components"` to include pedons that have no horizon records
+ * `createStaticNASIS()`: column order should match NASIS, even if data types require reorder for ODBC driver
+ * `fetchSoilGrids()` bug fixes, updates to metadata and references in documentation (https://github.com/ncss-tech/soilDB/issues/201)
+   * Corrected the conversion factor used for predicted `nitrogen` values (conversion from cg/kg to g/kg)
+   * Corrected the conversion factor used for uncertainty in `bdod` and `nitrogen` (SoilGrids uncertainty layer always uses factor of 10 to create integers)
+   * Improved error handling
+   * Added `progress` and `verbose` arguments for text progress bar and additional message output
+   * Added support for {sf} and {sp} POINT geometry inputs
+ * Add `get_SDA_coecoclass()` SOD-style method for mapunit/component level summaries of ecological site and other vegetation class information
+ 
 # soilDB 2.6.3 (2021-07-22)
  * `SDA_query()` and all functions that call `SDA_query()` get proper column class handling (related to #190), however:
    - be careful with the use of CAST(): unknown datatypes may not be correctly interpreted

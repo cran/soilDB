@@ -14,8 +14,10 @@
   con <- dbConnectNASIS(dsn)
   allcols <- "*"
 
+  columns <- NULL
+  
   # handling for MSSQL/ODBC weirdness
-  if (is.null(dsn)) {
+  if (is.null(dsn) || inherits(con, 'OdbcConnection')) {
 
     # assuming that default connection uses ODBC
     if (!requireNamespace("odbc"))
@@ -35,7 +37,14 @@
 
   # construct query and return result
   q <- sprintf("SELECT %s FROM %s", paste(allcols, collapse = ", "), table_name)
-  return(dbQueryNASIS(con, q))
+  res <- dbQueryNASIS(con, q)
+  
+  if (is.null(columns)) {
+    columns <- data.frame(name = colnames(res))
+  }
+  
+  # put back into original order from NASIS
+  return(res[, match(colnames(res), columns$name)])
 }
 
 #' Create a memory or file-based instance of NASIS database
@@ -45,7 +54,7 @@
 #'
 #' @param tables Character vector of target tables. Default: \code{NULL} is whatever tables are listed by `DBI::dbListTables` for the connection typ being used.
 #' @param SS Logical. Include "selected set" tables (ending with suffix \code{"_View_1"}). Default: \code{TRUE}
-#' @param dsn Optional: path to SQLite database containing NASIS table structure; Default: \code{NULL}
+#' @param dsn Optional: path to SQLite database containing NASIS table structure; or a `DBIConnection`. Default: \code{NULL}
 #' @param output_path Optional: path to new/existing SQLite database to write tables to. Default: \code{NULL} returns table results as named list.
 #' @param new_names Optional: new table names (should match length of vector of matching `tables` in `dsn`)
 #' @param verbose Show error messages from attempts to dump individual tables? Default `FALSE`
