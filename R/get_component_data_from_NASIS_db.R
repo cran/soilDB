@@ -147,7 +147,7 @@ get_cotext_from_NASIS_db <- function(SS = TRUE, fixLineEndings = TRUE, dsn = NUL
 #'
 #' @param SS fetch data from the currently loaded selected set in NASIS or from
 #' the entire local database (default: `TRUE`)
-#'
+#' @param nullFragsAreZero should surface fragment cover percentages of NULL be interpreted as 0? (default: TRUE)
 #' @param stringsAsFactors logical: should character vectors be converted to
 #' factors? This argument is passed to the `uncode()` function. It does not
 #' convert those vectors that have set outside of `uncode()` (i.e. hard coded).
@@ -175,16 +175,19 @@ get_cotext_from_NASIS_db <- function(SS = TRUE, fixLineEndings = TRUE, dsn = NUL
 #'
 #' @export get_component_data_from_NASIS_db
 get_component_data_from_NASIS_db <- function(SS = TRUE,
+                                             nullFragsAreZero = TRUE,
                                              stringsAsFactors = default.stringsAsFactors(),
                                              dsn = NULL) {
   
-  q <- "SELECT dmudesc, compname, comppct_r, compkind, majcompflag, localphase, drainagecl, hydricrating, elev_l, elev_r, elev_h, slope_l, slope_r, slope_h, aspectccwise, aspectrep, aspectcwise, map_l, map_r, map_h, airtempa_l as maat_l, airtempa_r as maat_r, airtempa_h as maat_h, soiltempa_r as mast_r, reannualprecip_r, ffd_l, ffd_r, ffd_h, tfact, wei, weg, nirrcapcl, nirrcapscl, nirrcapunit, irrcapcl, irrcapscl, irrcapunit, frostact, hydricrating, hydgrp, corcon, corsteel, taxclname, taxorder, taxsuborder, taxgrtgroup, taxsubgrp, taxpartsize, taxpartsizemod, taxceactcl, taxreaction, taxtempcl, taxmoistscl, taxtempregime, soiltaxedition, coiid, dmuiid
+  q1 <- "SELECT dmudesc, compname, comppct_r, compkind, majcompflag, localphase, drainagecl, hydricrating, elev_l, elev_r, elev_h, slope_l, slope_r, slope_h, aspectccwise, aspectrep, aspectcwise, map_l, map_r, map_h, airtempa_l as maat_l, airtempa_r as maat_r, airtempa_h as maat_h, soiltempa_r as mast_r, reannualprecip_r, ffd_l, ffd_r, ffd_h, tfact, wei, weg, nirrcapcl, nirrcapscl, nirrcapunit, irrcapcl, irrcapscl, irrcapunit, frostact, hydricrating, hydgrp, corcon, corsteel, taxclname, taxorder, taxsuborder, taxgrtgroup, taxsubgrp, taxpartsize, taxpartsizemod, taxceactcl, taxreaction, taxtempcl, taxmoistscl, taxtempregime, soiltaxedition, coiid, dmuiid
 
   FROM
   datamapunit_View_1 AS dmu
   INNER JOIN component_View_1 AS co ON co.dmuiidref = dmu.dmuiid
 
   ORDER BY dmudesc, comppct_r DESC, compname ASC;"
+  
+  q2 <- "SELECT * FROM cosurffrags_View_1"
 
   channel <- dbConnectNASIS(dsn)
 
@@ -193,25 +196,56 @@ get_component_data_from_NASIS_db <- function(SS = TRUE,
 
   # toggle selected set vs. local DB
   if (SS == FALSE) {
-    q <- gsub(pattern = '_View_1', replacement = '', x = q, fixed = TRUE)
+    q1 <- gsub(pattern = '_View_1', replacement = '', x = q1, fixed = TRUE)
+    q2 <- gsub(pattern = '_View_1', replacement = '', x = q2, fixed = TRUE)
   }
 
   # exec query
-  d <- dbQueryNASIS(channel, q)
+  d <- dbQueryNASIS(channel, q1, close = FALSE)
 
   # test for duplicate coiids
   idx <- which(table(d$coiid) > 1)
   if (length(idx) > 0) {
     dupes <- names(idx)
     assign('dupe.coiids', value=dupes, envir=soilDB.env)
-    message("-> QC: duplicate coiids, this should not happen. Use `get('dupe.coiids', envir=soilDB.env)` for related coiid values.")
+    message("-> QC: duplicate coiids, this should not happen.\n\tUse `get('dupe.coiids', envir=soilDB.env)` for component record IDs (coiid)")
   }
 
   # uncode metadata domains
   if (nrow(d) > 0) {
     d <- uncode(d, stringsAsFactors = stringsAsFactors, dsn = dsn)
   }
-
+  
+  if (nrow(d) > 0) {
+    # surface fragments
+    chs <- simplifyFragmentData(
+      uncode(dbQueryNASIS(channel, q2, close = FALSE), dsn = dsn),
+      id.var = "coiidref",
+      vol.var = "sfragcov_r",
+      prefix = "sfrag")
+    
+    if (sum(complete.cases(chs)) == 0) {
+      chs <- chs[1:nrow(d),]
+      chs$coiidref <- d$coiid
+    } else {
+      ldx <- !d$coiid %in% chs$coiidref
+      chs_null <- chs[0,]
+      if (any(ldx)) {
+        chs_null <- chs_null[seq(sum(ldx)),]
+      }
+      chs_null$coiidref <- d$coiid[ldx]
+      chs <- rbind(chs, chs_null)
+    }
+  
+    # handle NA for totals
+    if (nullFragsAreZero) {
+      chs[is.na(chs)] <- 0
+    } 
+    colnames(chs) <- paste0("surface_", colnames(chs))
+    colnames(chs)[1] <- "coiidref"
+    d <- merge(d, chs, by.x = "coiid", by.y = "coiidref", all.x = TRUE, sort = FALSE)
+  }
+  
   # done
   return(d)
 }
@@ -485,7 +519,7 @@ get_component_correlation_data_from_NASIS_db <- function(SS = TRUE,
   if(length(idx) > 0) {
     dupes <- names(idx)
     assign('dupe.muiids', value=dupes, envir=soilDB.env)
-    message("-> QC: duplicate muiids: multiple 'representative' DMU / MU?. Use `get('dupe.muiids', envir=soilDB.env)` for related muiid values.")
+    message("-> QC: duplicate muiids: multiple 'representative' DMU / MU?.\n\tUse `get('dupe.muiids', envir=soilDB.env)` for mapunit record IDs (muiid)")
   }
 
 
@@ -494,7 +528,7 @@ get_component_correlation_data_from_NASIS_db <- function(SS = TRUE,
   if(length(idx) > 0) {
     dupes <- names(idx)
     assign('multiple.mu.per.dmu', value=dupes, envir=soilDB.env)
-    message("-> QC: DMUs assigned to multiple MU. Use `get('multiple.mu.per.dmu', envir=soilDB.env)` for related dmuiid values.")
+    message("-> QC: DMUs assigned to multiple MU.\n\tUse `get('multiple.mu.per.dmu', envir=soilDB.env)` for data mapunit record IDs (dmuiid)")
   }
 
 
@@ -597,7 +631,7 @@ get_component_esd_data_from_NASIS_db <- function(SS = TRUE,
   dupes <- names(idx)
   assign('multiple.ecosite.per.coiid', value=dupes, envir=soilDB.env)
   if (length(idx) > 0) {
-    message("-> QC: multiple ecosites / component. Use `get('multiple.ecosite.per.coiid', envir=soilDB.env)` for related coiid values.")
+    message("-> QC: multiple ecosites / component.\n\tUse `get('multiple.ecosite.per.coiid', envir=soilDB.env)` for component record IDs (coiid)")
   }
 
   # uncode metadata domains
@@ -635,7 +669,7 @@ get_component_otherveg_data_from_NASIS_db <- function(SS = TRUE, dsn = NULL) {
   if (length(idx) > 0) {
     dupes <- names(idx)
     assign('multiple.otherveg.per.coiid', value=dupes, envir=soilDB.env)
-    message("-> QC: multiple othervegclasses / component. Use `get('multiple.otherveg.per.coiid', envir=soilDB.env)` for related coiid values.")
+    message("-> QC: multiple othervegclasses / component.\n\tUse `get('multiple.otherveg.per.coiid', envir=soilDB.env)` for component record IDs (coiid)")
   }
 
   # uncode metadata domains
@@ -751,7 +785,7 @@ get_comonth_from_NASIS_db <- function(SS = TRUE,
 
     # join full version to comonth records
     # nd contains the full set of component records IDs
-    d <- join(nd, d, by=c('coiid', 'month'), type = 'left')
+    d <- merge(nd, d, by=c('coiid', 'month'), all.x = TRUE, sort = FALSE)
 
     ## this isn't likely needed, will re-visit after some testing
 
@@ -815,7 +849,8 @@ get_copedon_from_NASIS_db <- function(SS = TRUE, dsn = NULL) {
 
 get_component_horizon_data_from_NASIS_db <- function(SS = TRUE,
                                                      fill = FALSE,
-                                                     dsn = NULL) {
+                                                     dsn = NULL,
+                                                     nullFragsAreZero = TRUE) {
 
   q <- "SELECT coiid, chiid, hzname, hzdept_r, hzdepb_r, texture, fragvoltot_l, fragvoltot_r, fragvoltot_h, sandtotal_l, sandtotal_r, sandtotal_h, silttotal_l, silttotal_r, silttotal_h, claytotal_l, claytotal_r, claytotal_h, om_l, om_r, om_h, structgrpname, dbthirdbar_l, dbthirdbar_r, dbthirdbar_h, ksat_l, ksat_r, ksat_h, awc_l, awc_r, awc_h, lep_l, lep_r, lep_h, ll_l, ll_r, ll_h, pi_l, pi_r, pi_h, sieveno4_l, sieveno4_r, sieveno4_h, sieveno10_l, sieveno10_r, sieveno10_h, sieveno40_l, sieveno40_r, sieveno40_h, sieveno200_l, sieveno200_r, sieveno200_h, sar_l, sar_r, sar_h, ec_l, ec_r, ec_h, cec7_l, cec7_r, cec7_h, sumbases_l, sumbases_r, sumbases_h, ecec_l, ecec_r, ecec_h, ph1to1h2o_l, ph1to1h2o_r, ph1to1h2o_h, ph01mcacl2_l, ph01mcacl2_r, ph01mcacl2_h, caco3_l, caco3_r, caco3_h, kffact, kwfact, aashind_l, aashind_r, aashind_h
 
@@ -829,7 +864,10 @@ get_component_horizon_data_from_NASIS_db <- function(SS = TRUE,
   INNER JOIN datamapunit_View_1 dmu ON dmu.dmuiid = co.dmuiidref
 
   ORDER BY dmudesc, comppct_r DESC, compname ASC, hzdept_r ASC;"
-
+  
+  q2 <- "SELECT * FROM chfrags_View_1"
+  q3 <- "SELECT * FROM chhuarts_View_1"
+  
   channel <- dbConnectNASIS(dsn)
 
   if (inherits(channel, 'try-error'))
@@ -838,10 +876,12 @@ get_component_horizon_data_from_NASIS_db <- function(SS = TRUE,
   # toggle selected set vs. local DB
   if (SS == FALSE) {
     q <- gsub(pattern = '_View_1', replacement = '', x = q, fixed = TRUE)
+    q2 <- gsub(pattern = '_View_1', replacement = '', x = q2, fixed = TRUE)
+    q3 <- gsub(pattern = '_View_1', replacement = '', x = q3, fixed = TRUE)
   }
 
   # exec query
-  d <- dbQueryNASIS(channel, q)
+  d <- dbQueryNASIS(channel, q, close = FALSE)
 
   ## TODO: better documentation for "fill" argument
   # https://github.com/ncss-tech/soilDB/issues/50
@@ -849,8 +889,61 @@ get_component_horizon_data_from_NASIS_db <- function(SS = TRUE,
   if (fill == FALSE) {
     d <- d[!is.na(d$chiid), ]
   }
-
-  # done
+  
+  # "sieving" chfrags, chuarts tables for parity with fetchNASIS("pedons") @horizons slot columns 
+  
+  if (nrow(d) > 0){
+    # horizon fragments
+    chf <- simplifyFragmentData(
+      uncode(dbQueryNASIS(channel, q2, close = FALSE), dsn = dsn),
+      id.var = "chiidref",
+      vol.var = "fragvol_r",
+      nullFragsAreZero = nullFragsAreZero
+    )
+    if (sum(complete.cases(chf)) == 0) {
+      chf <- chf[1:nrow(d),]
+      chf$chiidref <- d$chiid
+    } else {
+      ldx <- !d$chiid %in% chf$chiidref
+      chf_null <- chf[0,]
+      if (any(ldx)) {
+        chf_null <- chf_null[seq(sum(ldx)),]
+      }
+      chf_null$chiidref <- d$chiid[ldx]
+      chf <- rbind(chf, chf_null)
+    }
+    # handle NA for totals
+    if (nullFragsAreZero) {
+      chf[is.na(chf)] <- 0
+    } 
+  
+    # human artifacts  
+    cha <- simplifyArtifactData(
+      uncode(dbQueryNASIS(channel, q3, close = FALSE), dsn = dsn),
+      id.var = "chiidref",
+      vol.var = "huartvol_r",
+      nullFragsAreZero = nullFragsAreZero
+    )
+    # handle NULL result
+    if (sum(complete.cases(cha)) == 0) {
+      cha <- cha[1:nrow(d),]
+      cha$chiidref <- d$chiid
+    } else {
+      ldx <- !d$chiid %in% cha$chiidref
+      cha_null <- cha[0,][1:sum(ldx),]
+      cha_null$chiidref <- d$chiid[ldx]
+      cha <- rbind(cha, cha_null)
+    }
+    # handle NA for totals
+    if (nullFragsAreZero) {
+      cha[is.na(cha)] <- 0
+    }
+    
+    
+    d <- merge(d, chf, by.x = "chiid", by.y = "chiidref", all.x = TRUE, sort = FALSE)
+    d <- merge(d, cha, by.x = "chiid", by.y = "chiidref", all.x = TRUE, sort = FALSE)
+  }
+  
   return(d)
 }
 

@@ -4,9 +4,10 @@
 ## TODO: better error checking / reporting is needed: coiid, dmu id, component name
 .fetchNASIS_components <- function(SS = TRUE,
                                    rmHzErrors = TRUE,
+                                   nullFragsAreZero = TRUE,
                                    fill = FALSE,
                                    stringsAsFactors = default.stringsAsFactors(),
-                                   dsn = dsn) {
+                                   dsn = NULL) {
 
 
   # ensure that any old hz errors are cleared
@@ -14,8 +15,8 @@
     assign('component.hz.problems', value=character(0), envir=soilDB.env)
 
   # load data in pieces
-  f.comp       <- get_component_data_from_NASIS_db(SS = SS, stringsAsFactors = stringsAsFactors, dsn = dsn)
-  f.chorizon   <- get_component_horizon_data_from_NASIS_db(SS = SS, fill = fill, dsn = dsn)
+  f.comp       <- get_component_data_from_NASIS_db(SS = SS, stringsAsFactors = stringsAsFactors, dsn = dsn, nullFragsAreZero = nullFragsAreZero)
+  f.chorizon   <- get_component_horizon_data_from_NASIS_db(SS = SS, fill = fill, dsn = dsn, nullFragsAreZero = nullFragsAreZero)
   f.copm       <- get_component_copm_data_from_NASIS_db(SS = SS, stringsAsFactors = stringsAsFactors, dsn = dsn)
   f.cogeomorph <- get_component_cogeomorph_data_from_NASIS_db(SS = SS, dsn = dsn)
   f.otherveg   <- get_component_otherveg_data_from_NASIS_db(SS = SS, dsn = dsn)
@@ -65,43 +66,48 @@
   # add site data to object
   site(f.chorizon) <- f.comp # left-join via coiid
 
-  ## TODO: convert all ddply() calls into split() -> lapply() -> do.call('rbind')
-
-  # join-in copm strings
   ## 2017-3-13: short-circuts need testing, consider pre-marking mistakes before parsing
-  pm <- plyr::ddply(f.copm, 'coiid', .formatcoParentMaterialString, name.sep=' & ')
-  if(nrow(pm) > 0)
+  ## 2021-10-28: TODO: harmonize strategies for .formatXXXXString methods and ID variables
+  .SD <- NULL
+  .BY <- NULL
+  
+  # join-in copm strings
+  pm <- data.table::data.table(f.copm)[, .formatParentMaterialString(.SD, uid = .BY$coiid, name.sep=' & '), by = "coiid"]
+  pm$siteiid <- NULL
+  if (nrow(pm) > 0)
     site(f.chorizon) <- pm
 
   # join-in cogeomorph strings
-  ## 2017-3-13: short-circuts need testing, consider pre-marking mistakes before parsing
-  lf <- plyr::ddply(f.cogeomorph, 'coiid', .formatcoLandformString, name.sep=' & ')
-  if(nrow(lf) > 0)
+  lf <- data.table::data.table(f.cogeomorph)[, .formatLandformString(.SD, uid = .BY$coiid, name.sep=' & '), by = "coiid"]
+  lf$peiid <- NULL
+  if (nrow(lf) > 0)
     site(f.chorizon) <- lf
 
   # join-in ecosite string
-  ## 2017-3-06: short-circuts need testing, consider pre-marking mistakes before parsing
-  es <- plyr::ddply(f.ecosite, 'coiid', .formatEcositeString, name.sep=' & ')
-  if(nrow(es) > 0)
+  es <- data.table::data.table(f.ecosite)[, .formatEcositeString(.SD, name.sep=' & '), by = "coiid", .SDcols = colnames(f.ecosite)]
+  es$coiid <- NULL
+  if (nrow(es) > 0)
     site(f.chorizon) <- es
 
   # join-in othervegclass string
-  ## 2017-3-06: short-circuts need testing, consider pre-marking mistakes before parsing
-  ov <- plyr::ddply(f.otherveg, 'coiid', .formatOtherVegString, name.sep=' & ')
-  if(nrow(ov) > 0)
+  ov <- data.table::data.table(f.otherveg)[, .formatOtherVegString(.SD, name.sep=' & '), by = "coiid", .SDcols = colnames(f.otherveg)]
+  ov$coiid <- NULL
+  if (nrow(ov) > 0)
     site(f.chorizon) <- ov
 
+  # 2021-11-30: subset to hide aqp warnings for <- methods
+  
   # add diagnostic features to SPC
-  diagnostic_hz(f.chorizon) <- f.diaghz
+  diagnostic_hz(f.chorizon) <- f.diaghz[which(f.diaghz$coiid %in% f.chorizon$coiid),]
 
   # add restrictions to SPC
   # required new setter in aqp SPC object (AGB added 2019/12/23)
-  restrictions(f.chorizon) <- f.restrict
+  restrictions(f.chorizon) <- f.restrict[which(f.restrict$coiid %in% f.chorizon$coiid),]
 
   # print any messages on possible data quality problems:
   if(exists('component.hz.problems', envir=soilDB.env))
     if(length(get("component.hz.problems", envir = soilDB.env)) > 0)
-      message("-> QC: horizon errors detected, use `get('component.hz.problems', envir=soilDB.env)` for related coiid values")
+      message("-> QC: horizon errors detected:\n\tUse `get('component.hz.problems', envir=soilDB.env)` for component record IDs (coiid)")
 
   # set NASIS component specific horizon identifier
   if(!fill & length(filled.ids) == 0) {

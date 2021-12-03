@@ -10,7 +10,8 @@ SDA_spatialQuery(
   geom,
   what = "mukey",
   geomIntersection = FALSE,
-  db = c("SSURGO", "STATSGO", "SAPOLYGON")
+  db = c("SSURGO", "STATSGO", "SAPOLYGON"),
+  query_string = FALSE
 )
 }
 \arguments{
@@ -30,6 +31,8 @@ returned.}
 \item{db}{a character vector identifying the Soil Geographic Databases
 ('SSURGO' or 'STATSGO') to query. Option \var{STATSGO} currently works only
 in combination with \code{what = "mupolygon"}.}
+
+\item{query_string}{Default: \code{FALSE}; if \code{TRUE} return a character string containing query that would be sent to SDA via \code{SDA_query}}
 }
 \value{
 A \code{data.frame} if \code{what = 'mukey'}, otherwise
@@ -67,6 +70,7 @@ results. Polygon area in acres is computed server-side when \code{what =
 if(requireNamespace("curl") &
    curl::has_internet() & 
    requireNamespace("sp") &
+   requireNamespace("scales") &
    requireNamespace("raster") 
    ) {
 

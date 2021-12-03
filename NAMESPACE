@@ -8,25 +8,22 @@ importFrom("stats", "aggregate", "complete.cases", "na.omit", "as.formula", "spl
 
 importFrom("utils", "URLencode", "download.file", "object.size",
              "read.csv", "read.table", "setTxtProgressBar",
-             "txtProgressBar", "write.table")
+             "txtProgressBar", "write.table", "type.convert")
 
 importFrom("methods", "slot<-", "as")
 
 importFrom(data.table,
            rbindlist,
            data.table,
-           as.data.table)
+           as.data.table,
+           merge.data.table
+           )
 
 importFrom(DBI,
   dbGetQuery,
   dbConnect,
   dbSendQuery,
   dbFetch
-)
-
-importFrom(reshape2,
-  dcast,
-  melt
 )
 
 importFrom(raster,
@@ -38,16 +35,6 @@ importFrom(raster,
   "dataType<-",
   levels
 )
-
-importFrom(plyr,
-  ddply,
-  llply,
-  ldply,
-  dlply,
-  join,
-  summarize
-)
-
 
 importFrom(sp,
   spTransform,

@@ -1,3 +1,27 @@
+# soilDB 2.6.9 (2021-12-02)
+ * Replaced functionality using {plyr}/{reshape2} with {base}/{data.table}
+ * `processSDA_WKT()`: replaced {rgeos} with {wk} and {sf}
+ * `SDA_spatialQuery()`: added `query_string` argument
+ * `get_SDA_property()`: fixes for MIN/MAX aggregation (https://github.com/ncss-tech/soilDB/issues/219)
+ * `get_component_from_SDA()`: fragment size thresholds now conform with new (clarified) NSSH definitions
+ 
+# soilDB 2.6.8 (2021-11-05)
+ * `fetchNASIS()` upgrades: use data.table and base internally for data aggregation
+ * `fetchNASIS("components")` now "sieves" rock fragments and human artifacts using same routines as for pedons; respects `nullFragsAreZero` argument
+ * `fetchKSSL(..., returnGeochemicalData = TRUE)` safely returns 0-length `data.frame` when no data available
+ 
+# soilDB 2.6.7 (2021-10-27)
+ * Removed several packages from Suggests: {gridExtra}, {ggplot2}, {viridisLite}, {mapview}, {rasterVis}
+ * `get_OSD()`: Handle "NA" and type conversion for JSON results an convert spaces to underscores for file names as needed
+ * `fetchSCAN()`: graceful handling of timeout and converted from {plyr} to {data.table}; (https://github.com/ncss-tech/soilDB/issues/161, https://github.com/ncss-tech/soilDB/issues/184)
+ * `get_EDIT_ecoclass_by_geoUnit()`: graceful handling of timeout 
+ * `get_SDA_muaggatt()`: add `query_string` argument for parity with other "SSURGO on demand" / `get_SDA_*()` functions
+ 
+# soilDB 2.6.6 (2021-09-24)
+ * `get_SDA_pmgroupname()` and `get_SDA_hydric()` now support alternate aggregation methods. 
+   * Default for `get_SDA_pmgroupname()` is `"dominant component"`, now also supports `"dominant condition"` and `"none"`. 
+   * Default for `get_SDA_hydric()` is a map unit level aggregation of components and assigns new classes ; now supports `"dominant component"`, `"dominant condition"` and `"none"`
+
 # soilDB 2.6.5 (2021-08-19)
  * API calls that return geometry in projected coordinates (AEA/NAD83) now use ESPG:5070 instead of EPSG:6350
 
