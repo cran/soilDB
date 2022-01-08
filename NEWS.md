@@ -1,3 +1,20 @@
+# soilDB 2.6.12 (2022-01-07)
+ * `get_SDA_property()` now works with mixed component and horizon-level properties; thanks to Matthieu Stigler for the bug report
+ *  Added `get_SDV_legend_elements()` for fetching and parsing XML for Soil Data Viewer / Web Soil Survey-style symbol themes for soil interpretations from Soil Data Access
+ * `fetchNASIS()` pedon and component geomorphic summaries now include columns for landscape, microfeature, microrelief, 2D/3D morphometry, and slope shape 
+ * `fetchNASIS('pedons')` now uses `simplifyFragmentData()` for surface fragments
+ 
+# soilDB 2.6.11 (2021-12-21)
+ * `fetchSDA()` handle NULL component-level results with an informative error 
+ * `fetchSDA()` now (again) returns mapunit/legend-level information via `get_mapunit_from_NASIS()`
+ * `createStaticNASIS()` and queries to SQLite NASIS snapshots now preserve date/time using RSQLite 2.2.4+ via `extended_types=TRUE` argument to `dbConnect()`
+  * `get_soilseries_from_NASIS()` now returns `soiltaxclasslastupdated` as a date/time and stores the year in calculated column `soiltaxclassyearlastupdated`
+ * Added several tables to thematic groups in `get_NASIS_table_name_by_purpose()`
+ * `fetchOSD()` gains surface shape proportions in extended `shape_across` and `shape_down` tables
+ * `SDA_spatialQuery()` `what='mukey'` now works with `db='STATSGO'`
+ * Added metadata to `loafercreek`, `gopheridge` and `mineralKing`
+ * `waterYearDay()` pass through `format` argument for POSIX time conversion
+ 
 # soilDB 2.6.10 (2021-12-14)
  * `waterDayYear()` and `.formatDates()` allow optional `format` and `tz` argument; used for consistent POSIX time conversion in tests where date/time has granularity finer than one day
  * `fetchSDA()` extensions for better handling of components with no horizon data

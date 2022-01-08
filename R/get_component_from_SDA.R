@@ -3,6 +3,8 @@
 # https://github.com/ncss-tech/soilDB/issues/38
 # https://github.com/ncss-tech/soilDB/issues/36
 
+#' @export 
+#' @rdname fetchSDA
 get_component_from_SDA <- function(WHERE = NULL, duplicates = FALSE, childs = TRUE,
                                    droplevels = TRUE, nullFragsAreZero = TRUE,
                                    stringsAsFactors = default.stringsAsFactors()
@@ -322,7 +324,9 @@ get_component_from_SDA <- function(WHERE = NULL, duplicates = FALSE, childs = TR
 }
 
 
-
+#' @export 
+#' @rdname fetchSDA
+#' @param mrulename character. Interpretation rule names 
 get_cointerp_from_SDA <- function(WHERE = NULL, mrulename = NULL, duplicates = FALSE,
                                   droplevels = TRUE,
                                   stringsAsFactors = default.stringsAsFactors()
@@ -369,7 +373,8 @@ get_cointerp_from_SDA <- function(WHERE = NULL, mrulename = NULL, duplicates = F
   return(d.cointerp)
   }
 
-
+#' @export 
+#' @rdname fetchSDA
 get_legend_from_SDA <- function(WHERE = NULL, droplevels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
   q.legend  <- paste("
                      SELECT
@@ -403,7 +408,8 @@ get_legend_from_SDA <- function(WHERE = NULL, droplevels = TRUE, stringsAsFactor
 }
 
 
-
+#' @export 
+#' @rdname fetchSDA
 get_lmuaoverlap_from_SDA <- function(WHERE = NULL, droplevels = TRUE, stringsAsFactors = default.stringsAsFactors()) {
 
   q <- paste("SELECT
@@ -446,7 +452,8 @@ get_lmuaoverlap_from_SDA <- function(WHERE = NULL, droplevels = TRUE, stringsAsF
 }
 
 
-
+#' @export 
+#' @rdname fetchSDA
 get_mapunit_from_SDA <- function(WHERE = NULL,
                                  droplevels = TRUE,
                                  stringsAsFactors = default.stringsAsFactors()
@@ -501,7 +508,8 @@ get_mapunit_from_SDA <- function(WHERE = NULL,
 
 
 
-
+#' @export 
+#' @rdname fetchSDA
 get_chorizon_from_SDA <- function(WHERE = NULL, duplicates = FALSE,
                                   childs = TRUE,
                                   nullFragsAreZero = TRUE,
@@ -800,14 +808,18 @@ fetchSDA <- function(WHERE = NULL, duplicates = FALSE, childs = TRUE,
                                         nullFragsAreZero = TRUE,
                                         stringsAsFactors = stringsAsFactors
                                         )
-  # f.mapunit   <- get_mapunit_from_SDA(WHERE, stringsAsFactors = stringsAsFactors)
-
+  if (is.null(f.component)) {
+    stop("WHERE clause returned no components.", call. = FALSE)
+  }
+  
   # AGB update: only query component horizon for cokeys in the component result (subject to user-specified WHERE clause)
   f.chorizon  <- get_chorizon_from_SDA(paste0('c.cokey IN', format_SQL_in_statement(unique(f.component$cokey))),
                                        duplicates = duplicates,
                                        droplevels = droplevels
                                        )
-
+  # only query mapunit for mukeys in the component result
+  f.mapunit  <- get_mapunit_from_SDA(paste('mu.nationalmusym IN', format_SQL_in_statement(unique(f.component$nationalmusym))), stringsAsFactors = stringsAsFactors)
+  
   # diagnostic features and restrictions
   f.diag <- .get_diagnostics_from_SDA(f.component$cokey)
   f.restr <- .get_restrictions_from_SDA(f.component$cokey)
@@ -838,7 +850,10 @@ fetchSDA <- function(WHERE = NULL, duplicates = FALSE, childs = TRUE,
   ## TODO: make this error more informative
   # add site data to object
   site(f.chorizon) <- f.component # left-join via cokey
-
+  
+  # join mapunit on nationalmusym/mukey if present
+  site(f.chorizon) <- f.mapunit
+  
   # set SDA/SSURGO-specific horizon identifier
   if ('chkey' %in% aqp::horizonNames(f.chorizon) && all(!is.na('chkey'))) {
       hzidname(f.chorizon) <- 'chkey'
