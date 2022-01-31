@@ -98,12 +98,13 @@ ORDER BY pedon_View_1.peiid ;"
 	d <- uncode(d, stringsAsFactors = stringsAsFactors, dsn = dsn)
 	
 	# surface fragments
-	sfr <- dbQueryNASIS(channel, q2, close = FALSE)
+	sfr <- dbQueryNASIS(channel, q2)
 	
-	multi.siteobs <- unique(sfr[, c("siteiid","siteobsiid")])$siteiid
-	if (any(table(multi.siteobs) > 1)) {
-	  message("-> QC: surface fragment records from multiple site observations.\n\tUse `get('multisiteobs.surface', envir=soilDB.env) for site (siteiid) and site observation (siteobsiid)`")
-	  assign("multisiteobs.surface", value = multi.siteobs[table(multi.siteobs) > 1, ], envir = soilDB.env)
+	multi.siteobs <- unique(sfr[, c("siteiid","siteobsiid")])
+	multisite <- table(multi.siteobs$siteiid) 
+	if (any(multisite > 1)) {
+	  message("-> QC: surface fragment records from multiple site observations.\n\tUse `get('multisiteobs.surface', envir=soilDB.env)` for site (siteiid) and site observation (siteobsiid)")
+	  assign("multisiteobs.surface", value = multi.siteobs[multi.siteobs$siteiid %in% names(multisite[multisite > 1]),], envir = soilDB.env)
 	}
 	
 	phs <- simplifyFragmentData(
@@ -114,23 +115,28 @@ ORDER BY pedon_View_1.peiid ;"
 	  msg = "surface fragment cover"
 	)
 	
-	ldx <- !d$peiid %in% phs$peiid
-	if (!any(ldx)) {
-	  phs <- phs[1:nrow(d),]
-	  phs$peiid <- d$peiid
-	} else {
-	  phs_null <- phs[0,][1:sum(ldx),]
-	  phs_null$peiid <- d$peiid[ldx]
-	  phs <- rbind(phs, phs_null)
-	}
-	
-	# handle NA for totals
-	if (nullFragsAreZero) {
-	  phs[is.na(phs)] <- 0
-	} 
 	colnames(phs) <- paste0("surface_", colnames(phs))
 	colnames(phs)[1] <- "peiid"
-	d2 <- merge(d, phs, by = "peiid", all.x = TRUE, sort = FALSE)
+	
+	if (nrow(d) > 0) {
+  	ldx <- !d$peiid %in% phs$peiid
+  	if (!any(ldx)) {
+  	  phs <- phs[1:nrow(d),]
+  	  phs$peiid <- d$peiid
+  	} else {
+  	  phs_null <- phs[0,][1:sum(ldx),]
+  	  phs_null$peiid <- d$peiid[ldx]
+  	  phs <- rbind(phs, phs_null)
+  	}
+  	
+  	# handle NA for totals
+  	if (nullFragsAreZero) {
+  	  phs[is.na(phs)] <- 0
+  	} 
+  	d2 <- merge(d, phs, by = "peiid", all.x = TRUE, sort = FALSE)
+	} else {
+	  d2 <- cbind(d, phs[0,])
+	}
 	
 	# short-circuit: 0 rows means nothing in the selected set and thus we stop here
 	if (nrow(d2) == 0) {

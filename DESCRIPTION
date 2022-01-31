@@ -1,7 +1,7 @@
 Package: soilDB
 Type: Package
 Title: Soil Database Interface
-Version: 2.6.12
+Version: 2.6.13
 Authors@R: c(person(given="Dylan", family="Beaudette", role = c("aut"), email = "dylan.beaudette@usda.gov"),
              person(given="Jay", family="Skovlin", role = c("aut")), 
              person(given="Stephen", family="Roecker", role = c("aut")), 
@@ -24,5 +24,5 @@ URL: http://ncss-tech.github.io/AQP/
 BugReports: https://github.com/ncss-tech/soilDB/issues
 RoxygenNote: 7.1.2
 NeedsCompilation: no
-Packaged: 2022-01-07 20:01:28 UTC; Andrew.G.Brown
-Date/Publication: 2022-01-08 11:20:16 UTC
+Packaged: 2022-01-29 19:03:29 UTC; Andrew.G.Brown
+Date/Publication: 2022-01-31 07:40:02 UTC
