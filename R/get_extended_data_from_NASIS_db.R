@@ -13,11 +13,8 @@
 #'
 #' @param nullFragsAreZero should fragment volumes of NULL be interpreted as 0?
 #' (default: TRUE), see details
-#'
-#' @param stringsAsFactors logical: should character vectors be converted to
-#' factors? This argument is passed to the `uncode()` function. It does not
-#' convert those vectors that have been set outside of `uncode()` (i.e. hard
-#' coded).
+
+#' @param stringsAsFactors deprecated
 #'
 #' @param dsn Optional: path to local SQLite database containing NASIS
 #' table structure; default: `NULL`
@@ -44,10 +41,14 @@
 #' @export get_extended_data_from_NASIS_db
 get_extended_data_from_NASIS_db <- function(SS = TRUE,
                                             nullFragsAreZero = TRUE,
-                                            stringsAsFactors = default.stringsAsFactors(),
+                                            stringsAsFactors = NULL,
                                             dsn = NULL) {
 
-
+  if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
+    .Deprecated(msg = sprintf("stringsAsFactors argument is deprecated.\nSetting package option with `NASISDomainsAsFactor(%s)`", stringsAsFactors))
+    NASISDomainsAsFactor(stringsAsFactors)
+  }
+  
   # photo links from PedonPC stored as sitetext notes
   q.photolink <- "SELECT so.siteiidref AS siteiid, sot.recdate, sot.textcat,  CAST(sot.textentry AS text) AS imagepath
   FROM
@@ -396,7 +397,7 @@ LEFT OUTER JOIN (
   }
 
 
-  q.sitepm <- "SELECT siteiidref as siteiid, seqnum, pmorder, pmdept, pmdepb, pmmodifier, pmgenmod, pmkind, pmorigin, pmweathering
+  q.sitepm <- "SELECT siteiidref as siteiid, seqnum, pmorder, pmdept, pmdepb, pmmodifier, pmgenmod, pmkind, pmorigin 
   FROM
   sitepm_View_1 AS spm
   INNER JOIN site_View_1 AS s ON spm.siteiidref = s.siteiid;"
@@ -423,6 +424,20 @@ LEFT OUTER JOIN (
   if (SS == FALSE) {
     q.hz.dessuf <- gsub(pattern = '_View_1', replacement = '', x = q.hz.dessuf, fixed = TRUE)
   }
+  
+  # get siteaoverlap data
+  q.siteaoverlap <- "SELECT siteaoverlap_View_1.siteiidref as siteiid, 
+                        siteaoverlap_View_1.seqnum,                         
+			area.areasymbol, area.areaname, areatype.areatypename
+                  FROM siteaoverlap_View_1
+                    INNER JOIN area ON area.areaiid = siteaoverlap_View_1.areaiidref
+		                INNER JOIN areatype ON areatype.areatypeiid = area.areatypeiidref
+                  ORDER BY siteiidref ASC;"
+  
+  # toggle selected set vs. local DB
+  if (SS == FALSE) {
+    q.siteaoverlap <- gsub(pattern = '_View_1', replacement = '', x = q.siteaoverlap, fixed = TRUE)
+  }  
 
   channel <- dbConnectNASIS(dsn)
 
@@ -448,20 +463,22 @@ LEFT OUTER JOIN (
   d.sitepm <- dbQueryNASIS(channel, q.sitepm, close = FALSE)
   d.structure <- dbQueryNASIS(channel, q.structure, close = FALSE)
   d.hz.desgn <- dbQueryNASIS(channel, q.hz.desgn, close = FALSE)
-  d.hz.dessuf <- dbQueryNASIS(channel, q.hz.dessuf)
+  d.hz.dessuf <- dbQueryNASIS(channel, q.hz.dessuf, close = FALSE)
+  d.siteaoverlap <- dbQueryNASIS(channel, q.siteaoverlap, close = FALSE)
 
 	## uncode the ones that need that here
-	d.diagnostic <- uncode(d.diagnostic, stringsAsFactors = stringsAsFactors, dsn = dsn)
-	d.restriction <- uncode(d.restriction, stringsAsFactors = stringsAsFactors, dsn = dsn)
-	d.rf.data    <- uncode(d.rf.data, stringsAsFactors = stringsAsFactors, dsn = dsn)
-	d.art.data  <-  uncode(d.art.data, stringsAsFactors = stringsAsFactors, dsn = dsn)
-	d.hz.texmod  <- uncode(d.hz.texmod, stringsAsFactors = stringsAsFactors, dsn = dsn)
-	# https://github.com/ncss-tech/soilDB/issues/53
-	d.taxhistory <- uncode(d.taxhistory, stringsAsFactors = FALSE, dsn = dsn)
-	d.sitepm     <- uncode(d.sitepm, stringsAsFactors = stringsAsFactors, dsn = dsn)
-	d.structure  <- uncode(d.structure, stringsAsFactors = stringsAsFactors, dsn = dsn)
-	d.hz.desgn <- uncode(d.hz.desgn, stringsAsFactors = stringsAsFactors, dsn = dsn)
-	d.hz.dessuf <- uncode(d.hz.dessuf, stringsAsFactors = stringsAsFactors, dsn = dsn)
+	d.diagnostic <- uncode(d.diagnostic, dsn = dsn)
+	d.restriction <- uncode(d.restriction, dsn = dsn)
+	d.rf.data    <- uncode(d.rf.data, dsn = dsn)
+	d.art.data  <-  uncode(d.art.data, dsn = dsn)
+	d.hz.texmod  <- uncode(d.hz.texmod, dsn = dsn)
+	# ensure that taxhistory is always character
+	d.taxhistory[] <- lapply(uncode(d.taxhistory, dsn = dsn), 
+	                         function(x) if (is.factor(x)) as.character(x) else x)
+	d.sitepm     <- uncode(d.sitepm, dsn = dsn)
+	d.structure  <- uncode(d.structure, dsn = dsn)
+	d.hz.desgn <- uncode(d.hz.desgn, dsn = dsn)
+	d.hz.dessuf <- uncode(d.hz.dessuf, dsn = dsn)
 
 	## the following steps will not work when data are missing from local DB or SS
 	# return NULL in those cases
@@ -565,6 +582,7 @@ LEFT OUTER JOIN (
 
 	# return a list of results
 	return(list(ecositehistory = d.ecosite,
+	            siteaoverlap = d.siteaoverlap,
 							diagnostic = d.diagnostic,
 							diagHzBoolean = d.diag.boolean,
 							restriction = d.restriction,
