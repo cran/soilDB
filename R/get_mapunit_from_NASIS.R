@@ -71,34 +71,29 @@ get_mapunit_from_NASIS <- function(SS = TRUE, droplevels = TRUE, stringsAsFactor
   d.mapunit <- dbQueryNASIS(channel, q.mapunit)
   
   # recode metadata domains
-  d.mapunit <- uncode(d.mapunit,
-                      db = "NASIS",
-                      droplevels = droplevels,
-                      dsn = dsn)
+  d.mapunit <- uncode(d.mapunit, droplevels = droplevels, dsn = dsn)
   
   # hacks to make R CMD check --as-cran happy:
   metadata <- NULL
   
   # load local copy of metadata
-  load(system.file("data/metadata.rda", package="soilDB")[1])
+  load(system.file("data/metadata.rda", package = "soilDB")[1])
   
   # transform variables and metadata
-  d.mapunit <- within(d.mapunit, {
-    farmlndcl = factor(farmlndcl,
-                       levels = metadata[metadata$ColumnPhysicalName == "farmlndcl", "ChoiceValue"],
-                       labels = metadata[metadata$ColumnPhysicalName == "farmlndcl", "ChoiceLabel"]
-    )
-    if (stringsAsFactors == FALSE) {
-      farmlndcl = as.character(farmlndcl)
-    }
-    if (droplevels == TRUE & is.factor(farmlndcl)) {
-      farmlndcl = droplevels(farmlndcl)
-    }
-  })
+  d.mapunit$farmlndcl <- factor(d.mapunit$farmlndcl,
+                                levels = metadata[metadata$ColumnPhysicalName == "farmlndcl", "ChoiceValue"],
+                                labels = metadata[metadata$ColumnPhysicalName == "farmlndcl", "ChoiceLabel"])
+  
+  if (is.null(stringsAsFactors) || stringsAsFactors == FALSE) {
+    d.mapunit$farmlndcl  = as.character(d.mapunit$farmlndcl)
+  }
+  
+  if (droplevels == TRUE & is.factor(d.mapunit$farmlndcl)) {
+    d.mapunit$farmlndcl = droplevels(d.mapunit$farmlndcl)
+  }
   
   # cache original column names
   orig_names <- names(d.mapunit)
-  
   
   # done
   return(d.mapunit)
@@ -153,10 +148,7 @@ get_legend_from_NASIS <- function(SS = TRUE,
   d.legend <- dbQueryNASIS(channel, q.legend)
   
   # recode metadata domains
-  d.legend <- uncode(d.legend,
-                     db = "NASIS",
-                     droplevels = droplevels,
-                     dsn = dsn)
+  d.legend <- uncode(d.legend, droplevels = droplevels, dsn = dsn)
   
   # done
   return(d.legend)
@@ -217,10 +209,7 @@ get_lmuaoverlap_from_NASIS <- function(SS = TRUE,
   d$musym <- as.character(d$musym)
   
   # recode metadata domains
-  d <- uncode(d,
-              db = "NASIS",
-              droplevels = droplevels,
-              dsn = dsn)
+  d <- uncode(d, droplevels = droplevels, dsn = dsn)
   
   # done
   return(d)

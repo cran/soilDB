@@ -60,7 +60,7 @@
 #'   s <- site(comp)
 #'
 #'   # use SDA uncoding domain via db argument
-#'   s <- uncode(s,  db="SDA")
+#'   s <- uncode(s)
 #'   levels(s$taxorder)
 #' }
 #' }
@@ -73,6 +73,10 @@ uncode <- function(df,
                    stringsAsFactors = NULL,
                    dsn = NULL) {
   
+  if (!missing(db)) {
+    .Deprecated(msg = "passing `db` argument to uncode is no longer necessary, lookups are based on ChoiceName and/or ChoiceLabel")
+  }
+  
   if (getOption("soilDB.NASIS.skip_uncode", default = FALSE)) {
     # some static instances of NASIS come pre-decoded
     return(df)
@@ -84,8 +88,16 @@ uncode <- function(df,
   }
   
   # load current metadata table
-  if (db == "NASIS") {
-    metadata <- .get_NASIS_metadata(dsn = dsn)
+  if (local_NASIS_defined(dsn = dsn)) {
+    
+    # cache NASIS metadata in soilDB.env within an R session
+    if (!exists("NASIS.metadata", envir = soilDB.env)) {
+      metadata <- .get_NASIS_metadata(dsn = dsn)
+      assign('NASIS.metadata', value = metadata, envir = soilDB.env)
+    } else {
+      metadata <- get("NASIS.metadata", envir = soilDB.env)
+    }
+    
   } else {
     load(system.file("data/metadata.rda", package = "soilDB")[1])
   }
@@ -107,26 +119,18 @@ uncode <- function(df,
     # get the current metadata
     sub <- metadata[metadata[[metadata_col]] %in% nm[i],]
     
-    # NASIS or LIMS
-    if (db %in% c("NASIS", "LIMS")) {
-      if (invert == FALSE) {
-        # replace codes with values
-        df[, i] <- factor(df[, i], levels = sub[[value_col]], labels = sub[[name_col]])
-      } else {
-        # replace values with codes
-        df[, i] <- factor(df[, i], levels = sub[[name_col]], labels = sub[[value_col]])
-      }
-    }
-
-    # SDA
-    if (db == "SDA") {
-      if (invert == FALSE) {
-        # replace codes with values
-        df[, i] <- factor(df[, i], levels = sub[[label_col]])
-      } else {
-        # replace values with codes
-        df[, i] <- factor(df[, i], levels = sub[[label_col]], labels = sub[[value_col]])
-      }
+    if (invert == FALSE) {
+      # replace values with ChoiceName, try filling NA with replace based on ChoiceLabel
+      nc <- factor(df[, i], levels = sub[[value_col]], labels = sub[[name_col]])
+      lc <- factor(df[, i], levels = sub[[value_col]], labels = sub[[label_col]])
+      nc[is.na(nc)] <- lc[is.na(nc)]
+      df[, i] <- nc
+    } else {
+      # replace values with ChoiceName, try filling NA with replace based on ChoiceLabel
+      nc <- factor(df[, i], levels = sub[[name_col]], labels = sub[[value_col]])
+      lc <- factor(df[, i], levels = sub[[label_col]], labels = sub[[value_col]])
+      nc[is.na(nc)] <- lc[is.na(nc)]
+      df[, i] <- nc
     }
   }
 
@@ -138,7 +142,7 @@ uncode <- function(df,
 
   # convert factors to strings, check soilDB option first
   if ((length(stringsAsFactors) > 0 && !stringsAsFactors) ||
-      !getOption("soilDB.NASIS.DomainsAsFactor", default = FALSE)){
+      !getOption("soilDB.NASIS.DomainsAsFactor", default = FALSE)) {
     idx <- unlist(lapply(df, is.factor))
     df[idx] <- lapply(df[idx], as.character)
   }
@@ -149,7 +153,7 @@ uncode <- function(df,
 .get_NASIS_metadata <- function(dsn = NULL) {
   
   q <- "SELECT mdd.DomainID, DomainName, DomainRanked, DisplayLabel, 
-               ChoiceSequence, ChoiceValue, ChoiceName, ChoiceLabel, ChoiceObsolete, ChoiceDescription, 
+               ChoiceSequence, ChoiceValue, ChoiceName, ChoiceLabel, ChoiceObsolete, 
                ColumnPhysicalName, ColumnLogicalName
           FROM MetadataDomainDetail mdd
             INNER JOIN MetadataDomainMaster mdm ON mdm.DomainID = mdd.DomainID

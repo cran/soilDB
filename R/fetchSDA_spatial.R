@@ -5,31 +5,23 @@
 #' A Soil Data Access query returns geometry and key identifying information about the map unit or area of interest. Additional columns from the map unit or legend table can be included; see `add.fields` argument.
 #'
 #' @param x A vector of map unit keys (`mukey`) or national map unit symbols (`nmusym`) for `mupolygon` geometry OR legend keys (`lkey`) or soil survey area symbols (`areasymbol`) for `sapolygon` geometry
-#'
 #' @param by.col Column name containing map unit identifier `"mukey"`, `"nmusym"`/`"nationalmusym"` for `geom.src` `mupolygon` OR `"areasymbol"`, `"areaname"`, `"mlraoffice"`, `"mouagncyresp"` for `geom.src` `sapolygon`; default is determined by `is.numeric(x)` `TRUE` for `mukey` or `lkey` and `nationalmusym` or `areasymbol` otherwise.
-#'
 #' @param method geometry result type: `"feature"` returns polygons, `"bbox"` returns the bounding box of each polygon (via `STEnvelope()`), and `"point"` returns a single point (via `STPointOnSurface()`) within each polygon.
-#'
 #' @param geom.src Either `mupolygon` (map unit polygons) or `sapolygon` (soil survey area boundary polygons)
-#'
-#' @param db Default: SSURGO. When `geom.src` is `mupolygon`, use STATSGO polygon geometry instead of SSURGO by setting `db = "STATSGO"`
-#'
+#' @param db Default: `"SSURGO"`. When `geom.src` is `mupolygon`, use STATSGO polygon geometry instead of SSURGO by setting `db = "STATSGO"`
 #' @param add.fields Column names from `mapunit` or `legend` table to add to result. Must specify parent table name as the prefix before column name e.g. `mapunit.muname`.
-#'
 #' @param chunk.size Number of values of `x` to process per query. Necessary for large results. Default: `10`
-#'
 #' @param verbose Print messages?
+#' @param as_Spatial Return sp classes? e.g. `Spatial*DataFrame`. Default: `FALSE`.
+#' @return an `sf` data.frame corresponding to SDA spatial data for all symbols requested. If `as_Spatial=TRUE` returns a `Spatial*DataFrame` from the sp package via `sf::as_Spatial()` for backward compatibility. Default result contains geometry with attribute table containing unique feature ID, symbol and area symbol plus additional fields in result specified with `add.fields`.
+#' @details
 #'
-#' @return A `Spatial*DataFrame` corresponding to SDA spatial data for all symbols requested. Default result contains geometry with attribute table containing unique feature ID, symbol and area symbol plus additional fields in result specified with `add.fields`.
-#'
-#' @details 
-#' 
 #' This function automatically "chunks" the input vector (using `makeChunks()`) of map unit identifiers to minimize the likelihood of exceeding the SDA data request size. The number of chunks varies with the `chunk.size` setting and the length of your input vector. If you are working with many map units and/or large extents, you may need to decrease this number in order to have more chunks.
 #'
 #' Querying regions with complex mapping may require smaller `chunk.size`. Numerically adjacent IDs in the input vector may share common qualities (say, all from same soil survey area or region) which could cause specific chunks to perform "poorly" (slow or error) no matter what the chunk size is. Shuffling the order of the inputs using `sample()` may help to eliminate problems related to this, depending on how you obtained your set of MUKEY/nationalmusym to query. One could feasibly use `muacres` as a heuristic to adjust for total acreage within chunks.
-#' 
+#'
 #' Note that STATSGO data are fetched where `CLIPAREASYMBOL = 'US'` to avoid duplicating state and national subsets of the geometry.
-#' 
+#'
 #' @author Andrew G. Brown, Dylan E. Beaudette
 #'
 #' @examples
@@ -44,9 +36,9 @@
 #'     full.extent.nmusym <- fetchSDA_spatial(x = "2x8l5", by = "nmusym")
 #'
 #'     # compare extent of nmusym to single mukey within it
-#'     if(require(sp)) {
-#'      plot(full.extent.nmusym, col = "RED",border=0)
-#'      plot(single.mukey, add = TRUE, col = "BLUE", border=0)
+#'     if (requireNamespace("sf")) {
+#'      plot(sf::st_geometry(full.extent.nmusym), col = "RED", border = 0)
+#'      plot(sf::st_geometry(single.mukey), add = TRUE, col = "BLUE", border = 0)
 #'     }
 #'
 #'     # demo adding a field (`muname`) to attribute table of result
@@ -62,14 +54,15 @@ fetchSDA_spatial <- function(x,
                              db = 'SSURGO',
                              add.fields = NULL,
                              chunk.size = 10,
-                             verbose = TRUE) {
-  db <- toupper(db)
-  stopifnot(db %in% c("SSURGO", "STATSGO"))
+                             verbose = TRUE,
+                             as_Spatial = getOption('soilDB.return_Spatial', default = FALSE)) {
+  db <- match.arg(toupper(db), choices = c("SSURGO", "STATSGO"))
 
+  # survey area polygons only available in SSURGO
   if (geom.src == 'sapolygon') {
     db <- 'SSURGO'
   }
-  
+  # statsgo flag
   use_statsgo <- (db == "STATSGO")
 
   tstart <- Sys.time()
@@ -114,9 +107,9 @@ fetchSDA_spatial <- function(x,
   # a convenience interface for lkey is by areasymbol/areaname or other legend column
   } else if (by.col %in% c("areasymbol", "areasym", "areaname", "mlraoffice", "mouagncyresp")) {
     if (by.col == "areasym") by.col <- "areasymbol"
-    
+
     if (by.col != "areasymbol") add.fields <- unique(c(add.fields, by.col))
-    
+
     # do additional query to determine mapping of areasymbol:lkey
     q.mukey <- paste0("SELECT areasymbol, lkey FROM legend WHERE ", by.col, " IN ",
                       format_SQL_in_statement(x),";")
@@ -130,9 +123,9 @@ fetchSDA_spatial <- function(x,
   } else {
     stop(paste0("Unknown mapunit identifier (",by.col,")"), call. = FALSE)
   }
-  
+
   mukey.chunk <- makeChunks(mukey.list, chunk.size)
-  
+
   s <- NULL
 
   # select method
@@ -217,6 +210,11 @@ fetchSDA_spatial <- function(x,
     attr(s, "chunk.mean") <- chunk.mean
   }
 
+  # flag for Spatial result
+  if (as_Spatial && requireNamespace("sf")) {
+    s <- sf::as_Spatial(s)
+  }
+
   return(s)
 }
 
@@ -262,12 +260,10 @@ fetchSDA_spatial <- function(x,
 
   s <- NULL
   if (!is.null(sp.res.sub)) {
-    
-    sp.res.sub$geom <- sf::st_as_sfc(wk::as_wkt(sp.res.sub$geom))
-    sfobj <- sf::st_as_sf(sp.res.sub)
-    sfobj <- sf::st_set_crs(sfobj, sf::st_crs(4326))
-    s <- sf::as_Spatial(sfobj)
-    
+
+    sp.res.sub$geom <- sf::st_as_sfc(sp.res.sub$geom, crs = 4326)
+    s <- sf::st_as_sf(sp.res.sub) # sf::as_Spatial(sfobj)
+
     t2 <- Sys.time()
     tdif <- difftime(t2, t1, "secs")
 
