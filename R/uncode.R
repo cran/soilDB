@@ -1,4 +1,4 @@
-#' Convert coded values returned from NASIS and SDA queries to factors
+#' Convert coded values returned from NASIS and SDA queries into human-readable values
 #'
 #' These functions convert the coded values returned from NASIS or SDA to
 #' factors (e.g. 1 = Alfisols) using the metadata tables from NASIS. For SDA
@@ -9,7 +9,7 @@
 #' These functions convert the coded values returned from NASIS into their
 #' plain text representation. It duplicates the functionality of the CODELABEL
 #' function found in NASIS. This function is primarily intended to be used
-#' internally by other soilDB R functions, in order to minimizes the need to
+#' internally by other soilDB R functions, in order to minimize the need to
 #' manually convert values.
 #'
 #' The function works by iterating through the column names in a data frame and
@@ -27,8 +27,8 @@
 #' 
 #' Set `options(soilDB.NASIS.skip_uncode = TRUE)` to bypass decoding logic; for instance when using soilDB NASIS functions with custom NASIS snapshots that have already been decoded.
 #'
-#' @aliases metadata uncode code
-#'
+#' @aliases uncode code
+#' 
 #' @param df data.frame
 #'
 #' @param invert converts the code labels back to their coded values (`FALSE`)
@@ -46,26 +46,16 @@
 #' @param dsn Optional: path to local SQLite database containing NASIS
 #' table structure; default: `NULL`
 #'
-#' @return A data frame with the results.
+#' @return A `data.frame` with the results.
 #' @author Stephen Roecker
 #' @keywords manip
+#' @export
 #' @examples
-#'
-#' \donttest{
-#' if(requireNamespace("curl") &
-#'     curl::has_internet() &
-#'     require(aqp)) {
-#'   # query component by nationalmusym
-#'   comp <- fetchSDA(WHERE = "nationalmusym = '2vzcp'")
-#'   s <- site(comp)
-#'
-#'   # use SDA uncoding domain via db argument
-#'   s <- uncode(s)
-#'   levels(s$taxorder)
-#' }
-#' }
-#'
-#' @export uncode
+#' # convert column name `fraghard` (fragment hardness) codes to labels
+#' uncode(data.frame(fraghard = 1:10))
+#' 
+#' # convert column name `fragshp` (fragment shape) labels to codes
+#' code(data.frame(fragshp = c("flat", "nonflat")))
 uncode <- function(df,
                    invert = FALSE,
                    db = "NASIS",
@@ -119,23 +109,23 @@ uncode <- function(df,
     # get the current metadata
     sub <- metadata[metadata[[metadata_col]] %in% nm[i],]
     
-    if (invert == FALSE) {
+    if (!invert) {
       # replace values with ChoiceName, try filling NA with replace based on ChoiceLabel
-      nc <- factor(df[, i], levels = sub[[value_col]], labels = sub[[name_col]])
-      lc <- factor(df[, i], levels = sub[[value_col]], labels = sub[[label_col]])
+      nc <- factor(df[[i]], levels = sub[[value_col]], labels = sub[[name_col]])
+      lc <- factor(df[[i]], levels = sub[[value_col]], labels = sub[[label_col]])
       nc[is.na(nc)] <- lc[is.na(nc)]
-      df[, i] <- nc
+      df[[i]] <- nc
     } else {
       # replace values with ChoiceName, try filling NA with replace based on ChoiceLabel
-      nc <- factor(df[, i], levels = sub[[name_col]], labels = sub[[value_col]])
-      lc <- factor(df[, i], levels = sub[[label_col]], labels = sub[[value_col]])
+      nc <- factor(df[[i]], levels = sub[[name_col]], labels = sub[[value_col]])
+      lc <- factor(df[[i]], levels = sub[[label_col]], labels = sub[[value_col]])
       nc[is.na(nc)] <- lc[is.na(nc)]
-      df[, i] <- nc
+      df[[i]] <- nc
     }
   }
 
   # drop unused levels
-  if (droplevels == TRUE) {
+  if (droplevels) {
     idx <- which(!nm %in% possibleReplacements)
     df <- droplevels(df, except = idx)
   }
@@ -174,8 +164,14 @@ uncode <- function(df,
 }
 
 # convenient, inverted version of uncode()
-code <- function(df, ...) {
-  res <- uncode(df, invert = TRUE, ...)
+#' @export
+#' @rdname uncode
+code <- function(df, 
+                 db = "NASIS",
+                 droplevels = FALSE,
+                 stringsAsFactors = NULL,
+                 dsn = NULL) {
+  res <- uncode(df, invert = TRUE, db = db, droplevels = droplevels, stringsAsFactors = stringsAsFactors, dsn = dsn) 
   return(res)
 }
 

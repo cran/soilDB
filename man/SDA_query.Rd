@@ -21,7 +21,7 @@ The SDA website can be found at \url{https://sdmdataaccess.nrcs.usda.gov} and qu
 SSURGO (detailed soil survey) and STATSGO (generalized soil survey) data are stored together within SDA. This means that queries that don't specify an area symbol may result in a mixture of SSURGO and STATSGO records. See the examples below and the \href{http://ncss-tech.github.io/AQP/soilDB/SDA-tutorial.html}{SDA Tutorial} for details.
 }
 \note{
-This function requires the \code{httr}, \code{jsonlite}, and \code{XML} packages
+This function requires the \code{httr}, \code{jsonlite}, and \code{xml2} packages
 }
 \examples{
 \donttest{
@@ -66,11 +66,11 @@ if(requireNamespace("curl") & requireNamespace("wk") &
   # there is no need to filter STATSGO because
   # SDA_Get_Mukey_from_intersection_with_WktWgs84() implies SSURGO
   p <- wk::as_wkt(wk::rct(-120.9, 37.7, -120.8, 37.8))
-  q <- paste0("SELECT mukey, cokey, compname, comppct_r FROM component 
+  q <- paste0("SELECT mukey, cokey, compname, comppct_r FROM component
       WHERE mukey IN (SELECT DISTINCT mukey FROM
       SDA_Get_Mukey_from_intersection_with_WktWgs84('", p,
        "')) ORDER BY mukey, cokey, comppct_r DESC")
-    
+
    x <- SDA_query(q)
    str(x)
  }

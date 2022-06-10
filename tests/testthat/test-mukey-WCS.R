@@ -7,6 +7,8 @@ test_that("works as expected", {
   
   skip_on_cran()
   
+  skip_if_not_installed("terra")
+  
   x <- NULL
   
   expect_true(inherits(WCS_details("mukey"), 'data.frame'))
@@ -22,7 +24,7 @@ test_that("works as expected", {
   
   expect_true(inherits(x, 'SpatRaster') || inherits(x, 'try-error'))
 
-  if(inherits(x, 'SpatRaster')) {
+  if (inherits(x, 'SpatRaster')) {
     
     # expected dimensions
     expect_true(all(dim(x) == c(20, 16, 1)))

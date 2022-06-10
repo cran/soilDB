@@ -2,9 +2,8 @@
 % Please edit documentation in R/uncode.R
 \name{uncode}
 \alias{uncode}
-\alias{metadata}
 \alias{code}
-\title{Convert coded values returned from NASIS and SDA queries to factors}
+\title{Convert coded values returned from NASIS and SDA queries into human-readable values}
 \usage{
 uncode(
   df,
@@ -14,6 +13,8 @@ uncode(
   stringsAsFactors = NULL,
   dsn = NULL
 )
+
+code(df, db = "NASIS", droplevels = FALSE, stringsAsFactors = NULL, dsn = NULL)
 }
 \arguments{
 \item{df}{data.frame}
@@ -34,7 +35,7 @@ classes, which can waste space in tables and figures.}
 table structure; default: \code{NULL}}
 }
 \value{
-A data frame with the results.
+A \code{data.frame} with the results.
 }
 \description{
 These functions convert the coded values returned from NASIS or SDA to
@@ -46,7 +47,7 @@ the metadata is pulled from a static snapshot in the soilDB package
 These functions convert the coded values returned from NASIS into their
 plain text representation. It duplicates the functionality of the CODELABEL
 function found in NASIS. This function is primarily intended to be used
-internally by other soilDB R functions, in order to minimizes the need to
+internally by other soilDB R functions, in order to minimize the need to
 manually convert values.
 
 The function works by iterating through the column names in a data frame and
@@ -65,21 +66,11 @@ package.
 Set \code{options(soilDB.NASIS.skip_uncode = TRUE)} to bypass decoding logic; for instance when using soilDB NASIS functions with custom NASIS snapshots that have already been decoded.
 }
 \examples{
+# convert column name `fraghard` (fragment hardness) codes to labels
+uncode(data.frame(fraghard = 1:10))
 
-\donttest{
-if(requireNamespace("curl") &
-    curl::has_internet() &
-    require(aqp)) {
-  # query component by nationalmusym
-  comp <- fetchSDA(WHERE = "nationalmusym = '2vzcp'")
-  s <- site(comp)
-
-  # use SDA uncoding domain via db argument
-  s <- uncode(s)
-  levels(s$taxorder)
-}
-}
-
+# convert column name `fragshp` (fragment shape) labels to codes
+code(data.frame(fragshp = c("flat", "nonflat")))
 }
 \author{
 Stephen Roecker
