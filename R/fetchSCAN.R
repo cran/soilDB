@@ -151,7 +151,7 @@ SCAN_site_metadata <- function(site.code = NULL) {
 #'     curl::has_internet()) {
 #'
 #'     # get data
-#'     x <- fetchSCAN(site.code=c(356, 2072), year=c(2015, 2016))
+#'     x <- try(fetchSCAN(site.code=c(356, 2072), year=c(2015, 2016)))
 #'     str(x)
 #'
 #'     # get sensor metadata
@@ -166,11 +166,8 @@ SCAN_site_metadata <- function(site.code = NULL) {
 fetchSCAN <- function(site.code, year, report = 'SCAN', ...) {
 
   # check for required packages
-  if(!requireNamespace('httr', quietly = TRUE))
-    stop('please install the `httr` package', call.=FALSE)
-
-  if(!requireNamespace('data.table', quietly = TRUE))
-    stop('please install the `data.table` package', call.=FALSE)
+  if (!requireNamespace('httr', quietly = TRUE))
+    stop('please install the `httr` package', call. = FALSE)
 
   ## backwards compatibility
   l <- list(...)
@@ -197,23 +194,28 @@ fetchSCAN <- function(site.code, year, report = 'SCAN', ...) {
   # format raw data into a list of lists:
   # sensor suite -> site number -> year
   d.list <- list()
-
-  for(i in req.list) {
+  
+  # save: sensor suite -> site number -> year
+  sensors <- c('SMS', 'STO', 'SAL', 'TAVG', 'TMIN',
+               'TMAX', 'PRCP', 'PREC', 'SNWD', 'WTEQ',
+               'WDIRV', 'WSPDV', 'LRADT')
+  
+  for (i in req.list) {
 
     # when there are no data, result is NULL
-    d <- .get_SCAN_data(i)
+    d <- try(.get_SCAN_data(i), silent = TRUE)
+    
+    if (inherits(d, 'try-error')) {
+      message(d)
+      return(NULL)
+    }
 
     # handle timeouts or other bad requests
     if (is.null(d)) {
       return(NULL)
     }
 
-    # save: sensor suite -> site number -> year
-    sensors <- c('SMS', 'STO', 'SAL', 'TAVG', 'TMIN',
-                 'TMAX', 'PRCP', 'PREC', 'SNWD', 'WTEQ',
-                 'WDIRV', 'WSPDV', 'LRADT')
-
-    for(sensor.i in sensors) {
+    for (sensor.i in sensors) {
 
       site.i <- as.character(i$sitenum)
       year.i <- as.character(i$year)
@@ -378,11 +380,19 @@ fetchSCAN <- function(site.code, year, report = 'SCAN', ...) {
   if (inherits(r, 'try-error'))
     return(NULL)
 
-  res <- httr::stop_for_status(r)
+  res <- try(httr::stop_for_status(r), silent = TRUE)
+  
+  if (inherits(res, 'try-error')) {
+    return(NULL)
+  }
 
   # extract content as text, cannot be directly read-in
-  r.content <- httr::content(r, as='text')
-
+  r.content <- try(httr::content(r, as = 'text'), silent = TRUE)
+  
+  if (inherits(r.content, 'try-error')) {
+    return(NULL)
+  }
+  
   # connect to the text as a standard file
   tc <- textConnection(r.content)
 
@@ -406,10 +416,10 @@ fetchSCAN <- function(site.code, year, report = 'SCAN', ...) {
   h <- as.vector(na.omit(h))
 
   # split column names on white space and keep the first element
-  h <- sapply(strsplit(h, split=' '), function(i) i[[1]])
+  h <- sapply(strsplit(h, split = ' '),  function(i) i[[1]])
 
   # clean some more junk
-  h <- gsub('-1', '', fixed=TRUE, h)
+  h <- gsub('-1', '', fixed = TRUE, h)
   h <- gsub(':-', '_', h)
 
   # NOTE: we have already read-in the first 3 lines above, therefore we don't need to skip lines here

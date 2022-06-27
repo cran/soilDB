@@ -14,6 +14,7 @@
 #' @param not_rated_value Default: `"Not assigned"`
 #' @param miscellaneous_areas Include miscellaneous areas (non-soil components)?
 #' @param dsn Path to local SQLite database or a DBIConnection object. If `NULL` (default) use Soil Data Access API via `SDA_query()`.
+#' @export 
 get_SDA_coecoclass <- function(method = "None",
                                areasymbols = NULL, mukeys = NULL, WHERE = NULL,
                                query_string = FALSE, 
@@ -68,7 +69,7 @@ get_SDA_coecoclass <- function(method = "None",
     return(q)
   
   if (is.null(dsn)) {
-    res <- SDA_query(q)
+    res <- suppressMessages(SDA_query(q))
   } else {
     if (!inherits(dsn, 'DBIConnection')) {
       dsn <- dbConnect(RSQLite::SQLite(), dsn)
@@ -78,7 +79,8 @@ get_SDA_coecoclass <- function(method = "None",
   }
   
   if (length(res) == 0) {
-    stop('query returned no results', call. = FALSE)
+    message('query returned no results')
+    return(NULL)
   }
   
   .I <- NULL

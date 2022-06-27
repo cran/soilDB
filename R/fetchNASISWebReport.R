@@ -29,6 +29,10 @@
 #' @param droplevels logical: indicating whether to drop unused levels in
 #' classifying factors. This is useful when a class has large number of unused
 #' classes, which can waste space in tables and figures.
+#' @param impute replace missing (i.e. `NULL`) values with `"Not_Populated"` for
+#' categorical data, or the "RV" for numeric data or `201` cm if the "RV" is also
+#' `NULL` (default: `TRUE`)
+#' @param usiteid character: User Site IDs
 #' @return A data.frame or list with the results.
 #' @author Stephen Roecker
 #' @keywords manip
@@ -94,6 +98,7 @@ fetchNASISWebReport <- function(projectname, rmHzErrors = FALSE, fill = FALSE,
 }
 
 #' @rdname fetchNASISWebReport
+#' @export
 get_component_from_NASISWebReport <- function(projectname, stringsAsFactors = NULL) {
  
   if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
@@ -131,6 +136,7 @@ get_component_from_NASISWebReport <- function(projectname, stringsAsFactors = NU
 
 
 #' @rdname fetchNASISWebReport
+#' @export
 get_chorizon_from_NASISWebReport <- function(projectname, fill = FALSE, stringsAsFactors = NULL) {
   
   if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
@@ -178,6 +184,7 @@ get_chorizon_from_NASISWebReport <- function(projectname, fill = FALSE, stringsA
 
 
 #' @rdname fetchNASISWebReport
+#' @export
 get_legend_from_NASISWebReport <- function(mlraoffice, areasymbol, droplevels = TRUE, stringsAsFactors = NULL) {
   
   if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
@@ -210,6 +217,7 @@ get_legend_from_NASISWebReport <- function(mlraoffice, areasymbol, droplevels = 
 
 
 #' @rdname fetchNASISWebReport
+#' @export
 get_lmuaoverlap_from_NASISWebReport <- function(areasymbol, droplevels = TRUE, stringsAsFactors = NULL) {  
   
   if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
@@ -242,6 +250,7 @@ get_lmuaoverlap_from_NASISWebReport <- function(areasymbol, droplevels = TRUE, s
 
 
 #' @rdname fetchNASISWebReport
+#' @export
 get_mapunit_from_NASISWebReport <- function(areasymbol, droplevels = TRUE, stringsAsFactors = NULL) {
 
   if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
@@ -274,6 +283,7 @@ get_mapunit_from_NASISWebReport <- function(areasymbol, droplevels = TRUE, strin
 
 
 #' @rdname fetchNASISWebReport
+#' @export
 get_projectmapunit_from_NASISWebReport <- function(projectname, stringsAsFactors = NULL) {
 
   if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
@@ -302,6 +312,7 @@ get_projectmapunit_from_NASISWebReport <- function(projectname, stringsAsFactors
 
 
 #' @rdname fetchNASISWebReport
+#' @export
 get_projectmapunit2_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projectname, stringsAsFactors = NULL) {
 
   
@@ -327,6 +338,7 @@ get_projectmapunit2_from_NASISWebReport <- function(mlrassoarea, fiscalyear, pro
 }
 
 #' @rdname fetchNASISWebReport
+#' @export
 get_project_from_NASISWebReport <- function(mlrassoarea, fiscalyear) {
 
   url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_project_from_NASISWebReport"
@@ -348,6 +360,7 @@ get_project_from_NASISWebReport <- function(mlrassoarea, fiscalyear) {
 
 
 #' @rdname fetchNASISWebReport
+#' @export
 get_progress_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projecttypename) {
 
   url <-"https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_progress_from_NASISWebReport"
@@ -363,6 +376,7 @@ get_progress_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projecttyp
 
 
 #' @rdname fetchNASISWebReport
+#' @export
 get_project_correlation_from_NASISWebReport <- function(mlrassoarea, fiscalyear, projectname) {
 
   # nasty hack to trick R CMD check
