@@ -1,8 +1,30 @@
+# soilDB 2.7.3 (2022-08-19)
+
+ * `get_SDA_property()` all methods now support `miscellaneous_areas` argument. This defaults to `FALSE` for the methods it was previously implemented for--so be aware that queries using `"Dominant Component"` or `"Dominant Condition"` (which previously did not respond to `miscellaneous_areas`) may have the number of rows in result reduced due to omission of miscellaneous land types. If this is unexpected or undesired, please use `miscellaneous_areas=TRUE`. (https://github.com/ncss-tech/soilDB/issues/257)
+ 
+ * Adds `get_NASIS_metadata()` and helper method `get_NASIS_column_metadata()` and other new tools for working with `uncode()`, factors and NASIS metadata cached in the package.
+ 
+ * Bug fix for `get_cosoilmoist_from_SDA()`; thanks to Monika Shea @monikashea for reporting the problem (https://github.com/ncss-tech/soilDB/issues/253)
+ 
+ * `fetchNASIS_report()` now works with the output from `"get_site_from_NASIS"` report (useful for site records without associated pedons)
+ 
+ * `createSSURGO()` gains arguments `quiet` and `include_spatial` to toggle messages and inclusion of spatial data in created SQLite database, respectively
+ 
+ * `downloadSSURGO()` now handles queries against `sacatalog` that return no results more gracefully
+ 
+ * `get_OSD()`: Add `fix_ocr_errors` argument for `result='json'` to fix common optical character recognition errors associated with horizon designations and colors (NOTE: does NOT fix depths)
+ 
+ * `fetchSCAN()` gains `timeseries` argument to support batch downloads of hourly data. Additional arguments (`...`) are passed as a raw request, allowing other parameters sent in request to be modified if needed, and bypassing batch functionality. This is similar to the `req` argument syntax used in earlier versions of this function, which had been deprecated for some time now. Thanks to Matthew Morriss for raising the discussion item @morrismc99 (https://github.com/ncss-tech/soilDB/discussions/260).
+ 
+ * {curl} moved from Suggests to Imports; `curl::curl_download()` is now used instead of `utils::download.file()` because it seems to handle SSL certificates better on some networks.
+ 
 # soilDB 2.7.2 (2022-06-24)
  * `fetchNASIS("components')`: Fix and refactor ( **breaking change** from 2.7.1, which introduced a bug/inconsistency) of recent change; `duplicates` argument is now _required_ to merge in data from mapunit/legend tables (where many:1 relationships between legend/mapunit and datamapunit are possible). In 2.7.1 possibly incomplete mapunit/legend tables could be joined to SoilProfileCollection result (if and only if the tables were populated in selected set/local DB). Does not change historic (<=2.7.0) default behavior. Thanks to @dylanbeaudette for suggesting use of `get_component_correlation_data_from_NASIS_db()` here.
 
  * Several fixes for Roxygen documentation (notably for `ROSETTA()` and various NASIS web report related functions) that were missing `@export` tags. Several previously-exported functions missed being explicitly exported in the new Roxygen-generate NAMESPACE. These unintentional omissions from 2.7.1 NAMESPACE have been resolved.
  
+* Fixes an old bug in `fetchSDA()`/`get_chorizon_from_SDA()` related to LEFT OUTER versus RIGHT JOIN to `chtexture` table
+
 # soilDB 2.7.1 (2022-06-10)
    - `get_SDA_coecoclass()` better handling of `NULL` `ecoclassref`; support for filtering on `ecoclasstypename`; `not_assigned_value` now applies to `ecoclassname`, `ecoclasstypename` and `ecoclassref` columns in addition to `ecoclassid`; Thanks to Andy Paolucci and Jason Nemecek. Also, added additional columns from legend/mapunit tables (`areasymbol`, `lkey`, `muname`).
    - `fetchNASIS(from="components")` now returns mapunit and legend information (if loaded in local NASIS database); results now contain `mustatus` and `repdmu` which can be used to remove components from additional mapunits and non-representative data mapunits; thanks to Nathan Roe

@@ -151,18 +151,27 @@
   }
 
 
-  temp = read.csv(
-    textConnection(
-      readLines(tf)
-      ),
-    sep = "|",
-    quote = "",
-    stringsAsFactors = FALSE
-    )
+  # check to see if data is coming from fetchNASIS or get_site
+  temp <- readLines(tf)
+  begin = grep("@begin get_site_from_NASIS", temp)
+  
+  if (length(begin) > 0) {
+    
+    end = grep("@end get_site_from_NASIS", temp)
+    # check to see if there is any data
+    diff.idx <- end - begin
+    
+    if(all(diff.idx == 1))
+      stop("empty result set -- check parameters used to run `fetchNASIS` export report.", call.=FALSE)
+    
+    x2 <- temp[seq(begin + 1, end - 1)]
+    temp <- read.csv(textConnection(x2), sep = "|", quote = "", stringsAsFactors = FALSE)
+  } else   temp <- read.csv(textConnection(temp), sep = "|", quote = "", stringsAsFactors = FALSE)
+  
   # aggregate NASIS returns empty rows
   # NASIS text reports return empty columns
   # remove
-  temp = temp[!is.na(temp$peiid), - ncol(temp)]
+  temp = temp[!is.na(temp$siteiid), - ncol(temp)]
   idx  = names(temp) %in% c("pmkind", "pmorigin")
   temp[!idx] = uncode(temp[!idx])
   idx  = sapply(temp, is.character)
@@ -358,3 +367,40 @@
 
   return(site_data)
 }
+
+
+.get_copedon_from_NASISReport <- function(nasissitename = NULL, grpname = NULL, areasymbol = NULL) {
+  
+  # fp <- "C:/ProgramData/USDA/NASIS/Temp/get_copedon_from_NASIS.html"
+  # 
+  # # test
+  # tf_idx <- file.exists(tf)
+  p_idx  <- sapply(list(nasissitename, grpname, areasymbol), is.null)
+  
+  # if (tf_idx & any(! p_idx)) {
+  #   stop("the temp file ", tf, "\n doesn't exist and some of the argument parameters are NULL, please run the get_copedon_from_NASIS report in NASIS or enter the necessary argument parameters")
+  # }
+  if (any(p_idx)) {
+    stop("some of the argument parameters are NULL")
+    }
+  
+  
+  # # local report
+  # if (tf_idx & all(p_idx)) {
+  #   df <- tf |> 
+  #     xml2::read_html() |> 
+  #     rvest::html_table(header = TRUE) |> 
+  #     as.data.frame()
+  #   } 
+  
+  # web report
+  if (! all(p_idx)) {
+    url <- "https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=get_copedon_from_NASISWebReport"
+    args <- list(p_nasissitename = nasissitename, p_grpname = grpname, p_areasymbol = areasymbol)
+    
+    df <- parseWebReport(url, args)
+  }
+  
+  return(df)
+}
+
