@@ -1,6 +1,6 @@
-774a679e210ee0424b847528784db42a *DESCRIPTION
-1a1f7ce93a96feb7f2f57696e3c81a99 *NAMESPACE
-2759647aae0a8b43156c41e1bdad9c63 *NEWS.md
+7498c30645194ac890c723f724cd208a *DESCRIPTION
+f0920880d1542b2cddd21989d318f510 *NAMESPACE
+91c908543427621820e94b10373317a0 *NEWS.md
 7e4d2e644f83f20b0c36d49c5d08ab06 *R/AAAA.R
 f61cf9159793f0e84d3616d2f27081d7 *R/ISSR800.R
 ba857b483479b9e8edf53fc16c3d3cb3 *R/KSSL_VG_model.R
@@ -28,10 +28,10 @@ d51986344b5c699656dc7be51f2f2f2e *R/fetchNASISWebReport.R
 c45311cc26caddc3913d9a3b59b0d3fd *R/fetchNASIS_pedons.R
 d13d043ae33df433da927bac069e964c *R/fetchNASIS_report.R
 a3ec9354fa37e2bdb522799dbfbd4834 *R/fetchNOAA.R
-3310949a2db83e7351339b13d7dedf60 *R/fetchOSD.R
+5b6444ef3e83ce06bc8482551e1fe227 *R/fetchOSD.R
 88a6e7d29f167d1a560af2424543a9a6 *R/fetchPedonPC.R
 8742b43d4550dca33f36a99e5c04d402 *R/fetchRaCA.R
-44c9547f1e0c7435eeb9e21b710ce0a9 *R/fetchSCAN.R
+de26c3caa3ae3afef44238c6c8f1ba5d *R/fetchSCAN.R
 8b6b78c913bc15f042ccc703bd23c0d1 *R/fetchSDA_spatial.R
 0ab7dc13be55f9028875a6245e00e555 *R/fetchSoilGrids.R
 4d88be3ee48a7037fd49caaa878fd93e *R/fetchVegdata.R
@@ -49,7 +49,7 @@ a5a11454c5db99a5a809c7d778b47dba *R/get_OSD.R
 686eadfdca5d1041f7ad10c850c8eff3 *R/get_SDA_metrics.R
 78cda58798d623b1db5f20839204af1c *R/get_SDA_muaggatt.R
 aad2ddfe416143904e7d5ad295715d0f *R/get_SDA_pmgroupname.R
-0374dc07c34bc1b22762ffde6c7efede *R/get_SDA_property.R
+f0468746e8ed8feef2068e192c85bd84 *R/get_SDA_property.R
 b017f93d0aeed67c21b3872715db44b2 *R/get_SSURGO_utils.R
 dd12342fb94cf277e6fb5d5b5aa242ca *R/get_colors_from_NASIS_db.R
 b3da68ee2292904d822e723e26d50f88 *R/get_colors_from_pedon_db.R
@@ -91,10 +91,10 @@ c482f069498e89cad0a85bdf26758632 *R/siblings.R
 dd75dd5ae5ba6d59dc99a6bddbdc8014 *R/simplifyColorData.R
 32fbdf9a736b7a79dbc4a3e4d18701ca *R/soilDB-package.R
 f1fbebfd2227561e9dc4278338797ccb *R/taxaExtent.R
-b2c385357f68010c188da0b594a846c7 *R/uncode.R
+39259980267ed5fa4bdede4da5c8cb00 *R/uncode.R
 887e504ad20be0868fd340fa501100ee *R/utils.R
 a9e5b6b4ded2616dc367913a17c5b9cd *R/waterDayYear.R
-9ecb0bdfb906213cc54af05f9a8fb645 *build/partial.rdb
+afbe4209b3bb961ba3e41cbfe79ea507 *build/partial.rdb
 e468c080e33c26b639d2a945ba291b36 *data/NASIS_table_column_keys.rda
 a8bbce3cdd1003c059b10709d60f93ff *data/SCAN_SNOTEL_metadata.rda
 5c68ea4e3a2d021899e263ca69ee30e3 *data/gopheridge.rda
@@ -227,7 +227,7 @@ d1d1e689b1ed56ec25a85e2d15ad2479 *tests/testthat/test-get_SDA_hydric.R
 7e3ffe0aa27ccb64a4c44f46a300da02 *tests/testthat/test-get_SDA_interpretation.R
 806b14f43fb39d4717124204ad9ad46f *tests/testthat/test-get_SDA_muaggatt.R
 f24ee4d043bcd2272045bce9e05bf8a9 *tests/testthat/test-get_SDA_pmgroupname.R
-82c2130d24cc6f6aa88d41b3b011172b *tests/testthat/test-get_SDA_property.R
+c36256ef90e3be642f4e97a221449a06 *tests/testthat/test-get_SDA_property.R
 2494b651e813e54cf3a76af907ed0b55 *tests/testthat/test-mukey-WCS.R
 8d44ba04c25d84b5fe0c3f0cdef8694f *tests/testthat/test-multi-row-simplification.R
 c6cef4178a149ed006d6f9c05c4cf081 *tests/testthat/test-seriesExtent.R
