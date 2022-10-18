@@ -2,7 +2,7 @@
 #' 
 #' @description List variables or databases provided by soilDB web coverage service (WCS) abstraction. These lists will be expanded in future versions.
 #'
-#' @param wcs a WCS label ('mukey' or 'ISSR800')
+#' @param wcs a WCS label ('mukey', 'ISSR800', or 'soilColor')
 #'
 #' @return a \code{data.frame}
 #' @export
@@ -10,15 +10,16 @@
 #' @examples
 #' 
 #' WCS_details(wcs = 'ISSR800')
-WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
+WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
   
   # select a WCS
   wcs <- match.arg(wcs)
   
   spec <- switch(wcs,
                  'mukey' = .mukey.spec,
-                 'ISSR800' = .ISSR800.spec
-                 )
+                 'ISSR800' = .ISSR800.spec,
+                 'soilColor' = .soilColor.spec
+  )
   
   ## TODO: spec names / DSN are assumed to be identical
   ##       it would be nice to allow for more connotative names
@@ -93,7 +94,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     
     if (!requireNamespace("sf"))
       stop("package 'sf' is required to use an sf, sfc or bbox object as an AOI", call. = FALSE)
-      
+    
     if (inherits(obj, c('sf', 'sfc', 'bbox'))) {
       
       # create bbox around sf/sfc/bbox, create simple feature collection
@@ -116,7 +117,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     }
   }
   
-
+  
   # ISSR-800 and gNATSGO CRS
   # NOTE: EPSG:6350 NAD83 (2011) v.s. EPSG:5070 NAD83
   # we use EPSG:5070 (https://github.com/ncss-tech/soilDB/issues/205)
@@ -134,8 +135,8 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     # create BBOX used for WMS
     # xmin, ymin, xmax, ymax
     aoi.native <- e.native
-  
-
+    
+    
   } else if (inherits(p, 'SpatVector')) {
     p <- terra::project(p, native_crs)
     e.native <- terra::ext(p)
@@ -151,13 +152,148 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
   w <- round(abs(aoi.native[3] - aoi.native[1]) / res)
   # ymax - ymin
   h <- round(abs(aoi.native[4] - aoi.native[2]) / res)
-
+  
   res <- list(bbox = aoi.native,
               width = w,
               height = h)
   attr(res, '.input_class') <- return_class
   res
 }
+
+
+## moist soil colors
+# these are 16bit (unsigned) integers
+.soilColor.spec <- list(
+  
+  'sc005cm' = list(
+    dsn = 'sc005cm',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 5cm (270m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc010cm' = list(
+    dsn = 'sc010cm',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 10cm (270m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc015cm' = list(
+    dsn = 'sc015cm',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 15cm (270m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc025cm' = list(
+    dsn = 'sc025cm',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 25cm (270m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc050cm' = list(
+    dsn = 'sc050cm',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 50cm (270m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc075cm' = list(
+    dsn = 'sc075cm',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 75cm (270m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc100cm' = list(
+    dsn = 'sc100cm',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 100cm (270m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc125cm' = list(
+    dsn = 'sc125cm',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 125cm (270m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  
+  'sc005cm_hr' = list(
+    dsn = 'sc005cm_hr',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 5cm (30m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc010cm_hr' = list(
+    dsn = 'sc010cm_hr',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 10cm (30m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc015cm_hr' = list(
+    dsn = 'sc015cm_hr',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 15cm (30m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc025cm_hr' = list(
+    dsn = 'sc025cm_hr',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 25cm (30m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc050cm_hr' = list(
+    dsn = 'sc050cm_hr',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 50cm (30m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc075cm_hr' = list(
+    dsn = 'sc075cm_hr',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 75cm (30m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc100cm_hr' = list(
+    dsn = 'sc100cm_hr',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 100cm (30m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  ),
+  
+  'sc125cm_hr' = list(
+    dsn = 'sc125cm_hr',
+    type = 'GEOTIFF_16',
+    desc = 'Moist soil color, 125cm (30m)',
+    na = 0,
+    rat = 'http://soilmap2-1.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+  )
+)
 
 
 ## TODO: next release include suggested colors
@@ -268,7 +404,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'ph_025cm' = list(
     dsn = 'ph_025cm',
     type = 'GEOTIFF_FLOAT',
@@ -276,7 +412,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'ph_2550cm' = list(
     dsn = 'ph_2550cm',
     type = 'GEOTIFF_FLOAT',
@@ -284,7 +420,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'ph_3060cm' = list(
     dsn = 'ph_3060cm',
     type = 'GEOTIFF_FLOAT',
@@ -292,7 +428,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'clay_05cm' = list(
     dsn = 'clay_05cm',
     type = 'GEOTIFF_FLOAT',
@@ -300,7 +436,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'clay_025cm' = list(
     dsn = 'clay_025cm',
     type = 'GEOTIFF_FLOAT',
@@ -308,7 +444,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'clay_2550cm' = list(
     dsn = 'clay_2550cm',
     type = 'GEOTIFF_FLOAT',
@@ -316,7 +452,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'clay_3060cm' = list(
     dsn = 'clay_3060cm',
     type = 'GEOTIFF_FLOAT',
@@ -324,7 +460,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'sand_05cm' = list(
     dsn = 'sand_05cm',
     type = 'GEOTIFF_FLOAT',
@@ -332,7 +468,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'sand_025cm' = list(
     dsn = 'sand_025cm',
     type = 'GEOTIFF_FLOAT',
@@ -340,7 +476,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'sand_2550cm' = list(
     dsn = 'sand_2550cm',
     type = 'GEOTIFF_FLOAT',
@@ -348,7 +484,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'sand_3060cm' = list(
     dsn = 'sand_3060cm',
     type = 'GEOTIFF_FLOAT',
@@ -356,7 +492,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'silt_05cm' = list(
     dsn = 'silt_05cm',
     type = 'GEOTIFF_FLOAT',
@@ -364,7 +500,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'silt_025cm' = list(
     dsn = 'silt_025cm',
     type = 'GEOTIFF_FLOAT',
@@ -372,7 +508,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'silt_2550cm' = list(
     dsn = 'silt_2550cm',
     type = 'GEOTIFF_FLOAT',
@@ -380,7 +516,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'silt_3060cm' = list(
     dsn = 'silt_3060cm',
     type = 'GEOTIFF_FLOAT',
@@ -388,7 +524,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = -9999,
     rat = NULL
   ),
-
+  
   'sar' = list(
     dsn = 'sar',
     type = 'GEOTIFF_FLOAT',
@@ -421,7 +557,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = 0,
     rat = 'http://soilmap2-1.lawr.ucdavis.edu/800m_grids/RAT/drainage_class.csv'
   ),
-
+  
   'weg' = list(
     dsn = 'weg',
     type = 'GEOTIFF_BYTE',
@@ -429,7 +565,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = 0,
     rat = 'http://soilmap2-1.lawr.ucdavis.edu/800m_grids/RAT/weg.csv'
   ),
-
+  
   'wei' = list(
     dsn = 'wei',
     type = 'GEOTIFF_16',
@@ -437,7 +573,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     desc = 'Wind Erodibility Index',
     rat = NULL
   ),
-
+  
   'str' = list(
     dsn = 'str',
     type = 'GEOTIFF_BYTE',
@@ -509,13 +645,13 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     na = 0,
     rat = 'http://soilmap2-1.lawr.ucdavis.edu/800m_grids/RAT/lcc.csv'
   )
-
-
+  
+  
 )
 
 
 .mukey.spec <- list(
-
+  
   'gnatsgo' = list(
     dsn = 'gnatsgo',
     type = 'GEOTIFF_FLOAT',
@@ -524,7 +660,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800')) {
     res = 30,
     rat = NULL
   ),
-
+  
   'gssurgo' = list(
     dsn = 'gssurgo',
     type = 'GEOTIFF_FLOAT',

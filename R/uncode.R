@@ -102,28 +102,20 @@ uncode <- function(df,
       if (any(df[[i]] %in% sub[[value_col]])) {
         nc <- factor(df[[i]], levels = sub[[value_col]], labels = sub[[name_col]])
         lc <- factor(df[[i]], levels = sub[[value_col]], labels = sub[[label_col]])
-        if (all(is.na(nc))) {
-          df[[i]] <- lc
-        } else {
-          nc[is.na(nc)] <- lc[is.na(nc)]
-          df[[i]] <- nc
-        }
-        df[[i]] <- nc
       } else {
         nc <- factor(df[[i]], levels = sub[[name_col]], labels = sub[[name_col]])
         lc <- factor(df[[i]], levels = sub[[label_col]], labels = sub[[label_col]])
-        if (all(is.na(nc))) {
-          df[[i]] <- lc
-        } else {
-          nc[is.na(nc)] <- lc[is.na(nc)]
-          df[[i]] <- nc
-        }
+      }
+      if (sum(is.na(nc)) > sum(is.na(lc))) {
+        df[[i]] <- lc
+      } else {
+        df[[i]] <- nc
       }
     } else if (invert) {
       # replace values with ChoiceName, try filling NA with replace based on ChoiceLabel
       nc <- factor(df[[i]], levels = sub[[name_col]], labels = sub[[value_col]])
       lc <- factor(df[[i]], levels = sub[[label_col]], labels = sub[[value_col]])
-      if (all(is.na(nc))) {
+      if (sum(is.na(nc)) > sum(is.na(lc))) {
         df[[i]] <- lc
       } else {
         nc[is.na(nc)] <- lc[is.na(nc)]
@@ -315,13 +307,26 @@ NASISChoiceList <- function(x,
     if (!obsolete) {
       y <- y[y$ChoiceObsolete == 0, ]
     }
-    idx <-  na.omit(as.numeric(apply(do.call('cbind', lapply(y[c("ChoiceValue", "ChoiceName", "ChoiceLabel")], function(xxx)
-        match(x[[xx]], xxx))), MARGIN = 1, function(xxx) as.numeric(na.omit(xxx)))))
-    yy <- y[idx,]
+    
+    # create lut of value:name:choice
+    lut <- do.call('cbind', lapply(y[c("ChoiceValue", "ChoiceName", "ChoiceLabel")],
+                                   function(xxx) match(x[[xx]], xxx)))
+    
+    # pick the best (possibly there is overlap between name and choice)
+    lut.y <- lut[, which.max(apply(lut, MARGIN = 2, function(xxx) sum(!is.na(xxx))))]
+    yy <- y[lut.y,]
+    
     if (choice != "ChoiceValue" && factor) {
+      newlevels <- y[[choice]]
+      if (all(is.na(y$DomainRanked) | y$DomainRanked == 0)) {
+        ordered <- FALSE
+      } else {
+        # if ordered and domain is ranked, reorder levels based on sequence if needed
+        newlevels <- newlevels[order(y[["ChoiceSequence"]])]
+      }
       f <- factor(yy[[choice]], 
-                  levels = y[[choice]], 
-                  ordered = ordered && all(yy$DomainRanked))
+                  levels = newlevels, 
+                  ordered = ordered)
       if (droplevels) {
         return(droplevels(x))
       } else {
