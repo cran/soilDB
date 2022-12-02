@@ -1,6 +1,7 @@
-
 # setup a new environment to store error messages, etc.
-soilDB.env <- new.env(hash=TRUE, parent = parent.frame())
+#' @export
+#' @rdname get_soilDB_env
+soilDB.env <- new.env(hash = TRUE)
 
 # safely register some options at package load time
 .onLoad <- function(libname, pkgname) {
@@ -12,10 +13,24 @@ soilDB.env <- new.env(hash=TRUE, parent = parent.frame())
   options(soilDB.NASIS.credentials = "DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
   
   # update according to win 7 or 10
+  # NOTE: required NASIS credentials depend more on NASIS/SQL Server version than Windows version
   si <- Sys.info()
   if (grepl('windows', si['sysname'], ignore.case = TRUE) & grepl('8|10', si['release'], ignore.case = TRUE)) {
     options(soilDB.NASIS.credentials = "DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y365")
   }
+}
+
+#' Get the soilDB environment used for storing error messages and quality control output
+#' 
+#' The soilDB package uses an environment to store variables that are created as side effects of various data access and processing routines. 
+#' `get_soilDB_env()` provides a method to access this environment from the global (user) environment.
+#' @aliases soilDB.env
+#' @return a `environment` object
+#' @export
+#' @examples
+#' get_soilDB_env()
+get_soilDB_env <- function() {
+  soilDB.env
 }
 
 .soilDB_test_NASIS_connection <- function(dsn) {
@@ -28,7 +43,7 @@ soilDB.env <- new.env(hash=TRUE, parent = parent.frame())
   }
 }
 
-#' @importFrom curl new_handle 
+#' @importFrom curl new_handle has_internet
 .soilDB_curl_handle <- function(timeout = 300, ssl_verifyhost = 0, ...) {
   curl::new_handle(timeout = timeout, ssl_verifyhost = ssl_verifyhost, ...)
 }

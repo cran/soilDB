@@ -1,17 +1,44 @@
+# soilDB 2.7.6 (2022-11-28)
+
+ - All references to `soilDB.env` have been replaced with a function that returns that environment object (`get_soilDB_env()`); thanks to @MollicMeyer for identifying this as a problem in #277. This object used to be exported but was unintentionally omitted from NAMESPACE; this has been fixed.
+ 
+ - `fetchNASIS(lab=TRUE)` bug fix related to many:1 relationships between lab samples and morphologic horizons with all-missing columns having _logical_ datatype (#277)
+ 
+ - Added `get_SRI()` and `fetchSRI()` functions for accessing USFS Region 6 Soil Resource Inventory information from https://ecoshare.info/; thanks to @joshualerickson for the contribution (https://github.com/ncss-tech/soilDB/pull/274)
+ 
+ - `fetchLDM()` now sets the horizon designation metadata like other fetch* functions that return SoilProfileCollection objects (@dylanbeaudette)
+ 
+ - `mukey.wcs()` fix spurious warnings occasionally given due to minor differences (rounding) of grid dimensions
+ 
+ - {curl} has been moved from Suggests to Imports
+ 
+ - `simplfyFragmentData()` alias for `simplifyFragmentData()` removed (@infotroph)
+ 
 # soilDB 2.7.5 (2022-10-17)
+
  - Updates to SSURGO File Geodatabase functions (`fetchGDB()` and related) by @smroecker
+ 
  - Added `soilColor.wcs()` to access a web coverage service for soil color at various depths by @dylanbeaudette
+ 
  - `waterDayYear()`: fix for CRAN and different timezones; now defaults to `tz="UTC"` #268
     - `summarizeSoilTemperature()`: set default timezone to `tz="UTC"`
+    
  - Fix for `uncode()` on pre-decoded values when ChoiceName and ChoiceLabel overlap #273 
     - Fix for `NASISChoiceList()` related to #273 
+    
  - `get_soilseries_from_NASIS()`: Remove `areaacres` and `obterm` for #272 by @smroecker
+ 
  - Fix for `get_OSD(..., fix_ocr_errors = TRUE)` with empty typical profile for #271 by @dylanbeaudette
+ 
  - `fetchNASIS()` drops non-representative and additional when `dropNotRepresentative`/`dropAdditional` are set (@natearoe) 
+ 
  - Fix for `as.POSIXct()` in R 4.3+; for #265
+ 
  - Fix for "status was 'SSL connect error" for `fetchKSSL()` and other functions that download JSON (@kramdog)
     - Now uses standard soilDB {curl} handle, which includes a longer timeout and  `ssl_verifyhost=0`
+    
  - Fixes for compatibility with {jsonlite} >1.8.1 that now uses {base} rather than {curl}
+ 
  - Update row count expectations for end of FY22 SSURGO refresh
 
 # soilDB 2.7.4 (2022-09-30)

@@ -80,13 +80,7 @@
 #' @author D.E. Beaudette, A.G. Brown
 #' @keywords manip
 #' @examples
-#'
-#' \donttest{
-#' if(requireNamespace("curl") &&
-#'     curl::has_internet() &&
-#'     requireNamespace("httr") &&
-#'     requireNamespace("rvest")) {
-#'
+#' \dontrun{
 #'     # get data
 #'     x <- try(fetchSCAN(site.code=c(356, 2072), year=c(2015, 2016)))
 #'     str(x)
@@ -99,7 +93,6 @@
 #'
 #'     # get hourly data (396315 records)
 #'     # x <- try(fetchSCAN(site.code=c(356, 2072), year=c(2015, 2016), timeseries = "Hourly"))
-#' }
 #' }
 #' @rdname fetchSCAN
 #' @export

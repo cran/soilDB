@@ -109,17 +109,15 @@
 #'
 #' @return a \code{SoilProfileCollection} object containing basic soil morphology and taxonomic information.
 #'
-#' @references USDA-NRCS OSD search tools: \url{https://www.nrcs.usda.gov/wps/portal/nrcs/detailfull/soils/home/?cid=nrcs142p2_053587}
+#' @references USDA-NRCS OSD search tools: \url{https://soilseries.sc.egov.usda.gov/}
 #'
 #' @author D.E. Beaudette, A.G. Brown
 #' @seealso \link{OSDquery}, \link{siblings}
 #' @export
-#'
+#' @examplesIf curl::has_internet() && requireNamespace("scales")
 #' @examples
 #' \donttest{
-#' if(requireNamespace("curl") &
-#'    curl::has_internet()) {
-#'
+#'   library(aqp)
 #'   # soils of interest
 #'   s.list <- c('musick', 'cecil', 'drummer', 'amador', 'pentz',
 #'               'reiff', 'san joaquin', 'montpellier', 'grangeville', 'pollasky', 'ramona')
@@ -130,21 +128,18 @@
 #'
 #'   # plot profiles
 #'   # moist soil colors
-#'   if (require("aqp") && requireNamespace("scales")) {
+#'   par(mar=c(0,0,0,0), mfrow=c(2,1))
+#'   plot(s.moist, name='hzname',
+#'        cex.names=0.85, axis.line.offset=-4)
+#'   plot(s.dry, name='hzname',
+#'        cex.names=0.85, axis.line.offset=-4)
 #'
-#'     par(mar=c(0,0,0,0), mfrow=c(2,1))
-#'     plot(s.moist, name='hzname',
-#'          cex.names=0.85, axis.line.offset=-4)
-#'     plot(s.dry, name='hzname',
-#'          cex.names=0.85, axis.line.offset=-4)
+#'   # extended mode: return a list with SPC + summary tables
+#'   x <- fetchOSD(s.list, extended = TRUE, colorState = 'dry')
 #'
-#'     # extended mode: return a list with SPC + summary tables
-#'     x <- fetchOSD(s.list, extended = TRUE, colorState = 'dry')
-#'
-#'     par(mar=c(0,0,1,1))
-#'     plot(x$SPC)
-#'     str(x, 1)
-#'
+#'   par(mar=c(0,0,1,1))
+#'   plot(x$SPC)
+#'   str(x, 1)
 #'
 #'   # use makeChunks() for iteration over larger sequences of soil series
 #'   s.list <- c('musick', 'cecil', 'drummer', 'amador', 'pentz',
@@ -164,10 +159,6 @@
 #'
 #'   # there should be 11 profiles
 #'   length(x)
-#'   }
-#'
-#'
-#' }
 #' }
 #' @keywords manip
 #'

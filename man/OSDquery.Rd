@@ -70,13 +70,10 @@ Related documentation can be found in the following tutorials
 SoilWeb maintains a snapshot of the Official Series Description data.
 }
 \examples{
-
+\dontshow{if (curl::has_internet() && require(aqp)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{\}) # examplesIf}
 
 \donttest{
-if(requireNamespace("curl") &
-   curl::has_internet() &
-   require(aqp)) {
-
   # find all series that list Pardee as a geographically associated soil.
   s <- OSDquery(geog_assoc_soils = 'pardee')
 
@@ -87,11 +84,10 @@ if(requireNamespace("curl") &
   par(mar=c(0,0,1,1))
   plot(x$SPC)
 }
-}
 
 }
 \references{
-\url{https://www.nrcs.usda.gov/wps/portal/nrcs/detailfull/soils/home/?cid=nrcs142p2_053587}
+USDA-NRCS OSD search tools: \url{https://soilseries.sc.egov.usda.gov/}
 }
 \seealso{
 \code{\link{fetchOSD}, \link{siblings}, \link{fetchOSD}}
