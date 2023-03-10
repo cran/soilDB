@@ -1,6 +1,6 @@
 #' @export
 #' @rdname fetchSDA
-#' @param impute replace missing (i.e. `NULL`) values with `"Not_Populated"` forcategorical data, or the "RV" for numeric data or `201` cm if the "RV" is also`NULL` (default: `TRUE`)
+#' @param impute replace missing (i.e. `NULL`) values with `"Not_Populated"` for categorical data, or the "RV" for numeric data or `201` cm if the "RV" is also`NULL` (default: `TRUE`)
 get_cosoilmoist_from_SDA <- function(WHERE = NULL, duplicates = FALSE, impute = TRUE,
                                      stringsAsFactors = NULL
                                      ) {
@@ -11,8 +11,14 @@ get_cosoilmoist_from_SDA <- function(WHERE = NULL, duplicates = FALSE, impute = 
   }
 
   q.cosoilmoist <- paste("SELECT",
-  if (duplicates == FALSE) {"DISTINCT"}
-, "nationalmusym, muname, c.compname, c.comppct_r, drainagecl, month, flodfreqcl, pondfreqcl, soimoistdept_l, soimoistdept_r, soimoistdept_h, soimoistdepb_l, soimoistdepb_r, soimoistdepb_h, soimoiststat
+                         if (duplicates == FALSE) {
+                           "DISTINCT"
+                         } else {
+                           "mu.mukey, c.cokey, "
+                         },
+                  "nationalmusym, muname, c.compname, c.comppct_r, drainagecl, month, flodfreqcl, 
+                   pondfreqcl, soimoistdept_l, soimoistdept_r, soimoistdept_h, soimoistdepb_l, 
+                   soimoistdepb_r, soimoistdepb_h, soimoiststat
 
   FROM legend l INNER JOIN
        mapunit mu ON mu.lkey = l.lkey INNER JOIN",

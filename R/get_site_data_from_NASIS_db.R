@@ -43,13 +43,15 @@ get_site_data_from_NASIS_db <- function(SS = TRUE,
                                         nullFragsAreZero = TRUE,
                                         stringsAsFactors = NULL,
                                         dsn = NULL) {
+  .SD <- NULL
+  
   if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
     .Deprecated(msg = sprintf("stringsAsFactors argument is deprecated.\nSetting package option with `NASISDomainsAsFactor(%s)`", stringsAsFactors))
     NASISDomainsAsFactor(stringsAsFactors)
   }
   
-	q <- "SELECT siteiid as siteiid, peiid, CAST(usiteid AS varchar(60)) as site_id, CAST(upedonid AS varchar(60)) as pedon_id, obsdate as obs_date,
-utmzone, utmeasting, utmnorthing, -(longdegrees + CASE WHEN longminutes IS NULL THEN 0.0 ELSE longminutes / 60.0 END + CASE WHEN longseconds IS NULL THEN 0.0 ELSE longseconds / 60.0 / 60.0 END) as x, latdegrees + CASE WHEN latminutes IS NULL THEN 0.0 ELSE latminutes / 60.0 END + CASE WHEN latseconds IS NULL THEN 0.0 ELSE latseconds / 60.0 / 60.0 END as y, horizdatnm, longstddecimaldegrees as x_std, latstddecimaldegrees as y_std,
+	q <- "SELECT siteiid, siteobsiid, peiid, CAST(usiteid AS varchar(60)) as site_id, CAST(upedonid AS varchar(60)) as pedon_id, obsdate as obs_date,
+utmzone, utmeasting, utmnorthing, horizdatnm, longstddecimaldegrees as x_std, latstddecimaldegrees as y_std, longstddecimaldegrees, latstddecimaldegrees,
 gpspositionalerror, descname as describer, pedonpurpose, pedontype, pedlabsampnum, labdatadescflag,
 tsectstopnum, tsectinterval, utransectid, tsectkind, tsectselmeth,
 elev as elev_field, slope as slope_field, aspect as aspect_field, plantassocnm, siteobs_View_1.earthcovkind1, siteobs_View_1.earthcovkind2, erocl, bedrckdepth, bedrckkind, bedrckhardness, hillslopeprof, geomslopeseg, shapeacross, shapedown, slopecomplex, drainagecl,
@@ -76,6 +78,12 @@ ORDER BY pedon_View_1.peiid ;"
          LEFT OUTER JOIN pedon_View_1 ON siteobs_View_1.siteobsiid = pedon_View_1.siteobsiidref
          ORDER BY pedon_View_1.peiid ;"
 
+
+  q3 <- "SELECT site_View_1.siteiid, ovegclid, ovegclname, ovegcldesc, ovegcliid 
+        FROM site_View_1
+        INNER JOIN siteothvegclass_View_1 ON siteothvegclass_View_1.siteiidref = site_View_1.siteiid
+        INNER JOIN othvegclass ON siteothvegclass_View_1.ovegcliidref = othvegclass.ovegcliid"
+
   channel <- dbConnectNASIS(dsn)
 
   if (inherits(channel, 'try-error'))
@@ -85,6 +93,7 @@ ORDER BY pedon_View_1.peiid ;"
 	if (SS == FALSE) {
 	  q <- gsub(pattern = '_View_1', replacement = '', x = q, fixed = TRUE)
 	  q2 <- gsub(pattern = '_View_1', replacement = '', x = q2, fixed = TRUE)
+	  q3 <- gsub(pattern = '_View_1', replacement = '', x = q3, fixed = TRUE)
 	}
 
 	# exec query
@@ -99,7 +108,7 @@ ORDER BY pedon_View_1.peiid ;"
 	d <- uncode(d, dsn = dsn)
 	
 	# surface fragments
-	sfr <- dbQueryNASIS(channel, q2)
+	sfr <- dbQueryNASIS(channel, q2, close = FALSE)
 	
 	multi.siteobs <- unique(sfr[, c("siteiid","siteobsiid")])
 	multisite <- table(multi.siteobs$siteiid) 
@@ -144,28 +153,46 @@ ORDER BY pedon_View_1.peiid ;"
 	  return(d2)
 	}
 
+	# join in "best" ecological site
+	bes <- get_ecosite_history_from_NASIS_db(SS = SS, best = TRUE, dsn = dsn)
+	if (length(bes) > 0) {
+	  d2 <- merge(d2, bes, by = "siteiid", all.x = TRUE, sort = FALSE)
+	}
+	
+	# join-in othervegclass string
+	sov <- try(dbQueryNASIS(channel, q3))
+	
+	if (!inherits(sov, 'try-error') && nrow(sov) > 0) {
+  	ov <- data.table::data.table(sov)[, .formatOtherVegString(.SD, id.name = "siteiid", name.sep = ' & '), 
+  	                                         by = "siteiid", .SDcols = colnames(sov)] 
+  	ov$siteiid <- NULL
+  	if (nrow(ov) > 0) {
+  	  d2 <- merge(d2, ov, by = "siteiid", all.x = TRUE, sort = FALSE)
+  	}
+	}
+	
   # https://github.com/ncss-tech/soilDB/issues/41
 	# warn if mixed datums
-	if (length(na.omit(unique(d2$horizdatnm))) > 1)
-		message('multiple horizontal datums present, consider using WGS84 coordinates (x_std, y_std)')
+	# if (length(na.omit(unique(d2$horizdatnm))) > 1)
+	# 	message('multiple horizontal datums present, consider using WGS84 coordinates (x_std, y_std)')
 
 	# are there any duplicate pedon IDs?
 	t.pedon_id <- table(d2$pedon_id)
 	not.unique.pedon_id <- t.pedon_id > 1
 	if (any(not.unique.pedon_id))
-		assign('dup.pedon.ids', value=names(t.pedon_id[which(not.unique.pedon_id)]), envir=get_soilDB_env())
+	  assign('dup.pedon.ids', value = names(t.pedon_id[which(not.unique.pedon_id)]), envir = get_soilDB_env())
 
 	# warn about sites without a matching pedon (records missing peiid)
 	missing.pedon <- which(is.na(d2$peiid))
 	if (length(missing.pedon) > 0)
-		assign('sites.missing.pedons', value=unique(d2$site_id[missing.pedon]), envir=get_soilDB_env())
+	  assign('sites.missing.pedons', value = unique(d2$site_id[missing.pedon]), envir = get_soilDB_env())
 
   ## set factor levels, when it makes sense
 	# most of these are done via uncode()
 
   # surface shape
-  d2$shapeacross <- factor(d2$shapeacross, levels=c('concave', 'linear', 'convex', 'undulating', 'complex'))
-  d2$shapedown <- factor(d2$shapedown, levels=c('concave', 'linear', 'convex', 'undulating', 'complex'))
+	d2$shapeacross <- factor(d2$shapeacross, levels = c('concave', 'linear', 'convex', 'undulating', 'complex'))
+	d2$shapedown <- factor(d2$shapedown, levels = c('concave', 'linear', 'convex', 'undulating', 'complex'))
 
   # create 3D surface shape
   d2$slope_shape <- paste0(d2$shapeacross, ' / ', d2$shapedown)
