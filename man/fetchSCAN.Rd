@@ -33,10 +33,12 @@ SCAN_site_metadata(site.code = NULL)
 a \code{list} of \code{data.frame} objects, where each element name is a sensor type, plus a \code{metadata} table; different \code{report} types change the types of sensor data returned. \code{SCAN_sensor_metadata()} and \code{SCAN_site_metadata()} return a \code{data.frame}. \code{NULL} on bad request.
 }
 \description{
-Query soil/climate data from USDA-NRCS SCAN Stations
+Query soil/climate data from USDA-NRCS SCAN Stations.
 }
 \details{
 Possible above and below ground sensor types include: 'SMS' (soil moisture), 'STO' (soil temperature), 'SAL' (salinity), 'TAVG' (daily average air temperature), 'TMIN' (daily minimum air temperature), 'TMAX' (daily maximum air temperature), 'PRCP' (daily precipitation), 'PREC' (daily precipitation), 'SNWD' (snow depth), 'WTEQ' (snow water equivalent),'WDIRV' (wind direction), 'WSPDV' (wind speed), 'LRADT' (solar radiation/langley total).
+
+This function converts below-ground sensor depth from inches to cm. All temperature values are reported as degrees C. Precipitation, snow depth, and snow water content are reported as \emph{inches}.
 \subsection{SCAN Sensors}{
 
 All Soil Climate Analysis Network (SCAN) sensor measurements are reported hourly.\tabular{lll}{
@@ -92,7 +94,7 @@ See the \href{http://ncss-tech.github.io/AQP/soilDB/fetchSCAN-demo.html}{fetchSC
 }
 }
 \references{
-See the \href{https://www.nrcs.usda.gov/wps/portal/wcc/home/}{National Water and Climate Center} home page for more information on the SCAN and SNOTEL programs, information on web services, and interactive maps of snow water equivalent, precipitation and streamflow.
+See the \href{https://www.nrcs.usda.gov/resources/data-and-reports/soil-climate-analysis-network}{Soil Climate Analysis Network} home page for more information on the SCAN program,  and links to other associated programs such as SNOTEL, at the National Weather and Climate Center. You can get information on available web services, as well as interactive maps of snow water equivalent, precipitation and streamflow.
 }
 \author{
 D.E. Beaudette, A.G. Brown

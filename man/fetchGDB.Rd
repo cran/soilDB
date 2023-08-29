@@ -81,8 +81,7 @@ specified (except for fetchGDB() which currently can only target one table
 ##
 ##
 ##  download CONUS gNATSGO from here:
-##    https://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/survey/geo/?cid=nrcseprd1464625
-##
+##    https://nrcs.app.box.com/v/soils/folder/191790828371
 ##
 # dsn <- "D:/geodata/soils/gNATSGO_CONUS.gdb"
 

@@ -114,7 +114,7 @@
 #' @author D.E. Beaudette, A.G. Brown
 #' @seealso \link{OSDquery}, \link{siblings}
 #' @export
-#' @examplesIf curl::has_internet() && requireNamespace("scales")
+#' @examplesIf curl::has_internet()
 #' @examples
 #' \donttest{
 #'   library(aqp)
@@ -190,7 +190,7 @@ fetchOSD <- function(soils, colorState = 'moist', extended = FALSE) {
   }
 
   # attempt query to API, result is JSON
-  res <- .soilDB_curl_get_JSON(final.url, gzip = FALSE)
+  res <- .soilDB_curl_get_JSON(final.url, gzip = FALSE, quiet = TRUE)
 
   # errors are trapped above, returning NULL
   if (is.null(res)) {

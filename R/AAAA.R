@@ -7,7 +7,9 @@ soilDB.env <- new.env(hash = TRUE)
 .onLoad <- function(libname, pkgname) {
   
   # function verbosity
-  options(soilDB.verbose = FALSE)
+  options(soilDB.verbose = FALSE,
+          soilDB.timeout = 300,
+          soilDB.ssl_verifyhost = 0)
   
   # set default local nasis authentication
   options(soilDB.NASIS.credentials = "DSN=nasis_local;UID=NasisSqlRO;PWD=nasisRe@d0n1y")
@@ -44,23 +46,27 @@ get_soilDB_env <- function() {
 }
 
 #' @importFrom curl new_handle has_internet
-.soilDB_curl_handle <- function(timeout = 300, ssl_verifyhost = 0, ...) {
+.soilDB_curl_handle <- function(timeout = getOption("soilDB.timeout", default = 300), 
+                                ssl_verifyhost = getOption("soilDB.verify_host", default = 0), ...) {
   curl::new_handle(timeout = timeout, ssl_verifyhost = ssl_verifyhost, ...)
 }
 
 #' @importFrom curl curl_download
-.soilDB_curl_get_JSON <- function(x, gzip = FALSE, FUN = jsonlite::fromJSON, ...) {
+.soilDB_curl_get_JSON <- function(x, gzip = FALSE, FUN = jsonlite::fromJSON, quiet = TRUE, ...) {
   tf <- tempfile()
+  
   dl <- try(curl::curl_download(
       x,
       tf,
-      quiet = TRUE,
+      quiet = quiet,
       mode = ifelse(gzip, "wb", "w"),
       handle = .soilDB_curl_handle()
     ), silent = TRUE)
   
   if (inherits(dl, 'try-error')) {
-    message(dl[1])
+    if (!quiet) {
+      message(dl[1])
+    }
     return(NULL)
   }
   
