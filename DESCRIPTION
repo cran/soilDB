@@ -1,7 +1,7 @@
 Package: soilDB
 Type: Package
 Title: Soil Database Interface
-Version: 2.7.8
+Version: 2.7.10
 Authors@R: c(person(given="Dylan", family="Beaudette", role = c("aut"), email = "dylan.beaudette@usda.gov"),
              person(given="Jay", family="Skovlin", role = c("aut")), 
              person(given="Stephen", family="Roecker", role = c("aut")), 
@@ -28,5 +28,5 @@ Encoding: UTF-8
 LazyData: false
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2023-08-29 05:47:07 UTC; Andrew.G.Brown
-Date/Publication: 2023-08-29 06:20:02 UTC
+Packaged: 2023-11-16 18:42:42 UTC; Andrew.G.Brown
+Date/Publication: 2023-11-16 19:10:02 UTC

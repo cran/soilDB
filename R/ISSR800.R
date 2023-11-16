@@ -36,6 +36,10 @@
 #' @export
 ISSR800.wcs <- function(aoi, var, res = 800, quiet = FALSE) {
   
+  if (!requireNamespace("terra")) {
+    stop("package 'terra' is required", call. = FALSE)
+  }
+  
   # sanity check: aoi specification
   if (!inherits(aoi, c('list', 'Spatial', 'sf', 'sfc', 'bbox', 'RasterLayer', 'SpatRaster', 'SpatVector'))) { 
     stop('invalid `aoi` specification', call. = FALSE)
@@ -53,8 +57,13 @@ ISSR800.wcs <- function(aoi, var, res = 800, quiet = FALSE) {
   # get variable specs
   var.spec <- .ISSR800.spec[[var]]
   
+  # authoritative CONUS = grid
+  .crs <- 'EPSG:5070'
+  .grid <- terra::rast(nrows = 3621, ncols = 5770, crs = .crs, 
+                       extent = terra::ext(-2357200, 2258800, 276400, 3173200))
+  
   # compute BBOX / IMG geometry in native CRS
-  wcs.geom <- .prepare_AEA_AOI(aoi, res = res, native_crs = 'EPSG:5070')
+  wcs.geom <- .prepare_AEA_AOI(aoi, res = res, native_crs = .crs)
   
   ## TODO: investigate why this is so
   # sanity check: a 1x1 pixel request to WCS results in a corrupt GeoTiff 
@@ -80,7 +89,7 @@ ISSR800.wcs <- function(aoi, var, res = 800, quiet = FALSE) {
   }
   
   # base URL + parameters
-  base.url <- 'http://soilmap2-1.lawr.ucdavis.edu/cgi-bin/mapserv?'
+  base.url <- 'http://casoilresource.lawr.ucdavis.edu/cgi-bin/mapserv?'
   service.url <- 'map=/soilmap2/website/wcs/issr800.map&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage'
   
   # unpack BBOX for WCS 2.0
@@ -161,10 +170,10 @@ ISSR800.wcs <- function(aoi, var, res = 800, quiet = FALSE) {
   if (!is.null(var.spec$rat)) {
     
     # get rat
-    rat <- try(read.csv(var.spec$rat, stringsAsFactors = FALSE), silent = quiet)
+    rat <- try(suppressWarnings(read.csv(var.spec$rat, stringsAsFactors = FALSE)), silent = TRUE)
     
     if (inherits(rat, 'try-error')) {
-      message("Failed to download RAT from ", var.spec$rat, "; returning non-categorical grid")
+      message("\nFailed to download RAT from ", var.spec$rat, "; returning integer grid")
       return(r)
     }
     
@@ -190,6 +199,9 @@ ISSR800.wcs <- function(aoi, var, res = 800, quiet = FALSE) {
     # register categories in new order
     levels(r) <- rat[cat.idx, col.names]
   }
+  
+  # align to authoritative grid
+  terra::ext(r) <- terra::align(terra::ext(r), .grid)
   
   input_class <- attr(wcs.geom, '.input_class')
   
