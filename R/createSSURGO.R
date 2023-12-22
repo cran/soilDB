@@ -9,10 +9,14 @@
 #' @param destdir Directory to download ZIP files into. Default `tempdir()`.
 #' @param exdir Directory to extract ZIP archives into. May be a directory that does not yet exist. Each ZIP file will extract to a folder labeled with `areasymbol` in this directory. Default: `destdir`
 #' @param include_template Include the (possibly state-specific) MS Access template database? Default: `FALSE`
+#' @param db Either `"SSURGO"` (default; detailed soil map) or `"STATSGO"` (general soil map).
 #' @param extract Logical. Extract ZIP files to `exdir`? Default: `TRUE`
 #' @param remove_zip Logical. Remove ZIP files after extracting? Default: `FALSE` 
 #' @param overwrite Logical. Overwrite by re-extracting if directory already exists? Default: `FALSE`
 #' @param quiet Logical. Passed to `curl::curl_download()`.
+#' @details
+#' When `db="STATSGO"` the `WHERE` argument is not supported. Allowed `areasymbols` include `"US"` and two-letter state codes e.g. `"WY"` for the Wyoming general soils map.
+#' 
 #' @export
 #' 
 #' @details Pipe-delimited TXT files are found in _/tabular/_ folder extracted from a SSURGO ZIP. The files are named for tables in the SSURGO schema. There is no header / the files do not have column names. See the _Soil Data Access Tables and Columns Report_: \url{https://sdmdataaccess.nrcs.usda.gov/documents/TablesAndColumnsReport.pdf} for details on tables, column names and metadata including the default sequence of columns used in TXT files. The function returns a `try-error` if the `WHERE`/`areasymbols` arguments result in
@@ -25,10 +29,21 @@ downloadSSURGO <- function(WHERE = NULL,
                            destdir = tempdir(), 
                            exdir = destdir, 
                            include_template = FALSE,
+                           db = c('SSURGO', 'STATSGO'),
                            extract = TRUE, 
                            remove_zip = FALSE,
                            overwrite = FALSE,
                            quiet = FALSE) {
+  
+  db <- match.arg(toupper(db), c('SSURGO', 'STATSGO'))
+  
+  if (!is.null(WHERE) && db == "STATSGO") {
+    stop('custom WHERE clause not supported with db="STATSGO"', call. = FALSE)
+  }
+  
+  if (!is.null(areasymbols) && db == "STATSGO") {
+    WHERE <- areasymbols
+  }
   
   if (is.null(WHERE) && is.null(areasymbols)) {
     stop('must specify either `WHERE` or `areasymbols` argument', call. = FALSE)
@@ -45,7 +60,7 @@ downloadSSURGO <- function(WHERE = NULL,
   }
   
   # make WSS download URLs from areasymbol, template, date
-  urls <- .make_WSS_download_url(WHERE, include_template = include_template)
+  urls <- .make_WSS_download_url(WHERE, include_template = include_template, db = db)
   
   if (inherits(urls, 'try-error')) {
     message(urls[1])
@@ -65,7 +80,7 @@ downloadSSURGO <- function(WHERE = NULL,
   }
   
   paths <- list.files(destdir, pattern = "\\.zip$", full.names = TRUE)
-  paths2 <- paths[grep(".*wss_SSA_(.*)_.*", paths)]
+  paths2 <- paths[grep(".*wss_(SSA|gsmsoil)_(.*)_.*", paths)]
   
   if  (extract) {
     if (!quiet) {
@@ -137,23 +152,29 @@ createSSURGO <- function(filename,
   if (!requireNamespace("RSQLite"))
     stop("package `RSQLite` is required to write tabular datasets to SSURGO SQLite databases", call. = FALSE)
   
+  if (isTRUE(overwrite) && file.exists(filename)) {
+    file.remove(filename)
+  }
+  
   # create and add combined vector datasets:
   #   "soilmu_a", "soilmu_l", "soilmu_p", "soilsa_a", "soilsf_l", "soilsf_p" 
   f.shp <- f[grepl(".*\\.shp$", f)]
-  shp.grp <- do.call('rbind', strsplit(gsub(".*soil([musfa]{2})_([apl])_([a-z]{2}\\d{3})\\.shp", "\\1;\\2;\\3", f.shp), ";", fixed = TRUE))
-  if (length(shp.grp) > 1 && include_spatial) {
+  shp.grp <- do.call('rbind', strsplit(gsub(".*soil([musfa]{2})_([apl])_([a-z]{2}\\d{3}|[a-z]{2})\\.shp", "\\1;\\2;\\3", f.shp), ";", fixed = TRUE))
+  
+  layer_names <- c(`mu_a` = "mupolygon", `mu_l` = "muline",   `mu_p` = "mupoint", 
+                   `sa_a` = "sapolygon", `sf_l` = "featline", `sf_p` = "featpoint")
+  
+  if (nrow(shp.grp) >= 1 && ncol(shp.grp) == 3 && include_spatial) {
     f.shp.grp <- split(f.shp, list(feature = shp.grp[,1], geom = shp.grp[,2]))
     
     lapply(seq_along(f.shp.grp), function(i) {
       lapply(seq_along(f.shp.grp[[i]]), function(j){
-        lnm <- gsub(".*(soil[musfa]{2}_[apl])_.*", "\\1", f.shp.grp[[i]][j])
+        lnm <- layer_names[match(gsub(".*soil([musfa]{2}_[apl])_.*", "\\1", f.shp.grp[[i]][j]),
+                                 names(layer_names))]
         
         if (overwrite && j == 1) {
           sf::write_sf(sf::read_sf(f.shp.grp[[i]][j]), filename, layer = lnm, overwrite = TRUE, ...)
         } else sf::write_sf(sf::read_sf(f.shp.grp[[i]][j]), filename, layer = lnm, append = TRUE, ...)
-        
-        # TODO: check/optimize: GPKG vector data includes R*Tree spatial index
-        
         NULL
       })
     })
@@ -192,6 +213,7 @@ createSSURGO <- function(filename,
   
   con <- RSQLite::dbConnect(RSQLite::SQLite(), filename, loadable.extensions = TRUE)  
   on.exit(RSQLite::dbDisconnect(con))
+  
   lapply(names(f.txt.grp), function(x) {
     
     if (!is.null(mstabcol)) {
@@ -200,6 +222,7 @@ createSSURGO <- function(filename,
     
     if (!is.null(msidxdet)) {
       indexPK <- na.omit(msidxdet[[4]][msidxdet[[1]] == mstab_lut[x] & grepl("PK_", msidxdet[[2]])])
+      indexDI <- na.omit(msidxdet[[4]][msidxdet[[1]] == mstab_lut[x] & grepl("DI_", msidxdet[[2]])])
     }
     
     d <- try(as.data.frame(data.table::rbindlist(lapply(seq_along(f.txt.grp[[x]]), function(i) {
@@ -241,13 +264,23 @@ createSSURGO <- function(filename,
         }, silent = quiet)
       }
       
+      # create key indices
+      if (!is.null(indexDI) && length(indexDI) > 0) {
+        for (i in seq_along(indexDI)) {
+          try({
+            RSQLite::dbExecute(con, sprintf("CREATE INDEX IF NOT EXISTS %s ON %s (%s)", 
+                                            paste0('DI_', mstab_lut[x]), mstab_lut[x], indexDI[i]))
+          }, silent = quiet)
+        }
+      }
+      
       # for GPKG output, add gpkg_contents (metadata for features and attributes)
       if (IS_GPKG) {
-        # update gpkg_contents table entry
-        if (!include_spatial) {
+        if (!.gpkg_has_contents(con)) {
           # if no spatial data inserted, there will be no gpkg_contents table initally
           try(.gpkg_create_contents(con))
         }
+        # update gpkg_contents table entry
         try(.gpkg_delete_contents(con, mstab_lut[x]))
         try(.gpkg_add_contents(con, mstab_lut[x]))
       }

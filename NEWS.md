@@ -1,3 +1,21 @@
+# soilDB 2.8.0 (development)
+
+ - Minimum {aqp} version set to v2.0.2. This is due to changes in the namespace related to `aqp::col2Munsell()`, to "encourage" users to update to the more efficient routines provided in {aqp} 2+ (if they haven't already), and prepare for future updates in the 2.x series.
+ - Fix bugs in `get_SDA_interpretation()` when `dsn` refers to a local SQLite source
+and in concatenation of reason string when `wide_reason=TRUE`
+ - `createSSURGO()` updates:
+   - *Breaking change*: Now uses the standard SSURGO layer names for spatial data (e.g. `"mupolygon"` rather than `"soilmu_a"`).
+   - Creates indices for foreign keys and other columns important for data analysis, dramatically improving the performance of standard queries on SQLite sources.
+   - Now works properly on STATSGO data sets for individual states or CONUS. Previously tabular data would be transferred but spatial data were not.
+ - `downloadSSURGO()` gains `db` argument which gives ability to download STATSGO by state or all of US from Web Soil Survey. Thanks to Meghan Krueger for suggestion.
+ - `get_SDA_property()`: weighted average/dominant component numeric methods now return `mukey` in first column position; for parity with other `get_SDA*` methods recently updated/already doing this, making it easier to use these columns for raster attribute tables via `terra::set.levels()`
+ - `fetchNASIS(lab=TRUE)` fixed a bug when multiple `phlabresults` records are present for a single horizon, but one or both is missing bottom depth. Thanks to Meyer Bohn (@MollicMeyer) for reporting.
+ - SoilProfileCollection objects now include a time stamp in their metadata, accessed as: `metadata(x)$created` (#235)
+ - Added `area_type` argument to `fetchLDM()` for non-SSA area queries (#328)
+ - Added `grid` argument to `fetchSoilGrids()` for downloading Cloud-Optimized GeoTIFF subsets for spatial extent (#329)
+ - `fetchOSD()` now automatically batches requests into sets of 100 series, allowing arbitrarily large requests to be made (#239)
+ 
+ 
 # soilDB 2.7.10 (2023-11-16)
 
  - `fetchSDA_spatial()` gains `geom.src="mlrapolygon"` for obtaining Major Land Resource Area (MLRA) polygon boundaries. When using this geometry source `x` is a vector of `MLRARSYM` (MLRA Symbols).

@@ -38,8 +38,12 @@ LEFT OUTER JOIN phlabresults_View_1 phl on phl.phiidref = ph.phiid
   idx <- which(duplicated(d.phlabresults$phiid))
 
   if (length(idx) > 0) {
-    message(paste("NOTICE: multiple phiid values exist in the `phlabresults` table, computing weighted averages and dominant values based on horizon thickness"))
-
+    message(paste("NOTICE: multiple records per pedon horizon exist in the `phlabresults` table, computing weighted averages and dominant values based on sample thickness"))
+    
+    if (any(is.na(d.phlabresults[idx, "sampledepthbottom"]))) {
+      message("NOTICE: some `phlabresults` records are missing `sampledepthbottom`; affected weighted averages will return `NA` and dominant values will be from the first (shallowest top depth) record per horizon")
+    }
+  
     # aggregate dup phiid
     dup <- d.phlabresults[idx, "phiid"]
     dup_idx <- which(d.phlabresults$phiid %in% dup)
@@ -67,8 +71,8 @@ LEFT OUTER JOIN phlabresults_View_1 phl on phl.phiidref = ph.phiid
     d.dups_char <- do.call(
       "rbind", by(d.dups_char, d.dups_char[[var]], function(x) { 
         data.frame(
-        peiid = unique(x[['peiid']]),
-        lapply(x[2:ncol(x)], function(x2) x2[which.max(x$hzthk)])
+          peiid = unique(x[['peiid']]),
+          lapply(x[2:ncol(x)], function(x2) x2[max(c(1, which.max(x$hzthk)), na.rm = TRUE)])
         )})
       )
 
@@ -79,9 +83,9 @@ LEFT OUTER JOIN phlabresults_View_1 phl on phl.phiidref = ph.phiid
     d.dups_ph <- do.call(
       "rbind",
       by(d.dups_ph, d.dups_ph[[var]], function(x) { data.frame(
-        peiid = unique(x[['peiid']]),
-        phiid = unique(x[['phiid']]),
-        lapply(x[3:ncol(x)], function(x2) -log10(weighted.mean(1/10^x2, weights = x$hzthk, na.rm = TRUE)))
+          peiid = unique(x[['peiid']]),
+          phiid = unique(x[['phiid']]),
+          lapply(x[3:ncol(x)], function(x2) -log10(weighted.mean(1/10^x2, weights = x$hzthk, na.rm = TRUE)))
         )})
       )
 
