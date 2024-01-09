@@ -1,7 +1,7 @@
 Package: soilDB
 Type: Package
 Title: Soil Database Interface
-Version: 2.8.0
+Version: 2.8.1
 Authors@R: c(person(given="Dylan", family="Beaudette", role = c("aut"), email = "dylan.beaudette@usda.gov"),
              person(given="Jay", family="Skovlin", role = c("aut")), 
              person(given="Stephen", family="Roecker", role = c("aut")), 
@@ -25,8 +25,9 @@ URL: https://ncss-tech.github.io/soilDB/,
 BugReports: https://github.com/ncss-tech/soilDB/issues
 RoxygenNote: 7.2.3
 Encoding: UTF-8
+Language: en-US
 LazyData: false
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2023-12-22 01:40:32 UTC; Andrew.G.Brown
-Date/Publication: 2023-12-22 05:00:05 UTC
+Packaged: 2024-01-09 18:35:48 UTC; Andrew.G.Brown
+Date/Publication: 2024-01-09 23:50:03 UTC

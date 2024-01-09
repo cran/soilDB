@@ -10,7 +10,7 @@ get_SDA_coecoclass(
   mukeys = NULL,
   WHERE = NULL,
   query_string = FALSE,
-  ecoclasstypename = NULL,
+  ecoclasstypename = c("NRCS Rangeland Site", "NRCS Forestland Site"),
   ecoclassref = "Ecological Site Description Database",
   not_rated_value = "Not assigned",
   miscellaneous_areas = TRUE,
@@ -30,7 +30,7 @@ get_SDA_coecoclass(
 
 \item{query_string}{Default: \code{FALSE}; if \code{TRUE} return a character string containing query that would be sent to SDA via \code{SDA_query}}
 
-\item{ecoclasstypename}{If \code{NULL} no constraint on \code{ecoclasstypename} is used in the query.}
+\item{ecoclasstypename}{Default: \code{c("NRCS Rangeland Site", "NRCS Forestland Site")}. If \code{NULL} no constraint on \code{ecoclasstypename} is used in the query.}
 
 \item{ecoclassref}{Default: \code{"Ecological Site Description Database"}. If \code{NULL} no constraint on \code{ecoclassref} is used in the query.}
 
@@ -40,7 +40,7 @@ get_SDA_coecoclass(
 
 \item{include_minors}{logical. Include minor components? Default: \code{TRUE}.}
 
-\item{threshold}{integer. Default: \code{0}. Minimum combined component percentage (RV) for inclusion of a mapunit's ecological site in wide-format tabular sumamry. Used only for \code{method="all"}.}
+\item{threshold}{integer. Default: \code{0}. Minimum combined component percentage (RV) for inclusion of a mapunit's ecological site in wide-format tabular summary. Used only for \code{method="all"}.}
 
 \item{dsn}{Path to local SQLite database or a DBIConnection object. If \code{NULL} (default) use Soil Data Access API via \code{SDA_query()}.}
 }

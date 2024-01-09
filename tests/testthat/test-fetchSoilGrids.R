@@ -24,8 +24,8 @@ test_that("fetchSoilGrids() works as expected", {
   expect_equal(nrow(res),   2*6)
 
   # 5 base columns in SPC: label, id, hzdept, hzdepb, hzID
-  #   plus 10 default variables w/ 5 columns each 
-  expect_equal(ncol(horizons(res)), 5 + (10 * 5))
+  #   plus 13 default variables w/ 5 columns each 
+  expect_equal(ncol(horizons(res)), 5 + (13 * 5))
 
   # data conversion works
   expect_equal(res$claymean[1], 18.7)
