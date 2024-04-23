@@ -25,7 +25,7 @@
 #' Variables available from this WCS can be queried using \code{WCS_details(wcs = 'soilColor')}. The full resolution version of the soil color grids use a `hr` suffix, e.g. 'sc025cm_hr'.
 #' 
 #' 
-#' @return A SpatRaster (or RasterLayer) object containing indexed map unit keys and associated raster attribute table or a try-error if request fails. By default, spatial classes from the `terra` package are returned. If the input object class is from the `raster` or `sp` packages a RasterLayer is returned.
+#' @return A `SpatRaster` (or `RasterLayer`) object containing indexed map unit keys and associated raster attribute table or a try-error if request fails. By default, spatial classes from the `terra` package are returned. If the input object class is from the `raster` or `sp` packages a `RasterLayer` is returned.
 #' 
 #' @examples 
 #' \dontrun{
@@ -45,7 +45,10 @@
 #' @export
 soilColor.wcs <- function(aoi, var, res = 270, quiet = FALSE) {
   
-  # sanity check: aoi specification
+  ## vintage of source data
+  .vintage <- 'FY2022'
+  
+  # sanity check: AOI specification
   if (!inherits(aoi, c('list', 'Spatial', 'sf', 'sfc', 'bbox', 'RasterLayer', 'SpatRaster', 'SpatVector'))) { 
     stop('invalid `aoi` specification', call. = FALSE)
   }
@@ -157,9 +160,6 @@ soilColor.wcs <- function(aoi, var, res = 270, quiet = FALSE) {
   # set layer name in object
   names(r) <- var.spec$desc
   
-  # and as an attribute
-  attr(r, 'layer name') <- var.spec$desc
-  
   # optional processing of RAT
   if (!is.null(var.spec$rat)) {
     
@@ -203,6 +203,9 @@ soilColor.wcs <- function(aoi, var, res = 270, quiet = FALSE) {
       r <- raster::raster(r)
     }
   }
+  
+  # set metadata
+  terra::metags(r) <- c(description = var.spec$desc, vintage = .vintage)
   
   return(r)
 }

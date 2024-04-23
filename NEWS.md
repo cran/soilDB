@@ -1,3 +1,19 @@
+# soilDB 2.8.2 (2024-04-22)
+
+ - SoilWeb Web Coverage Service MUKEY grid data source (used for `mukey.wcs()`) and metadata have been updated for FY2024
+   - Note that ISSR800 WCS (`ISSR800.wcs()` source) is still using FY2023/FY2022 data
+ - `get_SDA_coecoclass()` default data returned for methods "Dominant Component", "Dominant Condition" and "None" now include `localphase` column
+ - `get_soilseries_from_NASIS()` and `get_competing_soilseries_from_NASIS()`: add `SS` argument for parity with all other NASIS "get" methods
+   - default to `FALSE` for backward compatibility/common use cases
+ - `get_site_data_from_NASIS_db()` gains Frost Free Days, MAP, REAP, MAAT, MAST, MSAT, MSST, MWAT, MWST, and Parent Material Group Name; thanks to Zach Van Abbema for suggestion 
+ - Changes in column names related to Area table / `"areasymbol"` (#272); thanks to Zach Van Abbema for suggestion
+   - `get_site_data_from_NASIS_db()`: Add state, county, and MLRA areasymbol references (`"site_state"`, `"site_county"`, `"site_mlra"`)
+   - `get_mapunit_from_NASIS_db()`: Add dominant MLRA areasymbol reference column `"lmapunit_mlra"`
+   - `get_soilseries_from_NASIS()`: replace `areasymbol` column to use relationship-style name `"soilseries_typelocst"` (minor breaking change)
+ - `fetchSDA_spatial()`: Add support for querying mapunit point (`"mupoint"`), mapunit line (`"muline"`), special feature point (`"featpoint"`), special feature line (`"featline"`) by `mukey` or `featkey`, geometry type selectable via `geom.src` argument
+ - `SDA_spatialQuery()`: Add support for querying mapunit point (`"mupoint"`), mapunit line (`"muline"`), special feature point (`"featpoint"`), special feature line (`"featline"`) for a spatial extent, geometry type selectable via `what` argument
+ - `simplifyFragmentData()` / `simplifyArtifactData()` efficiency improvement when all records are missing data
+ 
 # soilDB 2.8.1 (2024-01-09)
 
  - `get_mapunit_from_NASIS()`, `get_lmuaoverlap_from_NASIS()` and `get_legend_from_NASIS()` gain `areatypename` argument used for filtering legends by `areatypename`. 
@@ -46,10 +62,10 @@ and in concatenation of reason string when `wide_reason=TRUE`
 # soilDB 2.7.9 (2023-09-01)
  
  - Added new `method` options for `fetchSDA_spatial()`. Aggregation grouping is controlled by the `by.col` argument. This works for mapunit and survey area polygon geometries, aggregating all polygons in the group for each `mukey`, `nationalmusym`, `lkey`, or `areasymbol` extent.
-  - `method="extent"` method calculates a bounding rectangle  
-  - `method="convexhull"` calculates the convex hull 
-  - `method="union"` returns a MULTIPOLYGON 
-  - `method="collection"` returns a GEOMETRYCOLLECTION 
+   - `method="extent"` method calculates a bounding rectangle  
+   - `method="convexhull"` calculates the convex hull 
+   - `method="union"` returns a MULTIPOLYGON 
+   - `method="collection"` returns a GEOMETRYCOLLECTION 
  
 ## Bug Fixes
 

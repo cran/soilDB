@@ -64,8 +64,7 @@ b <- buffer(p, 1000)
 mu <- mukey.wcs(b, db = 'gSSURGO')
 
 # inspect
-plot(mu, legend = FALSE, axes = FALSE, main = attr(mu, 'layer name'))
-box()
+plot(mu, legend = FALSE, axes = FALSE, main = metags(mu)['description'])
 
 # add buffer, after transforming to mukey grid CRS
 plot(project(b, "EPSG:5070"), add = TRUE)
@@ -92,8 +91,7 @@ st_crs(x) <- 4326
 mu <- mukey.wcs(x, db = 'gSSURGO')
 
 # inspect
-plot(mu, legend = FALSE, axes = FALSE, main = attr(mu, 'layer name'))
-box()
+plot(mu, legend = FALSE, axes = FALSE, main = metags(mu)['description'])
 
 # add original BBOX, after transforming to mukey grid CRS
 plot(st_transform(x, 5070), add = TRUE)
@@ -184,7 +182,7 @@ plot(
   x,
   axes = FALSE,
   legend = FALSE,
-  main = attr(x, 'layer name')
+  main = metags(x)['description']
 )
 plot(a, add = TRUE)
 
@@ -193,7 +191,7 @@ plot(
   y,
   axes = FALSE,
   legend = FALSE,
-  main = attr(y, 'layer name')
+  main = metags(y)['description']
 )
 plot(a, add = TRUE)
 
@@ -202,7 +200,7 @@ plot(
   z,
   axes = FALSE,
   legend = FALSE,
-  main = attr(z, 'layer name'),
+  main = metags(z)['description'],
   ext = x
 )
 plot(a, add = TRUE)
@@ -218,7 +216,7 @@ plot(
   x,
   axes = FALSE,
   legend = FALSE,
-  main = attr(x, 'layer name')
+  main = metags(x)['description']
 )
 
 # STATSGO
@@ -226,7 +224,7 @@ plot(
   statsgo,
   axes = FALSE,
   legend = FALSE,
-  main = attr(statsgo, 'layer name')
+  main = metags(statsgo)['description']
 )
 
 ## ----fig.width = 6.5, fig.height=5----------------------------------------------------------------
@@ -245,7 +243,7 @@ plot(
   mu,
   legend = FALSE,
   axes = FALSE,
-  main = attr(mu, 'layer name'),
+  main = metags(mu)['description'],
   colNA = 'royalblue'
 )
 
@@ -271,7 +269,7 @@ plot(
   mu,
   legend = FALSE,
   axes = FALSE,
-  main = attr(mu, 'layer name'),
+  main = metags(mu)['description'],
   colNA = 'royalblue'
 )
 
@@ -401,7 +399,7 @@ plot(
   )
 )
 
-## ---- fig.width = 8, fig.height = 6---------------------------------------------------------------
+## ----fig.width = 8, fig.height = 6----------------------------------------------------------------
 # copy example grid
 mu2 <- mu
 
@@ -425,7 +423,7 @@ activeCat(mu2) <- 'corsteel'
 # plot
 plot(
   mu2,
-  col = cols$hex,
+  col = cols$hex[na.omit(match(unique(tab$corsteel), cols$label))],
   axes = FALSE,
   legend = "topleft"
 )
@@ -450,7 +448,7 @@ plot(
   main = 'gSSURGO Map Unit Key Grid'
 )
 
-## ---- fig.width = 8, fig.height = 6---------------------------------------------------------------
+## ----fig.width = 8, fig.height = 6----------------------------------------------------------------
 # copy example grid
 mu2 <- mu
 
@@ -469,7 +467,7 @@ activeCat(mu2) <- 'pmgroupname'
 
 plot(mu2, legend = "topleft", axes = FALSE)
 
-## ---- fig.width = 8, fig.height = 6---------------------------------------------------------------
+## ----fig.width = 8, fig.height = 6----------------------------------------------------------------
 # copy example grid
 mu2 <- mu
 
@@ -518,7 +516,6 @@ mu2 <- catalyze(mu)
 
 ## ----fig.width = 6, fig.height = 4----------------------------------------------------------------
 plot(mu2$awc_r)
-box()
 
 ## -------------------------------------------------------------------------------------------------
 plot(mu2[['dbthirdbar_r']], cex.main = 0.7,

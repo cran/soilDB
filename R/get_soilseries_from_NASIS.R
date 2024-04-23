@@ -6,7 +6,7 @@
 #' @param stringsAsFactors deprecated
 #' @param dsn Optional: path to local SQLite database containing NASIS table structure; default: `NULL`
 #' @param delimiter _character_. Used to collapse `taxminalogy` records where multiple values are used to describe strongly contrasting control sections. Default `" over "` creates combination mineralogy classes as they would be used in the family name.
-#'
+#' @param SS _logical_. Fetch data from the currently loaded selected set in NASIS or from the entire local database (default: `FALSE`; this is to allow for queries against the full Series Classification database as default)
 #' @return A \code{data.frame}
 #'
 #' @author Stephen Roecker
@@ -15,27 +15,38 @@
 #'
 #' @export
 get_soilseries_from_NASIS <- function(stringsAsFactors = NULL,
-                                      dsn = NULL, delimiter = " over ") {
+                                      dsn = NULL, delimiter = " over ",
+                                      SS = FALSE) {
   if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
     .Deprecated(msg = sprintf("stringsAsFactors argument is deprecated.\nSetting package option with `NASISDomainsAsFactor(%s)`", stringsAsFactors))
     NASISDomainsAsFactor(stringsAsFactors)
   }
   
   q.soilseries <- "
-  SELECT soilseriesname, soilseriesstatus, benchmarksoilflag, soiltaxclasslastupdated, mlraoffice, taxclname, taxorder, taxsuborder, taxgrtgroup, taxsubgrp, taxpartsize, taxpartsizemod, taxceactcl, taxreaction, taxtempcl, taxfamhahatmatcl, originyear, establishedyear, descriptiondateinitial, descriptiondateupdated, statsgoflag,  soilseriesiid, areasymbol, areaname, areatypename, soilseriesedithistory
-  FROM soilseries ss
+  SELECT soilseriesname, soilseriesstatus, benchmarksoilflag, 
+  soiltaxclasslastupdated, mlraoffice, taxclname, 
+  taxorder, taxsuborder, taxgrtgroup, taxsubgrp, 
+  taxpartsize, taxpartsizemod, taxceactcl, taxreaction, taxtempcl, taxfamhahatmatcl, 
+  originyear, establishedyear, descriptiondateinitial, descriptiondateupdated, statsgoflag, 
+  soilseriesiid, areasymbol AS soilseries_typelocst, soilseriesedithistory
+  FROM soilseries_View_1 ss
   INNER JOIN area a ON a.areaiid = ss.typelocstareaiidref
   INNER JOIN areatype at ON at.areatypeiid = ss.typelocstareatypeiidref
   ORDER BY soilseriesname;"
 
-  q.min <- "SELECT soilseriesiidref, minorder, taxminalogy FROM soilseriestaxmineralogy
+  q.min <- "SELECT soilseriesiidref, minorder, taxminalogy FROM soilseriestaxmineralogy_View_1
             ORDER BY soilseriesiidref, minorder;"
 
   channel <- dbConnectNASIS(dsn)
 
   if (inherits(channel, 'try-error'))
     return(data.frame())
-
+  
+  if (!SS) {
+    q.soilseries <- gsub(pattern = '_View_1', replacement = '', x = q.soilseries, fixed = TRUE)
+    q.min <- gsub(pattern = '_View_1', replacement = '', x = q.min, fixed = TRUE)
+  }
+  
   # exec query
   d.soilseries <- dbQueryNASIS(channel, q.soilseries, close = FALSE)
   d.soilseriesmin <- dbQueryNASIS(channel, q.min)
@@ -68,7 +79,7 @@ get_soilseries_from_NASIS <- function(stringsAsFactors = NULL,
                 "taxsuborder", "taxgrtgroup", "taxsubgrp", "taxpartsize", "taxpartsizemod",
                 "taxceactcl", "taxreaction", "taxtempcl", "taxminalogy", "taxfamhahatmatcl",
                 "originyear", "establishedyear", "descriptiondateinitial", "descriptiondateupdated",
-                "statsgoflag", "soilseriesedithistory", "areasymbol", "areaname", "areatypename")])
+                "statsgoflag", "soilseriesedithistory", "soilseries_typelocst")])
 }
 
 #' @param soils A vector of soil series names
@@ -106,11 +117,15 @@ get_soilseries_from_NASISWebReport <- function(soils, stringsAsFactors = NULL) {
 #' @rdname get_soilseries_from_NASIS
 # @examples
 # get_competing_soilseries_from_NASIS("fine-loamy, mixed, %, thermic ultic haploxeralfs")
-get_competing_soilseries_from_NASIS <- function(x, what = 'taxclname', dsn = NULL) {
+get_competing_soilseries_from_NASIS <- function(x, what = 'taxclname', dsn = NULL, SS = FALSE) {
   
   con <- dbConnectNASIS(dsn)
   
-  q <- sprintf("SELECT * FROM soilseries WHERE %s LIKE '%s'", what, x)
+  q <- sprintf("SELECT * FROM soilseries_View_1 WHERE %s LIKE '%s'", what, x)
+  
+  if (!SS) {
+    q <- gsub(pattern = '_View_1', replacement = '', x = q, fixed = TRUE)
+  }
   
   res <- dbQueryNASIS(con, q)
   

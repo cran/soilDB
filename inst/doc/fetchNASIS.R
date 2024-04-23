@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 soilDBdata_pedon_dsn <- system.file("extdata/fetchNASIS_pedons.sqlite", package = "soilDBdata")
 
 calcdef <- structure(list(fetchNASIS_Column = c("hzID", "texture_class", "d_r", "d_g", "d_b", 

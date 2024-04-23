@@ -50,12 +50,19 @@ get_site_data_from_NASIS_db <- function(SS = TRUE,
     NASISDomainsAsFactor(stringsAsFactors)
   }
   
-	q <- "SELECT siteiid, siteobsiid, peiid, CAST(usiteid AS varchar(60)) as site_id, CAST(upedonid AS varchar(60)) as pedon_id, obsdate as obs_date,
-utmzone, utmeasting, utmnorthing, horizdatnm, longstddecimaldegrees as x_std, latstddecimaldegrees as y_std, longstddecimaldegrees, latstddecimaldegrees,
+	q <- "SELECT siteiid, siteobsiid, peiid, 
+CAST(usiteid AS varchar(60)) as site_id, CAST(upedonid AS varchar(60)) as pedon_id, obsdate as obs_date,
+utmzone, utmeasting, utmnorthing, horizdatnm, 
+longstddecimaldegrees as x_std, latstddecimaldegrees as y_std, longstddecimaldegrees, latstddecimaldegrees,
 gpspositionalerror, descname as describer, pedonpurpose, pedontype, pedlabsampnum, labdatadescflag,
 tsectstopnum, tsectinterval, utransectid, tsectkind, tsectselmeth,
-elev as elev_field, slope as slope_field, aspect as aspect_field, plantassocnm, siteobs_View_1.earthcovkind1, siteobs_View_1.earthcovkind2, erocl, bedrckdepth, bedrckkind, bedrckhardness, hillslopeprof, geomslopeseg, shapeacross, shapedown, slopecomplex, drainagecl,
-flodfreqcl, floddurcl, flodmonthbeg, pondfreqcl, ponddurcl, pondmonthbeg, geomposhill, geomposmntn, geompostrce, geomposflats, swaterdepth
+elev as elev_field, slope as slope_field, aspect as aspect_field, plantassocnm, 
+siteobs_View_1.earthcovkind1, siteobs_View_1.earthcovkind2, erocl, 
+bedrckdepth, bedrckkind, bedrckhardness, pmgroupname, 
+hillslopeprof, geomslopeseg, shapeacross, shapedown, slopecomplex, drainagecl,
+geomposhill, geomposmntn, geompostrce, geomposflats, swaterdepth,
+flodfreqcl, floddurcl, flodmonthbeg, pondfreqcl, ponddurcl, pondmonthbeg, 
+climstaid, climstanm, climstatype, ffd, map, reannualprecip, airtempa, soiltempa, airtemps, soiltemps, airtempw, soiltempw
 
 FROM
 
@@ -84,6 +91,13 @@ ORDER BY pedon_View_1.peiid ;"
         INNER JOIN siteothvegclass_View_1 ON siteothvegclass_View_1.siteiidref = site_View_1.siteiid
         INNER JOIN othvegclass ON siteothvegclass_View_1.ovegcliidref = othvegclass.ovegcliid"
 
+  q4 <- "SELECT siteiid, area.areasymbol AS site_state FROM area 
+         LEFT JOIN site_View_1 ON area.areaiid = site_View_1.stateareaiidref"
+  q5 <- "SELECT siteiid, area.areasymbol AS site_county FROM area 
+         LEFT JOIN site_View_1 ON area.areaiid = site_View_1.countyareaiidref"
+  q6 <- "SELECT siteiid, area.areasymbol AS site_mlra FROM area 
+         LEFT JOIN site_View_1 ON area.areaiid = site_View_1.mlraareaiidref"
+  
   channel <- dbConnectNASIS(dsn)
 
   if (inherits(channel, 'try-error'))
@@ -94,6 +108,9 @@ ORDER BY pedon_View_1.peiid ;"
 	  q <- gsub(pattern = '_View_1', replacement = '', x = q, fixed = TRUE)
 	  q2 <- gsub(pattern = '_View_1', replacement = '', x = q2, fixed = TRUE)
 	  q3 <- gsub(pattern = '_View_1', replacement = '', x = q3, fixed = TRUE)
+	  q4 <- gsub(pattern = '_View_1', replacement = '', x = q4, fixed = TRUE)
+	  q5 <- gsub(pattern = '_View_1', replacement = '', x = q5, fixed = TRUE)
+	  q6 <- gsub(pattern = '_View_1', replacement = '', x = q6, fixed = TRUE)
 	}
 
 	# exec query
@@ -160,7 +177,7 @@ ORDER BY pedon_View_1.peiid ;"
 	}
 	
 	# join-in othervegclass string
-	sov <- try(dbQueryNASIS(channel, q3))
+	sov <- try(dbQueryNASIS(channel, q3, close = FALSE))
 	
 	if (!inherits(sov, 'try-error') && nrow(sov) > 0) {
   	ov <- data.table::data.table(sov)[, .formatOtherVegString(.SD, id.name = "siteiid", name.sep = ' & '), 
@@ -169,6 +186,23 @@ ORDER BY pedon_View_1.peiid ;"
   	if (nrow(ov) > 0) {
   	  d2 <- merge(d2, ov, by = "siteiid", all.x = TRUE, sort = FALSE)
   	}
+	}
+	
+	# join-in state, county, mlra string
+	state <- try(dbQueryNASIS(channel, q4, close = FALSE))
+	county <- try(dbQueryNASIS(channel, q5, close = FALSE))
+	mlra <- try(dbQueryNASIS(channel, q6))
+	
+	if (!inherits(state, 'try-error') && nrow(state) > 0) {
+	  d2 <- merge(d2, state, by = "siteiid", all.x = TRUE, sort = FALSE)
+	}
+	
+	if (!inherits(county, 'try-error') && nrow(state) > 0) {
+	  d2 <- merge(d2, county, by = "siteiid", all.x = TRUE, sort = FALSE)
+	}
+	
+	if (!inherits(mlra, 'try-error') && nrow(state) > 0) {
+	  d2 <- merge(d2, mlra, by = "siteiid", all.x = TRUE, sort = FALSE)
 	}
 	
   # https://github.com/ncss-tech/soilDB/issues/41
