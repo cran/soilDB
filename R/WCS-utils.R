@@ -12,6 +12,8 @@
 #' WCS_details(wcs = 'ISSR800')
 WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
   
+  ## TODO: add md5sum + vintage
+  
   # select a WCS
   wcs <- match.arg(wcs)
   
@@ -167,6 +169,9 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
 
 ## moist soil colors
 # these are 16bit (unsigned) integers
+# TODO: consider moving soil color LUT to wcs-files
+# these maps all share the same RAT
+.soilColorRAT <- 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
 .soilColor.spec <- list(
   
   'sc005cm' = list(
@@ -174,7 +179,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 5cm (270m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc010cm' = list(
@@ -182,7 +187,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 10cm (270m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc015cm' = list(
@@ -190,7 +195,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 15cm (270m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc025cm' = list(
@@ -198,7 +203,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 25cm (270m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc050cm' = list(
@@ -206,7 +211,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 50cm (270m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc075cm' = list(
@@ -214,7 +219,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 75cm (270m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc100cm' = list(
@@ -222,7 +227,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 100cm (270m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc125cm' = list(
@@ -230,7 +235,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 125cm (270m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   
@@ -239,7 +244,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 5cm (30m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc010cm_hr' = list(
@@ -247,7 +252,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 10cm (30m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc015cm_hr' = list(
@@ -255,7 +260,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 15cm (30m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc025cm_hr' = list(
@@ -263,7 +268,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 25cm (30m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc050cm_hr' = list(
@@ -271,7 +276,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 50cm (30m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc075cm_hr' = list(
@@ -279,7 +284,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 75cm (30m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc100cm_hr' = list(
@@ -287,7 +292,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 100cm (30m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   ),
   
   'sc125cm_hr' = list(
@@ -295,7 +300,7 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
     type = 'GEOTIFF_16',
     desc = 'Moist soil color, 125cm (30m)',
     na = 0,
-    rat = 'http://casoilresource.lawr.ucdavis.edu/wcs/soilcolor/unique-moist-color-LUT.csv'
+    rat = .soilColorRAT
   )
 )
 
@@ -654,8 +659,20 @@ WCS_details <- function(wcs = c('mukey', 'ISSR800', 'soilColor')) {
 )
 
 
+##
+## TODO:
+##       
+##  * host WCS specifications as JSON on server so that changes don't require a soilDB release
+##  * each suite of products should have their own spec
+##  * remove xx.spec lists from soilDB
+##  * top-level names in specs via JSON are used to determine available products
+##  * are we just re-inventing a crummy version of STAC?
+##
+
 .mukey.spec <- list(
   
+  # FY24 data were exported as INT32 instead of UINT32
+  # NODATA is -2147483648
   'gnatsgo' = list(
     dsn = 'gnatsgo',
     type = 'GEOTIFF_FLOAT',

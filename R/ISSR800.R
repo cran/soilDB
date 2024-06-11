@@ -37,13 +37,19 @@
 ISSR800.wcs <- function(aoi, var, res = 800, quiet = FALSE) {
   
   ## vintage of source data
-  .vintage <- 'FY2023'
+  
+  # TODO: use remote metadata
+  #  --> must add to load-balancer
+  # .vintage <- readLines('http://casoilresource.lawr.ucdavis.edu/wcs-files/...')
+  
+  # hard-coded
+  .vintage <- 'FY2024'
   
   if (!requireNamespace("terra")) {
     stop("package 'terra' is required", call. = FALSE)
   }
   
-  # sanity check: aoi specification
+  # sanity check: AOI specification
   if (!inherits(aoi, c('list', 'Spatial', 'sf', 'sfc', 'bbox', 'RasterLayer', 'SpatRaster', 'SpatVector'))) { 
     stop('invalid `aoi` specification', call. = FALSE)
   }
@@ -60,10 +66,14 @@ ISSR800.wcs <- function(aoi, var, res = 800, quiet = FALSE) {
   # get variable specs
   var.spec <- .ISSR800.spec[[var]]
   
+  # 2024-04-23: updated grid system
+  # 3620, 5769, 1  (nrow, ncol, nlyr)
+  # -2356800, 2258400, 276800, 3172800  (xmin, xmax, ymin, ymax)
+  
   # authoritative CONUS = grid
   .crs <- 'EPSG:5070'
-  .grid <- terra::rast(nrows = 3621, ncols = 5770, crs = .crs, 
-                       extent = terra::ext(-2357200, 2258800, 276400, 3173200))
+  .grid <- terra::rast(nrows = 3620, ncols = 5769, crs = .crs, 
+                       extent = terra::ext(-2356800, 2258400, 276800, 3172800))
   
   # compute BBOX / IMG geometry in native CRS
   wcs.geom <- .prepare_AEA_AOI(aoi, res = res, native_crs = .crs)
@@ -166,38 +176,50 @@ ISSR800.wcs <- function(aoi, var, res = 800, quiet = FALSE) {
   # set layer name in object
   names(r) <- var.spec$desc
   
+  # test for all NA
+  # if TRUE, we cannot process RATs
+  .allNA <- terra::global(r, fun = "isNA")$isNA == terra::ncell(r)
+  
+  # message when all cells are NA
+  if(.allNA) {
+    message('all cells are NA')
+  }
+  
   # optional processing of RAT
-  if (!is.null(var.spec$rat)) {
+  if (!is.null(var.spec$rat) && !.allNA) {
     
     # get rat
     rat <- try(suppressWarnings(read.csv(var.spec$rat, stringsAsFactors = FALSE)), silent = TRUE)
     
+    # trap missing RAT
     if (inherits(rat, 'try-error')) {
       message("\nFailed to download RAT from ", var.spec$rat, "; returning integer grid")
       return(r)
+    } else {
+      # the cell value / ID column is always the 2nd column
+      # name it for reference later
+      names(rat)[2] <- 'ID'
+      
+      # re-order columns by name
+      # there may be > 2 columns (hex colors, etc.)
+      col.names <- c('ID', names(rat)[-2])
+      
+      # make categories + RAT
+      r <- terra::as.factor(r)
+      r.rat <- terra::cats(r)[[1]]
+      
+      # merge basic RAT + ISSR800 RAT
+      rat <- merge(r.rat[, 'ID', drop = FALSE], rat, by = 'ID', all.x = TRUE, sort = FALSE)
+      
+      # register RAT
+      levels(r) <- rat
+      
+      # set color table if there is a column named 'hex'
+      if('hex' %in% names(rat)) {
+        terra::coltab(r) <- rat[, c('ID', 'hex')]
+      }
+      
     }
-    
-    # the cell value / ID column is always the 2nd colum
-    # name it for reference later
-    names(rat)[2] <- 'ID'
-    
-    ## TODO: changes since previous version
-    ##         * the raster-based version set only existing levels
-    ##         * there may be more than ID, code in the RAT: see texture RATS
-    ##         * very large RATs with mostly un-used levels (series name) will be a problem
-    
-    # re-order columns by name
-    # there may be > 2 columns (hex colors, etc.)
-    col.names <- c('ID', names(rat)[-2])
-    
-    # unique cell values
-    u.values <- terra::unique(r)[[1]]
-    
-    # index those categories present in r
-    cat.idx <- which(rat$ID %in% u.values)
-    
-    # register categories in new order
-    levels(r) <- rat[cat.idx, col.names]
   }
   
   # align to authoritative grid

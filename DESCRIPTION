@@ -1,7 +1,7 @@
 Package: soilDB
 Type: Package
 Title: Soil Database Interface
-Version: 2.8.2
+Version: 2.8.3
 Authors@R: c(person(given="Dylan", family="Beaudette", role = c("aut"), email = "dylan.beaudette@usda.gov"),
              person(given="Jay", family="Skovlin", role = c("aut")), 
              person(given="Stephen", family="Roecker", role = c("aut")), 
@@ -20,7 +20,8 @@ Imports: grDevices, graphics, stats, utils, methods, aqp (>= 2.0.2),
 Suggests: jsonlite, xml2, httr, rvest, odbc, RSQLite, sf, wk, terra,
         raster, knitr, rmarkdown, testthat
 Repository: CRAN
-URL: https://ncss-tech.github.io/soilDB/,
+URL: https://github.com/ncss-tech/soilDB/,
+        https://ncss-tech.github.io/soilDB/,
         https://ncss-tech.github.io/AQP/
 BugReports: https://github.com/ncss-tech/soilDB/issues
 RoxygenNote: 7.3.1
@@ -29,5 +30,5 @@ Language: en-US
 LazyData: false
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2024-04-22 23:14:27 UTC; Andrew.G.Brown
-Date/Publication: 2024-04-23 00:10:02 UTC
+Packaged: 2024-06-11 20:27:17 UTC; Andrew.G.Brown
+Date/Publication: 2024-06-11 22:00:06 UTC

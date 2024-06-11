@@ -57,7 +57,12 @@ get_component_from_SDA <- function(WHERE = NULL, duplicates = FALSE, childs = TR
 
   # exec query
   d.component <- SDA_query(q.component)
-
+  
+  # return if bad
+  if (inherits(d.component, 'try-error')) {
+    return(invisible(d.component))
+  }
+  
   # empty result set should short circuit (no error, just message)
   if(length(d.component) == 0)
     return(d.component)
@@ -124,7 +129,15 @@ get_component_from_SDA <- function(WHERE = NULL, duplicates = FALSE, childs = TR
 
     # exec query
     d.pm    <- SDA_query(q.pm)
+    if (inherits(d.pm, 'try-error')) {
+      return(invisible(d.pm))
+    }
+    
     d.cogmd <- SDA_query(q.lf)
+    if (inherits(d.cogmd, 'try-error')) {
+      return(invisible(d.cogmd))
+    }
+    
     d.cosrf <- .get_cosurffrags_from_SDA(unique(d.component$cokey), nullFragsAreZero = nullFragsAreZero)
     d.cm    <- uncode(.get_comonth_from_SDA(d.component$cokey))
 
@@ -246,6 +259,11 @@ get_component_from_SDA <- function(WHERE = NULL, duplicates = FALSE, childs = TR
   ")
   
   df <- SDA_query(q)
+  
+  if (inherits(df, 'try-error')) {
+    return(invisible(df))
+  }
+  
   vars <- c("flodfreqcl", "floddurcl", "pondfreqcl", "ponddurcl")
   df[vars] <- lapply(df[vars], trimws)
   
@@ -409,7 +427,11 @@ get_component_from_SDA <- function(WHERE = NULL, duplicates = FALSE, childs = TR
   ")
 
   d <- SDA_query(q)
-
+  
+  if (inherits(d, 'try-error')) {
+    return(invisible(d))
+  }
+  
   if (is.null(d)) {
     d <- data.frame(
       cokey = cokey[1],
@@ -484,12 +506,16 @@ get_cointerp_from_SDA <- function(WHERE = NULL, mrulename = NULL, duplicates = F
   )
 
   d.cointerp <- SDA_query(q.cointerp)
-
+  
+  if (inherits(d.cointerp, 'try-error')) {
+    return(invisible(d.cointerp))
+  }
+  
   # recode metadata domains
   d.cointerp <- uncode(d.cointerp)
-
+  
   return(d.cointerp)
-  }
+}
 
 #' @export 
 #' @rdname fetchSDA
@@ -550,13 +576,18 @@ get_lmuaoverlap_from_SDA <- function(WHERE = NULL, droplevels = TRUE, stringsAsF
 
   # exec query
   d <- SDA_query(q)
-
-  d$musym = as.character(d$musym)
-
-  # recode metadata domains
-  d <- uncode(d, droplevels = droplevels)
-
-  # done
+  
+  if (inherits(d, 'try-error')) {
+    return(invisible(d))
+  }
+    
+  if (!is.null(d)) {
+    d$musym <- as.character(d$musym)
+  
+    # recode metadata domains
+    d <- uncode(d, droplevels = droplevels)
+  }
+  
   return(d)
 }
 
@@ -600,14 +631,16 @@ get_mapunit_from_SDA <- function(WHERE = NULL,
 
   # exec query
   d.mapunit <- SDA_query(q.mapunit)
-
-  if (!inherits(d.mapunit, 'try-error')) {
+  
+  if (inherits(d.mapunit, 'try-error')) {
+    return(invisible(d.mapunit))
+  }
+  
+  if (!is.null(d.mapunit)) {
     d.mapunit$musym = as.character(d.mapunit$musym)
   
     # recode metadata domains
     d.mapunit <- uncode(d.mapunit, droplevels = droplevels)
-  } else {
-    d.mapunit <- NULL
   }
   
   # done
@@ -622,46 +655,55 @@ get_chorizon_from_SDA <- function(WHERE = NULL, duplicates = FALSE,
                                   childs = TRUE,
                                   nullFragsAreZero = TRUE,
                                   droplevels = TRUE,
-                                  stringsAsFactors = NULL
-                                  ) {
+                                  stringsAsFactors = NULL) {
   if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
     .Deprecated(msg = sprintf("stringsAsFactors argument is deprecated.\nSetting package option with `NASISDomainsAsFactor(%s)`", stringsAsFactors))
     NASISDomainsAsFactor(stringsAsFactors)
   }
 
   q.chorizon <- paste("
-  SELECT", if (duplicates == FALSE) {"DISTINCT"}
-  , "hzname, hzdept_r, hzdepb_r, texture, texcl, lieutex,
-     fragvol_l, fragvol_r, fragvol_h, 
-     sandtotal_l, sandtotal_r, sandtotal_h, 
-     silttotal_l, silttotal_r, silttotal_h, 
-     claytotal_l, claytotal_r, claytotal_h,
-     om_l, om_r, om_h, 
-     dbthirdbar_l, dbthirdbar_r, dbthirdbar_h,
-     ksat_l, ksat_r, ksat_h,  
-     awc_l, awc_r, awc_h, 
-     lep_r, sar_r, ec_r, cec7_r, sumbases_r, 
-     ph1to1h2o_l, ph1to1h2o_r, ph1to1h2o_h,
-     caco3_l, caco3_r, caco3_h, 
-     kwfact, kffact, c.cokey, ch.chkey
-  FROM legend l INNER JOIN
-       mapunit mu ON mu.lkey = l.lkey",
-  if (duplicates == FALSE) { paste(" INNER JOIN
-  (SELECT MIN(nationalmusym) nationalmusym2, MIN(mukey) AS mukey2
-   FROM mapunit
-   GROUP BY nationalmusym) AS mu2 ON mu2.mukey2 = mu.mukey
-  ")
-  } else { paste(" INNER JOIN
-   (SELECT nationalmusym, mukey
-    FROM mapunit) AS mu2 ON mu2.mukey = mu.mukey
-   ")
+    SELECT ", ifelse(!duplicates, "DISTINCT", ""),
+     " hzname, hzdept_r, hzdepb_r, texture, texcl, lieutex,
+       fragvol_l, fragvol_r, fragvol_h, 
+       sandtotal_l, sandtotal_r, sandtotal_h, 
+       silttotal_l, silttotal_r, silttotal_h, 
+       claytotal_l, claytotal_r, claytotal_h,
+       om_l, om_r, om_h, 
+       dbthirdbar_l, dbthirdbar_r, dbthirdbar_h,
+       ksat_l, ksat_r, ksat_h,  
+       awc_l, awc_r, awc_h, 
+       lep_r, sar_r, ec_r, cec7_r, sumbases_r, 
+       ph1to1h2o_l, ph1to1h2o_r, ph1to1h2o_h,
+       caco3_l, caco3_r, caco3_h, 
+       kwfact, kffact, c.cokey, ch.chkey
+    FROM legend l INNER JOIN
+    mapunit mu ON mu.lkey = l.lkey",
+    
+  if (duplicates == FALSE) {
+    paste(
+      "INNER JOIN
+       (SELECT MIN(nationalmusym) nationalmusym2, MIN(mukey) AS mukey2
+        FROM mapunit
+        GROUP BY nationalmusym) AS mu2 ON mu2.mukey2 = mu.mukey
+      "
+    )
+  } else {
+    paste(
+      "INNER JOIN
+       (SELECT nationalmusym, mukey
+        FROM mapunit) AS mu2 ON mu2.mukey = mu.mukey
+      "
+    )
   },
-  "INNER JOIN
-   component    c    ON c.mukey      = mu.mukey   LEFT JOIN
-   chorizon     ch   ON ch.cokey     = c.cokey    LEFT OUTER JOIN
-   chtexturegrp chtg ON chtg.chkey   = ch.chkey AND rvindicator = 'Yes' RIGHT JOIN
-   chtexture    cht  ON cht.chtgkey  = chtg.chtgkey
-
+  "INNER JOIN component c ON c.mukey = mu.mukey   
+   LEFT JOIN chorizon ch ON ch.cokey = c.cokey    
+   LEFT JOIN (SELECT ch2.chkey, texture,
+                     STRING_AGG(texcl, ',') texcl, 
+                     STRING_AGG(lieutex, ',') lieutex
+                    FROM chorizon ch2
+                    LEFT JOIN chtexturegrp chtg ON chtg.chkey = ch2.chkey AND rvindicator = 'Yes' 
+                    LEFT JOIN chtexture cht ON cht.chtgkey = chtg.chtgkey
+                    GROUP BY ch2.chkey, chtg.texture) texagg ON texagg.chkey = ch.chkey
    LEFT OUTER JOIN
        (SELECT SUM(fragvol_l) fragvol_l, SUM(fragvol_r) fragvol_r, SUM(fragvol_h) fragvol_h, ch2.chkey
         FROM chorizon ch2
@@ -672,15 +714,16 @@ get_chorizon_from_SDA <- function(WHERE = NULL, duplicates = FALSE,
   WHERE", WHERE,
 
   "ORDER BY c.cokey, hzdept_r ASC;")
-
+  
   # exec query
   d.chorizon <- SDA_query(q.chorizon)
 
-  ## TODO: might be nice to abstract this into a new function
-  # hacks to make R CMD check --as-cran happy:
-  metadata <- NULL
-  # load local copy of metadata
-  load(system.file("data/metadata.rda", package = "soilDB")[1])
+  # get metadata
+  metadata <- get_NASIS_metadata()
+  
+  if (inherits(d.chorizon, 'try-error')) {
+    return(invisible(d.chorizon))
+  }
 
   # transform variables and metadata
   if (!is.null(d.chorizon) && nrow(d.chorizon) > 0){
@@ -806,14 +849,18 @@ get_chorizon_from_SDA <- function(WHERE = NULL, duplicates = FALSE,
                             ")
   
       d.chfrags  <- SDA_query(q.chfrags)
-  
+      
+      if (inherits(d.chfrags, 'try-error')) {
+        return(invisible(d.chfrags))
+      }
+      
       # r.rf.data.v2 nullFragsAreZero = TRUE
       idx <- !names(d.chfrags) %in% "chkey"
       if (nullFragsAreZero == TRUE) {
         d.chfrags[idx] <- lapply(d.chfrags[idx], function(x) ifelse(is.na(x), 0, x))
       }
   
-      d.chorizon <- merge(d.chorizon, d.chfrags, all.x = TRUE, by = "chkey")
+      d.chorizon <- merge(d.chorizon, d.chfrags, all.x = TRUE, by = "chkey", sort = FALSE)
   
     }
   # } else {
@@ -848,17 +895,15 @@ get_chorizon_from_SDA <- function(WHERE = NULL, duplicates = FALSE,
 .get_diagnostics_from_SDA <- function(target_cokeys) {
   # query SDA to get corresponding codiagfeatures
   q <- paste0('SELECT * FROM codiagfeatures WHERE cokey IN ', format_SQL_in_statement(target_cokeys), ";")
-  return(SDA_query(q))
+  SDA_query(q)
 }
 
 
 .get_restrictions_from_SDA <- function(target_cokeys) {
   # query SDA to get corresponding corestrictions
   q <- paste0('SELECT * FROM corestrictions WHERE cokey IN ', format_SQL_in_statement(target_cokeys), ";")
-  return(SDA_query(q))
+  SDA_query(q)
 }
-
-
 
 
 #' @title Get SSURGO/STATSGO2 Mapunit Data from Soil Data Access
@@ -930,6 +975,10 @@ fetchSDA <- function(WHERE = NULL, duplicates = FALSE, childs = TRUE,
                                         droplevels = droplevels,
                                         nullFragsAreZero = TRUE
                                         )
+  if (inherits(f.component, 'try-error')) {
+    return(invisible(f.component))
+  }
+  
   if (is.null(f.component)) {
     stop("WHERE clause returned no components.", call. = FALSE)
   }
@@ -963,7 +1012,10 @@ fetchSDA <- function(WHERE = NULL, duplicates = FALSE, childs = TRUE,
       assign('component.hz.problems', value=bad.ids, envir=get_soilDB_env())
   }
 
-
+  if (inherits(f.chorizon, 'try-error')) {
+    return(invisible(f.chorizon))
+  }
+  
   # upgrade to SoilProfilecollection
   depths(f.chorizon) <- cokey ~ hzdept_r + hzdepb_r
 
