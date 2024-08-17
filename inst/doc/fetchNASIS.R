@@ -161,106 +161,106 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   echo = FALSE,
-  eval = (nchar(soilDBdata_pedon_dsn) > 0)
+  eval = (nchar(soilDBdata_pedon_dsn) > 0) && file.exists(soilDBdata_pedon_dsn)
 )
 
 ## ----setup, include = FALSE---------------------------------------------------
-#  library(soilDB)
-#  
-#  # get fetchNASIS result and categorize columns by table source
-#  f <- fetchNASIS(dsn = soilDBdata_pedon_dsn)
-#  x <- get_NASIS_table_metadata(dsn = soilDBdata_pedon_dsn)
-#  y <- get_NASIS_table_name_by_purpose(c("area", "site", "pedon", "transect",
-#                                         "metadata", "lookup", "nasis"))
+library(soilDB)
+
+# get fetchNASIS result and categorize columns by table source
+f <- fetchNASIS(dsn = soilDBdata_pedon_dsn)
+x <- get_NASIS_table_metadata(dsn = soilDBdata_pedon_dsn)
+y <- get_NASIS_table_name_by_purpose(c("area", "site", "pedon", "transect",
+                                       "metadata", "lookup", "nasis"))
 
 ## ----message = FALSE, results = 'asis'----------------------------------------
-#  mldx <- names(f) %in% x$ColumnPhysicalName
-#  nasis_names <- names(f)[mldx]
-#  soildb_names <- names(f)[!mldx]
-#  
-#  # fetchNASIS does not hit these tables; ignore them (some column names overlap)
-#  nasis_tables <- y[!y %in% c("transectestcomposition",
-#                              "ncsspedonlabdata",
-#                              "ncsslayerlabdata")]
-#  
-#  # these are 1:1 aliases of a NASIS column (from="pedons")
-#  aliases <- c(genhz = "phorizon.dspcomplayerid",
-#               clay = "phorizon.claytotest",
-#               silt = "phorizon.silttotest",
-#               sand = "phorizon.sandtotest",
-#               texture_class = "phorizon.texcl",
-#               y_std = "site.latstddecimaldegrees",
-#               x_std = "site.longstddecimaldegrees",
-#               pedon_id = "pedon.upedonid",
-#               describer = "pedon.descname",
-#               site_id = "site.usiteid",
-#               elev_field = "site.elev",
-#               slope_field = "site.slope",
-#               aspect_field = "site.aspect",
-#               obs_date = "siteobs.obsdate",
-#               es_classifier = "siteecositehistory.classifier")
-#  alias_tnames <- gsub("(.*)\\..*|([^.]*)", "\\1\\2", aliases)
-#  alias_pnames <- gsub(".*\\.(.*)|([^.]*)", "\\1\\2", aliases)
-#  
-#  res <- subset(x,
-#                TablePhysicalName %in% nasis_tables &
-#                ColumnPhysicalName %in% c(nasis_names, alias_pnames),
-#                      select = c("TablePhysicalName",
-#                                 "TableDescription",
-#                                 "ColumnPhysicalName",
-#                                 "ColumnDescription"))
-#  res$fetchNASIS_Column <- res$ColumnPhysicalName
-#  ressub <- data.frame(TablePhysicalName = alias_tnames,
-#                       ColumnPhysicalName = alias_pnames,
-#                       fetchNASIS_Column = names(aliases))
-#  newalias <- merge(data.table::data.table(res[,1:3]), ressub, all.x = TRUE, sort = FALSE)$fetchNASIS_Column
-#  res$fetchNASIS_Column[!is.na(newalias)] <- na.omit(newalias)
-#  
-#  res$ColumnDescription <- gsub("\r\n\r\n", " ", res$ColumnDescription)
-#  rownames(res) <- NULL
-#  res2 <- split(res, res$TablePhysicalName)
-#  # cat("# Duplicates")
-#  # knitr::kable(res[duplicated(res$ColumnPhysicalName),])
-#  
-#  makeTable <- function(d) {
-#    cat(paste0("# ", "`", d$TablePhysicalName[1], "`"), "\n")
-#    cat("\n")
-#    cat(d$TableDescription[1], "\n")
-#    cat("\n")
-#    d$Alias <- ifelse(d$ColumnPhysicalName == d$fetchNASIS_Column, "No", "Yes")
-#    colnames(d)[4] <- "Column Description"
-#    colnames(d)[5] <- "`fetchNASIS()` Column"
-#    d$`Physical Name` <- paste0(d$TablePhysicalName, ".", d$ColumnPhysicalName)
-#    cat(knitr::kable(d[c(5:7, 4)], row.names = FALSE), sep = "\n")
-#    cat("\n")
-#    cat("\n")
-#  }
-#  x <- lapply(res2, makeTable)
-#  
-#  # Missing / undefined calculated values
-#  cat("# Calculated", "\n", "\n")
-#  ldx <- !names(f) %in% res$fetchNASIS_Column
-#  res3 <- res[0,][seq_len(sum(ldx)),]
-#  res3$fetchNASIS_Column <- names(f)[ldx]
-#  res3$ColumnPhysicalName <- NULL
-#  res3$ColumnDescription <- "TODO"
-#  calcdef$RelatedFunction <- sapply(strsplit(calcdef$RelatedFunction, ","), function(z) { paste0(paste0("`", trimws(z), "`"), collapse = ", ") })
-#  res4 <- merge(res3[, 4, drop = FALSE], calcdef, by = "fetchNASIS_Column")
-#  knitr::kable(res4[complete.cases(res4), ], row.names = FALSE)
-#  cat(" \n")
-#  
-#  # dbQueryNASIS(NASIS(), "SELECT siteecositehistory.classifier AS [siteecositehistory.classifier] FROM siteecositehistory") |>
-#  #   head() |>
-#  #   View()
-#  
-#  # custom calculated
-#  # - color (dry/moist, RGB/HVC+sigma, dry_soil_color, moist_soil_color, soil_color)
-#  # - horizon fragments (fine_gravel, gravel, cobbles, stones, boulders, channers, flagstones + para, total with and w/o para)
-#  # - horizon artifacts (fine_gravel, gravel, cobbles, stones, boulders, channers, flagstones + para, total cohesive/penetrable/innocuous)
-#  # - surface fragments (fine_gravel, gravel, cobbles, stones, boulders, channers, flagstones + para, total with and w/o para)
-#  # - presence/absence of diagnostic features (TRUE/FALSE feature name with " " replaced with ".")
-#  # - landform, landscape, microfeature and geomicrorelief strings (concatenated landform names)
-#  
-#  # these should not be used any more
-#  # x/y (calculated long/lat), texture_class (replaced by texcl), surface_fgravel (replaced by surface_fine_gravel)
+mldx <- names(f) %in% x$ColumnPhysicalName
+nasis_names <- names(f)[mldx]
+soildb_names <- names(f)[!mldx]
+
+# fetchNASIS does not hit these tables; ignore them (some column names overlap)
+nasis_tables <- y[!y %in% c("transectestcomposition", 
+                            "ncsspedonlabdata", 
+                            "ncsslayerlabdata")]
+
+# these are 1:1 aliases of a NASIS column (from="pedons")
+aliases <- c(genhz = "phorizon.dspcomplayerid", 
+             clay = "phorizon.claytotest", 
+             silt = "phorizon.silttotest",
+             sand = "phorizon.sandtotest",
+             texture_class = "phorizon.texcl",
+             y_std = "site.latstddecimaldegrees",
+             x_std = "site.longstddecimaldegrees",
+             pedon_id = "pedon.upedonid",
+             describer = "pedon.descname",
+             site_id = "site.usiteid",
+             elev_field = "site.elev",
+             slope_field = "site.slope",
+             aspect_field = "site.aspect",
+             obs_date = "siteobs.obsdate",
+             es_classifier = "siteecositehistory.classifier") 
+alias_tnames <- gsub("(.*)\\..*|([^.]*)", "\\1\\2", aliases)
+alias_pnames <- gsub(".*\\.(.*)|([^.]*)", "\\1\\2", aliases)
+
+res <- subset(x, 
+              TablePhysicalName %in% nasis_tables &
+              ColumnPhysicalName %in% c(nasis_names, alias_pnames), 
+                    select = c("TablePhysicalName", 
+                               "TableDescription",
+                               "ColumnPhysicalName", 
+                               "ColumnDescription"))
+res$fetchNASIS_Column <- res$ColumnPhysicalName
+ressub <- data.frame(TablePhysicalName = alias_tnames,
+                     ColumnPhysicalName = alias_pnames,
+                     fetchNASIS_Column = names(aliases))
+newalias <- merge(data.table::data.table(res[,1:3]), ressub, all.x = TRUE, sort = FALSE)$fetchNASIS_Column
+res$fetchNASIS_Column[!is.na(newalias)] <- na.omit(newalias)
+  
+res$ColumnDescription <- gsub("\r\n\r\n", " ", res$ColumnDescription)
+rownames(res) <- NULL
+res2 <- split(res, res$TablePhysicalName)
+# cat("# Duplicates")
+# knitr::kable(res[duplicated(res$ColumnPhysicalName),])
+
+makeTable <- function(d) {
+  cat(paste0("# ", "`", d$TablePhysicalName[1], "`"), "\n")
+  cat("\n")
+  cat(d$TableDescription[1], "\n")
+  cat("\n")
+  d$Alias <- ifelse(d$ColumnPhysicalName == d$fetchNASIS_Column, "No", "Yes")
+  colnames(d)[4] <- "Column Description"
+  colnames(d)[5] <- "`fetchNASIS()` Column"
+  d$`Physical Name` <- paste0(d$TablePhysicalName, ".", d$ColumnPhysicalName)
+  cat(knitr::kable(d[c(5:7, 4)], row.names = FALSE), sep = "\n")
+  cat("\n")
+  cat("\n")
+}
+x <- lapply(res2, makeTable)
+
+# Missing / undefined calculated values
+cat("# Calculated", "\n", "\n")
+ldx <- !names(f) %in% res$fetchNASIS_Column
+res3 <- res[0,][seq_len(sum(ldx)),]
+res3$fetchNASIS_Column <- names(f)[ldx]
+res3$ColumnPhysicalName <- NULL
+res3$ColumnDescription <- "TODO"
+calcdef$RelatedFunction <- sapply(strsplit(calcdef$RelatedFunction, ","), function(z) { paste0(paste0("`", trimws(z), "`"), collapse = ", ") })
+res4 <- merge(res3[, 4, drop = FALSE], calcdef, by = "fetchNASIS_Column")
+knitr::kable(res4[complete.cases(res4), ], row.names = FALSE)
+cat(" \n")
+
+# dbQueryNASIS(NASIS(), "SELECT siteecositehistory.classifier AS [siteecositehistory.classifier] FROM siteecositehistory") |> 
+#   head() |> 
+#   View()
+
+# custom calculated
+# - color (dry/moist, RGB/HVC+sigma, dry_soil_color, moist_soil_color, soil_color)
+# - horizon fragments (fine_gravel, gravel, cobbles, stones, boulders, channers, flagstones + para, total with and w/o para)
+# - horizon artifacts (fine_gravel, gravel, cobbles, stones, boulders, channers, flagstones + para, total cohesive/penetrable/innocuous)
+# - surface fragments (fine_gravel, gravel, cobbles, stones, boulders, channers, flagstones + para, total with and w/o para)
+# - presence/absence of diagnostic features (TRUE/FALSE feature name with " " replaced with ".")
+# - landform, landscape, microfeature and geomicrorelief strings (concatenated landform names)
+
+# these should not be used any more
+# x/y (calculated long/lat), texture_class (replaced by texcl), surface_fgravel (replaced by surface_fine_gravel)
 

@@ -1,3 +1,11 @@
+# soilDB 2.8.4 (development)
+ - `createSSURGO()` bug fixes following changes in 2.8.3
+   - generating `gpkg_contents` for GeoPackage files failed to add entries for "features" data_type
+   - `filename` argument not properly handled in some cases
+ - `SDA_query()` handle another possible failure point in error handling code
+ - `createStaticNASIS()` use `odbc::dbListFields()` instead of `odbc::odbcConnectionColumns()`
+ - fetchNASIS Vignette
+ 
 # soilDB 2.8.3 (2024-06-11)
  - Updates to SoilWeb web coverage services
    - ISSR800 authoritative grid system altered slightly
@@ -8,6 +16,9 @@
    - Handle try-error result more gracefully in high-level functions (#352)
  - `createSSURGO()`: added support for creating DuckDB, PostgreSQL, and other DBI-compatible databases (#352) via `conn` argument
  - `fetchSDA()` and `get_chorizon_from_SDA()` concatenate multiple `texcl` using a comma when a texture group contains multiple texture classes (e.g. stratified textures) (fixes #353)
+ - `fetchNASIS()`/`.formatLandformString()`: append `geomfmod` column to landscape, landform, and microfeature strings where present; thanks to Gabriel Benitez for suggestion
+ - `fetchNASIS()`/`get_extended_data_from_NASIS_db()`: fix conversion of codes to labels for microrelief
+ - `fetchSCAN()`: fix header format; thanks to @dschlaep for reporting and providing a fix
 
 # soilDB 2.8.2 (2024-04-22)
 
