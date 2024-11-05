@@ -96,117 +96,6 @@ FROM perestrictions_View_1 As prf
     q.restriction <- gsub(pattern = '_View_1', replacement = '', x = q.restriction, fixed = TRUE)
   }
 
-  # TODO: convert this to simplifyFragmentData
-  q.surf.rf.summary <- "SELECT pedon_View_1.peiid,
-f1_fgr.gravel as surface_fgravel,
-f1_gr.gravel as surface_gravel,
-f2_cb.cobbles as surface_cobbles,
-f3.stones as surface_stones,
-f4.boulders as surface_boulders,
-f5.channers as surface_channers,
-f6.flagstones as surface_flagstones,
-f1_pgr.gravel as surface_paragravel,
-f2_pcb.cobbles as surface_paracobbles
-
-FROM
-
-pedon_View_1
-
-INNER JOIN siteobs_View_1
-ON siteobsiid = pedon_View_1.siteobsiidref
-
-LEFT OUTER JOIN
-(
-SELECT DISTINCT siteobsiidref FROM sitesurffrags_View_1
-) as p ON p.siteobsiidref = siteobs_View_1.siteobsiid
-
-LEFT OUTER JOIN (
-  	SELECT siteobsiidref, Sum(sfragcov) AS gravel
-		FROM sitesurffrags_View_1
-		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON sfraghard = m.ChoiceValue
-		WHERE (sfragsize_r <= 5 OR sfragsize_h <= 5) AND (sfragshp != 1 OR sfragshp IS NULL)
-		AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
-		GROUP BY siteobsiidref
-	) as f1_fgr ON p.siteobsiidref = f1_fgr.siteobsiidref
-
-LEFT OUTER JOIN (
-		SELECT siteobsiidref, Sum(sfragcov) AS gravel
-		FROM sitesurffrags_View_1
-		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON sfraghard = m.ChoiceValue
-		WHERE (sfragsize_r <= 76 OR sfragsize_h <= 76) AND (sfragshp != 1 OR sfragshp IS NULL)
-		AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
-		GROUP BY siteobsiidref
-	) as f1_gr ON p.siteobsiidref = f1_gr.siteobsiidref
-
-LEFT OUTER JOIN (
-		SELECT siteobsiidref, Sum(sfragcov) AS gravel
-		FROM sitesurffrags_View_1
-		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON sfraghard = m.ChoiceValue
-		WHERE (sfragsize_r <= 76 OR sfragsize_h <= 76) AND (sfragshp != 1 OR sfragshp IS NULL)
-		AND m.ChoiceName NOT IN ('strongly', 'very strongly', 'indurated')
-		GROUP BY siteobsiidref
-	) as f1_pgr ON p.siteobsiidref = f1_pgr.siteobsiidref
-
-	LEFT OUTER JOIN (
-		SELECT siteobsiidref, Sum(sfragcov) AS cobbles
-		FROM sitesurffrags_View_1
-		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON sfraghard = m.ChoiceValue
-		WHERE (sfragsize_r >= 76 OR sfragsize_l >= 76) AND (sfragsize_r <= 250 OR sfragsize_h <= 250) AND (sfragshp != 1 OR sfragshp IS NULL)
-		AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
-		GROUP BY siteobsiidref
-	) as f2_cb ON p.siteobsiidref = f2_cb.siteobsiidref
-
-	LEFT OUTER JOIN (
-		SELECT siteobsiidref, Sum(sfragcov) AS cobbles
-		FROM sitesurffrags_View_1
-		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON sfraghard = m.ChoiceValue
-		WHERE (sfragsize_r >= 76 OR sfragsize_l >= 76) AND (sfragsize_r <= 250 OR sfragsize_h <= 250) AND (sfragshp != 1 OR sfragshp IS NULL)
-		AND m.ChoiceName NOT IN ('strongly', 'very strongly', 'indurated')
-		GROUP BY siteobsiidref
-	) as f2_pcb ON p.siteobsiidref = f2_pcb.siteobsiidref
-
-	LEFT OUTER JOIN (
-		SELECT siteobsiidref, Sum(sfragcov) AS stones
-		FROM sitesurffrags_View_1
-		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON sfraghard = m.ChoiceValue
-		WHERE (sfragsize_r >= 250 OR sfragsize_l >= 250) AND (sfragsize_r <= 600 OR sfragsize_h <= 600) AND (sfragshp != 1 OR sfragshp IS NULL)
-		GROUP BY siteobsiidref
-	) as f3 ON p.siteobsiidref = f3.siteobsiidref
-
-	LEFT OUTER JOIN (
-		SELECT siteobsiidref, Sum(sfragcov) AS boulders
-		FROM sitesurffrags_View_1
-		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON sfraghard = m.ChoiceValue
-		WHERE sfragsize_r >= 600 OR sfragsize_l >= 600
-		GROUP BY siteobsiidref
-	) as f4 ON p.siteobsiidref = f4.siteobsiidref
-
-	LEFT OUTER JOIN (
-		SELECT siteobsiidref, Sum(sfragcov) AS channers
-		FROM sitesurffrags_View_1
-		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON sfraghard = m.ChoiceValue
-		WHERE (sfragsize_r <= 76 OR sfragsize_h <= 76) AND sfragshp = 1
-		AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
-		GROUP BY siteobsiidref
-	) as f5 ON p.siteobsiidref = f5.siteobsiidref
-
-	LEFT OUTER JOIN (
-		SELECT siteobsiidref, Sum(sfragcov) AS flagstones
-		FROM sitesurffrags_View_1
-		LEFT OUTER JOIN (SELECT * FROM MetadataDomainDetail WHERE DomainID = 173) AS m ON sfraghard = m.ChoiceValue
-		WHERE (sfragsize_r >= 150 OR sfragsize_l >= 150) AND (sfragsize_r <= 380 OR sfragsize_h <= 380) AND sfragshp = 1
-		AND (m.ChoiceName IN ('strongly', 'very strongly', 'indurated') OR m.ChoiceName IS NULL)
-		GROUP BY siteobsiidref
-	) as f6 ON p.siteobsiidref = f6.siteobsiidref
-
-	ORDER BY pedon_View_1.peiid;"
-
-
-  # toggle selected set vs. local DB
-  if (SS == FALSE) {
-    q.surf.rf.summary <- gsub(pattern = '_View_1', replacement = '', x = q.surf.rf.summary, fixed = TRUE)
-  }
-
   # base table is phorizon so that NULL data can be converted to 0s later
   q.rf.data <- "SELECT p.phiid, fragvol, fragsize_l, fragsize_r, fragsize_h, fragshp, fraghard
   FROM
@@ -229,112 +118,6 @@ LEFT OUTER JOIN (
   if (SS == FALSE) {
     q.art.data <- gsub(pattern = '_View_1', replacement = '', x = q.art.data, fixed = TRUE)
   }
-
-  # new phfrags summary SQL
-  q.rf.data.v2 <- "
-  SET NOCOUNT ON
-
-  -- find fragsize_r
-  CREATE TABLE #RF1 (peiid INT, phiid INT, phfragsiid INT, fragvol REAL,
-  shape CHAR(7), para INT, nonpara INT, fragsize_r2 INT);
-
-  INSERT INTO  #RF1 (peiid, phiid, phfragsiid, fragvol, shape, para, nonpara, fragsize_r2)
-  SELECT             peiid, phiid, phfragsiid, fragvol,
-  -- shape
-  CASE WHEN fragshp = 2 OR fragshp IS NULL THEN 'nonflat' ELSE 'flat' END shape,
-  -- hardness
-  CASE WHEN fraghard IN (6, 7, 9, 5, 10, 3, 14)                     THEN 1 ELSE NULL END para,
-  CASE WHEN fraghard IN (11, 4, 8, 12, 2, 13)   OR fraghard IS NULL THEN 1 ELSE NULL END nonpara,
-  -- fragsize_r
-  CASE WHEN fragsize_r IS NOT NULL THEN fragsize_r
-       WHEN fragsize_r IS NULL     AND fragsize_h IS NOT NULL AND fragsize_l IS NOT NULL
-       THEN (fragsize_h + fragsize_l) / 2
-       WHEN fragsize_h IS NOT NULL THEN fragsize_h
-       WHEN fragsize_l IS NOT NULL THEN fragsize_l
-       ELSE NULL END
-  fragsize_r2
-
-  FROM
-  pedon_View_1    pe                           LEFT OUTER JOIN
-  phorizon_View_1 ph ON ph.peiidref = pe.peiid LEFT OUTER JOIN
-  phfrags_View_1  pf ON pf.phiidref = ph.phiid
-
-  ORDER BY pe.peiid, ph.phiid, pf.phfragsiid;
-
-
-  -- compute logicals
-  CREATE TABLE #RF2 (
-  peiid INT, phiid INT, phfragsiid INT, fragvol REAL, para INT, nonpara INT,
-  fine_gravel INT, gravel INT, cobbles INT, stones INT, boulders INT, channers INT, flagstones INT,
-  unspecified INT
-  );
-  INSERT INTO  #RF2 (
-  peiid, phiid, phfragsiid, fragvol, para, nonpara,
-  fine_gravel, gravel, cobbles, stones, boulders, channers, flagstones,
-  unspecified
-  )
-  SELECT
-  peiid, phiid, phfragsiid, fragvol, para, nonpara,
-  -- fragments
-  CASE WHEN   fragsize_r2 >= 2  AND fragsize_r2 <= 5   AND shape = 'nonflat' THEN 1 ELSE NULL END fine_gravel,
-  CASE WHEN   fragsize_r2 >= 2  AND fragsize_r2 <= 76  AND shape = 'nonflat' THEN 1 ELSE NULL END gravel,
-  CASE WHEN   fragsize_r2 > 76  AND fragsize_r2 <= 250 AND shape = 'nonflat' THEN 1 ELSE NULL END cobbles,
-  CASE WHEN ((fragsize_r2 > 250 AND fragsize_r2 <= 600 AND shape = 'nonflat') OR
-  (fragsize_r2 >= 380 AND fragsize_r2 < 600 AND shape = 'flat'))
-  THEN 1 ELSE NULL END stones,
-  CASE WHEN   fragsize_r2 > 600 THEN 1 ELSE NULL END boulders,
-  CASE WHEN   fragsize_r2 >= 2  AND fragsize_r2 <= 150 AND shape = 'flat' THEN 1 ELSE NULL END channers,
-  CASE WHEN   fragsize_r2 > 150 AND fragsize_r2 <= 380 AND shape = 'flat' THEN 1 ELSE NULL END flagstones,
-  CASE WHEN   fragsize_r2 IS NULL                                         THEN 1 ELSE NULL END unspecified
-
-  FROM
-  #RF1
-
-  ORDER BY peiid, phiid, phfragsiid;
-
-
-  -- summarize rock fragments
-  SELECT
-  phiid,
-  -- nonpara rock fragments
-  SUM(fragvol * fine_gravel * nonpara)  fine_gravel,
-  SUM(fragvol * gravel      * nonpara)  gravel,
-  SUM(fragvol * cobbles     * nonpara)  cobbles,
-  SUM(fragvol * stones      * nonpara)  stones,
-  SUM(fragvol * boulders    * nonpara)  boulders,
-  SUM(fragvol * channers    * nonpara)  channers,
-  SUM(fragvol * flagstones  * nonpara)  flagstones,
-  -- para rock fragments
-  SUM(fragvol * fine_gravel * para)     parafine_gravel,
-  SUM(fragvol * gravel      * para)     paragravel,
-  SUM(fragvol * cobbles     * para)     paracobbles,
-  SUM(fragvol * stones      * para)     parastones,
-  SUM(fragvol * boulders    * para)     paraboulders,
-  SUM(fragvol * channers    * para)     parachanners,
-  SUM(fragvol * flagstones  * para)     paraflagstones,
-  -- unspecified
-  SUM(fragvol * unspecified)            unspecified,
-  -- total_frags_pct_para
-  SUM(fragvol               * nonpara)  total_frags_pct_nopf,
-  -- total_frags_pct
-  SUM(fragvol)                          total_frags_pct
-
-  FROM #RF2
-
-  GROUP BY peiid, phiid
-
-  ORDER BY phiid;
-
-
-  -- cleanup
-  DROP TABLE #RF1;
-  DROP TABLE #RF2;
-  "
-  # toggle selected set vs. local DB
-  if (SS == FALSE) {
-    q.rf.data.v2 <- gsub(pattern = '_View_1', replacement = '', x = q.rf.data.v2, fixed = TRUE)
-  }
-
 
   # get horizon texture modifiers
   q.hz.texmod <- "SELECT phz.peiidref AS peiid, phz.phiid AS phiid, pht.phtiid AS phtiid, phtm.seqnum, texmod
@@ -437,11 +220,13 @@ LEFT OUTER JOIN (
   d.restriction <- dbQueryNASIS(channel, q.restriction, close = FALSE)
 
   d.rf.data <- dbQueryNASIS(channel, q.rf.data, close = FALSE)
-  # d.rf.data.v2 <- dbQueryNASIS(channel, q.rf.data.v2, close = FALSE)
   d.art.data <- dbQueryNASIS(channel, q.art.data, close = FALSE)
   
   # 2021-11-05: leaving this in the extended data result for now, but no longer used in fetchNASIS('pedons')
-  d.surf.rf.summary <- dbQueryNASIS(channel, q.surf.rf.summary, close = FALSE)
+  # 2024-09-24: surface fragments have been handled by simplifyFragmentData for some time; 
+  #             removing query because it relies on domain information internally 
+  #             decoding domains should all be handled through uncode()/standard NASIS metadata options
+  # d.surf.rf.summary <- dbQueryNASIS(channel, q.surf.rf.summary, close = FALSE)
 
   d.hz.texmod <- dbQueryNASIS(channel, q.hz.texmod, close = FALSE)
   d.geomorph <- dbQueryNASIS(channel, q.geomorph, close = FALSE)
@@ -572,7 +357,7 @@ LEFT OUTER JOIN (
 							frag_summary = d.rf.summary,
 							# frag_summary_v2 = d.rf.data.v2,
 							art_summary = d.art.summary,
-							surf_frag_summary = d.surf.rf.summary,
+							# surf_frag_summary = d.surf.rf.summary,
 							texmodifier = d.hz.texmod,
 							geomorph = d.geomorph,
 							taxhistory = d.taxhistory,

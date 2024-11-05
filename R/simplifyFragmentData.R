@@ -176,7 +176,7 @@ simplifyFragmentData <- function(rf, id.var, vol.var = "fragvol", prefix = "frag
     return(dat)
   } else if (any(is.na(rf[[vol.var]]))) {
     rf <- rf[which(!is.na(rf[[vol.var]])), ]
-    message(sprintf('NOTE: some records are missing %s', msg))
+    # message(sprintf('NOTE: some records are missing %s', msg))
   }
 
   # extract classes
@@ -229,8 +229,11 @@ simplifyFragmentData <- function(rf, id.var, vol.var = "fragvol", prefix = "frag
     class.idx <- which(gt.100.matches)
     idx <- unique(unlist(lapply(gt.100[class.idx], which)))
     flagged.ids <- rf.wide[[id.var]][idx]
-
-    message(sprintf("NOTE: %s >= 100%% in %s: %s", msg, id.var, paste(flagged.ids, collapse = ",")))
+    
+    gt100nm <- paste0(gsub(" ", ".", msg), ".gt100.", id.var)
+    assign(gt100nm, value = flagged.ids, envir = get_soilDB_env())
+    
+    message(sprintf("NOTE: some %s have %s >= 100%%", id.var, msg))
   }
 
   # compute total fragments
