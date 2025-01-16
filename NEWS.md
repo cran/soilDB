@@ -1,3 +1,34 @@
+# soilDB 2.8.7 (2025-01-16)
+ - Several aliases of NASIS physical column names have been deprecated and will be removed in the next minor release (2.9.x). See https://ncss-tech.github.io/AQP/soilDB/bulletins/2025.01-1-soilDB-NASIS-column-aliases.html for details (#369)
+ - `fetchVegdata()`
+   - Added `"ecostateid"`, `"ecostatename"`, `"commphaseid"`, `"commphasename`" to columns from `site` and `siteobs` are now joined into `"vegplot"` result.
+   - Fixed  `"site"` join used for `"vegplot"` table result. Now using LEFT join to add `siteecositehistory` information
+   - Sites without vegetation plots are now excluded from the result
+ - `get_vegplot_trhi_from_NASIS_db()` & `get_vegplot_transect_from_NASIS_db()` no longer join to the `pedon` table. Use the `"siteobsiid"` or vegetation plot `"assocuserpedonid"` to join to pedon records when necessary.
+   - This change avoids issues with unintended duplication of records e.g. lab pedons that have multiple pedons per site observation. Thanks to Nathan Roe for suggestion.
+ - `get_vegplot_*()` functions use INNER join to `vegtransect` table where applicable, so records are only returned for vegplots with an associated transect. Thanks to Zach Van Abbema for suggestion.
+ - `createSSURGO()`: more informative error message when no export files found for import
+ - Improved [soilDBdata](https://github.com/brownag/soilDBdata) data sets used for unit tests of `fetchNASIS()` and `fetchVegdata()` when a local NASIS instance is not available
+ - Updated NASIS SoilProfileCollection data sets (`loafercreek`, `gopheridge`, `mineralKing`)
+ 
+# soilDB 2.8.6 (2024-12-23)
+ - `fetchNASIS()` and `get_site_data_from_NASIS_db()` now return Ecological Site State and Community Phase information (ecostatename, ecostateid, commphasename, commphaseid columns) from Site Observation table
+ - `createStaticNASIS()` bug fixes
+   - Removed workaround for {odbc}/nanoodbc VARCHAR(MAX) columns; now can directly use `DBI::dbReadTable()` for all tables via NASIS ODBC connection
+   - Fixed error when `output_path=NULL`
+ - `fetchNASIS()` changed default behavior to `mixColors=FALSE` which returns dominant condition for each moisture state rather than mixing LAB color coordinates
+   - `get_colors_from_NASIS_db()` deprecate `mixColors` argument, add `method` argument with options "dominant", "mixed", and "none". New aggregation method `"none"` returns long format representation of color data from phcolor table with no aggregation applied. 
+ - `createSSURGO()` updates:
+   - Added incremental write of tabular data by table and soil survey area, which is much more memory efficient
+   - Added `maxruledepth` argument to allow filtering of `cointerp` table, and set default to `0`.
+     - This reduces number of `cointerp` rows by about 75% for published SSURGO. Generally, Web Soil Survey exports have maximum rule depth of `1`, but custom NASIS exports can be "deeper"
+   - Updated behavior of `filename` argument when `conn` _DBIConnection_ is specified and improved `overwrite` logic
+   - Added `dissolve_field` to facilitate creating aggregate geometries by `"mukey"` or other spatial attribute
+   - Added `include_tabular` argument to support omitting tabular data when building a database
+   - Now `include_spatial` and `include_tabular` are allowed to be a _character_ vectors of table names
+      - `TRUE` is all tables, `FALSE` is no tables. This allows for subsets of the SSURGO data model to be specified with finer user control over database contents.
+   - Now a composite `"soil_metadata"` table is made with `"areasymbol"` column and one row per soil survey area, rather than one table per soil survey area. This is more compact and scales better to larger databases.
+
 # soilDB 2.8.5 (2024-11-04)
  - `fetchLDM()` add support for `area_type` argument with local database connections (`dsn` argument)
  - `fetchSCAN()` updates:

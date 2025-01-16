@@ -17,31 +17,31 @@ knitr::opts_chunk$set(
 options(width = 100, stringsAsFactors = FALSE)
 
 ## ----eval = FALSE---------------------------------------------------------------------------------
-#  install.packages(c('soilDB', 'terra', 'sf'))
+# install.packages(c('soilDB', 'terra', 'sf'))
 
 ## ----eval = FALSE---------------------------------------------------------------------------------
-#  install.packages(c('soilDB', 'terra', 'sf'),
-#    repos = c('https://ncss-tech.r-universe.dev',
-#              'https://rspatial.r-universe.dev',
-#              'https://r-spatial.r-universe.dev')
-#  )
+# install.packages(c('soilDB', 'terra', 'sf'),
+#   repos = c('https://ncss-tech.r-universe.dev',
+#             'https://rspatial.r-universe.dev',
+#             'https://r-spatial.r-universe.dev')
+# )
 
 ## ----eval = FALSE---------------------------------------------------------------------------------
-#  # select gSSURGO grid, 30m resolution
-#  x <- mukey.wcs(aoi = aoi, db = 'gssurgo', ...)
-#  
-#  # select gNATSGO grid, 30m resolution
-#  x <- mukey.wcs(aoi = aoi, db = 'gnatsgo', ...)
-#  
-#  # select RSS grid, 10m resolution
-#  x <- mukey.wcs(aoi = aoi, db = 'RSS', ...)
-#  
-#  # select STATSGO2 grid, 300m resolution
-#  x <- mukey.wcs(aoi = aoi, db = 'statsgo', ...)
+# # select gSSURGO grid, 30m resolution
+# x <- mukey.wcs(aoi = aoi, db = 'gssurgo', ...)
+# 
+# # select gNATSGO grid, 30m resolution
+# x <- mukey.wcs(aoi = aoi, db = 'gnatsgo', ...)
+# 
+# # select RSS grid, 10m resolution
+# x <- mukey.wcs(aoi = aoi, db = 'RSS', ...)
+# 
+# # select STATSGO2 grid, 300m resolution
+# x <- mukey.wcs(aoi = aoi, db = 'statsgo', ...)
 
 ## ----eval = FALSE---------------------------------------------------------------------------------
-#  # select various ISSR-800 grids, details below
-#  x <- ISSR800.wcs(aoi = aoi, var = 'paws')
+# # select various ISSR-800 grids, details below
+# x <- ISSR800.wcs(aoi = aoi, var = 'paws')
 
 ## ----fig.width = 5, fig.height = 5----------------------------------------------------------------
 library(terra)
@@ -249,10 +249,10 @@ plot(
 )
 
 ## ----eval=FALSE, include=FALSE--------------------------------------------------------------------
-#  # # check mu names
-#  # .is <- format_SQL_in_statement(cats(mu)[[1]]$mukey)
-#  # .sql <- sprintf("SELECT mukey, muname FROM mapunit WHERE mukey IN %s", .is)
-#  # knitr::kable(SDA_query(.sql))
+# # # check mu names
+# # .is <- format_SQL_in_statement(cats(mu)[[1]]$mukey)
+# # .sql <- sprintf("SELECT mukey, muname FROM mapunit WHERE mukey IN %s", .is)
+# # knitr::kable(SDA_query(.sql))
 
 ## ----fig.width = 6.5, fig.height=5----------------------------------------------------------------
 # paste your BBOX text here
@@ -275,10 +275,10 @@ plot(
 )
 
 ## ----eval=FALSE, include=FALSE--------------------------------------------------------------------
-#  # # check mu names
-#  # .is <- format_SQL_in_statement(cats(mu)[[1]]$mukey)
-#  # .sql <- sprintf("SELECT mukey, muname FROM mapunit WHERE mukey IN %s", .is)
-#  # knitr::kable(SDA_query(.sql))
+# # # check mu names
+# # .is <- format_SQL_in_statement(cats(mu)[[1]]$mukey)
+# # .sql <- sprintf("SELECT mukey, muname FROM mapunit WHERE mukey IN %s", .is)
+# # knitr::kable(SDA_query(.sql))
 
 ## -------------------------------------------------------------------------------------------------
 # make a bounding box and assign a CRS (4326: GCS, WGS84)
