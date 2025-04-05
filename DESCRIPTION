@@ -1,7 +1,7 @@
 Package: soilDB
 Type: Package
 Title: Soil Database Interface
-Version: 2.8.8
+Version: 2.8.9
 Authors@R: c(person(given="Dylan", family="Beaudette", role = c("aut"), email = "dylan.beaudette@usda.gov"),
              person(given="Jay", family="Skovlin", role = c("aut")), 
              person(given="Stephen", family="Roecker", role = c("aut")), 
@@ -15,7 +15,7 @@ Description: A collection of functions for reading soil data from U.S. Departmen
 License: GPL (>= 3)
 LazyLoad: yes
 Depends: R (>= 3.5.0)
-Imports: grDevices, graphics, stats, utils, methods, aqp (>= 2.0.2),
+Imports: grDevices, graphics, stats, utils, methods, aqp (>= 2.1.0),
         data.table, DBI, curl
 Suggests: jsonlite, xml2, httr, rvest, odbc, RSQLite, sf, wk, terra,
         raster, knitr, rmarkdown, testthat
@@ -30,5 +30,5 @@ Language: en-US
 LazyData: false
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2025-02-10 18:56:28 UTC; Andrew.G.Brown
-Date/Publication: 2025-02-10 19:20:01 UTC
+Packaged: 2025-04-05 04:12:42 UTC; Andrew.G.Brown
+Date/Publication: 2025-04-05 04:40:02 UTC

@@ -2,6 +2,8 @@ test_that("soilDBdata: fetchNASIS", {
 
   skip_on_cran()
 
+  skip_if_not_installed("RSQLite")
+
   # soilDBdata package is available on GitHub and provides SQLite data sources with real data
   skip_if_not_installed("soilDBdata")
 
@@ -58,6 +60,8 @@ test_that("soilDBdata: fetchVegdata", {
   
   skip_on_cran()
   
+  skip_if_not_installed("RSQLite")
+  
   # soilDBdata package is available on GitHub and provides SQLite data sources with real data
   skip_if_not_installed("soilDBdata")
   
@@ -68,7 +72,8 @@ test_that("soilDBdata: fetchVegdata", {
   
   expect_true(all(sapply(fvp1, inherits, 'data.frame')))
   
-  expect_true(all(!is.na(fvp1$vegtranspoint$plantsym)))
+  # only one transect missing points/species info
+  expect_equal(sum(!is.na(fvp1$vegtranspoint$plantsym)), nrow(fvp1$vegtranspoint) - 1)
 
   # TEST SS=TRUE
   fvp2 <- fetchVegdata(dsn = VEGPLOT_TEST_DSN, SS = TRUE)

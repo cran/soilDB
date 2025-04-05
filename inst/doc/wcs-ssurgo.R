@@ -65,7 +65,12 @@ b <- buffer(p, 1000)
 mu <- mukey.wcs(b, db = 'gSSURGO')
 
 # inspect
-plot(mu, legend = FALSE, axes = FALSE, main = metags(mu)['description'])
+plot(
+  mu,
+  legend = FALSE,
+  axes = FALSE,
+  main = paste0(metags(mu)$value, collapse = " - ")
+)
 
 # add buffer, after transforming to mukey grid CRS
 plot(project(b, "EPSG:5070"), add = TRUE)
@@ -92,7 +97,12 @@ st_crs(x) <- 4326
 mu <- mukey.wcs(x, db = 'gSSURGO')
 
 # inspect
-plot(mu, legend = FALSE, axes = FALSE, main = metags(mu)['description'])
+plot(
+  mu, 
+  legend = FALSE, 
+  axes = FALSE, 
+  main = paste0(metags(mu)$value, collapse = " - ")
+)
 
 # add original BBOX, after transforming to mukey grid CRS
 plot(st_transform(x, 5070), add = TRUE)
@@ -183,7 +193,7 @@ plot(
   x,
   axes = FALSE,
   legend = FALSE,
-  main = metags(x)['description']
+  main = paste0(metags(x)$value, collapse = " - ")
 )
 plot(a, add = TRUE)
 
@@ -192,7 +202,7 @@ plot(
   y,
   axes = FALSE,
   legend = FALSE,
-  main = metags(y)['description']
+  main = paste0(metags(y)$value, collapse = " - ")
 )
 plot(a, add = TRUE)
 
@@ -201,7 +211,7 @@ plot(
   z,
   axes = FALSE,
   legend = FALSE,
-  main = metags(z)['description'],
+  main = paste0(metags(z)$value, collapse = " - "),
   ext = x
 )
 plot(a, add = TRUE)
@@ -217,7 +227,7 @@ plot(
   x,
   axes = FALSE,
   legend = FALSE,
-  main = metags(x)['description']
+  main = paste0(metags(mu)$value, collapse = " - ")
 )
 
 # STATSGO
@@ -225,7 +235,7 @@ plot(
   statsgo,
   axes = FALSE,
   legend = FALSE,
-  main = metags(statsgo)['description']
+  main = paste0(metags(statsgo)$value, collapse = " - ")
 )
 
 ## ----fig.width = 6.5, fig.height=5----------------------------------------------------------------
@@ -244,7 +254,7 @@ plot(
   mu,
   legend = FALSE,
   axes = FALSE,
-  main = metags(mu)['description'],
+  main = paste0(metags(mu)$value, collapse = " - "),
   colNA = 'royalblue'
 )
 
@@ -270,7 +280,7 @@ plot(
   mu,
   legend = FALSE,
   axes = FALSE,
-  main = metags(mu)['description'],
+  main = paste0(metags(mu)$value, collapse = " - "),
   colNA = 'royalblue'
 )
 
