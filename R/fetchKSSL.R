@@ -46,7 +46,7 @@
 .getExtended_SoilWeb <- function(f) {
 
   # KSSL geochem, XRD, glass
-  x <- URLencode(paste0('https://casoilresource.lawr.ucdavis.edu/soil_web/kssl/query.php?gzip=1&format=json&what=extended', f))
+  x <- URLencode(paste0('https://soilmap2-1.lawr.ucdavis.edu/soil_web/kssl/query.php?gzip=1&format=json&what=extended', f))
 
   # list of dataframe objects; note: missing data are returned as FALSE
   ext <-  .soilDB_curl_get_JSON(x, gzip = TRUE, quiet = TRUE)
@@ -59,7 +59,7 @@
 .getMorphologic_SoilWeb <- function(f) {
 
   # NASIS morphology
-  x <- URLencode(paste0('https://casoilresource.lawr.ucdavis.edu/soil_web/kssl/query.php?gzip=1&format=json&what=nasis_morphologic', f))
+  x <- URLencode(paste0('https://soilmap2-1.lawr.ucdavis.edu/soil_web/kssl/query.php?gzip=1&format=json&what=nasis_morphologic', f))
 
   # list of dataframe objects; note: missing data are returned as FALSE
   m <- .soilDB_curl_get_JSON(x, gzip = TRUE, quiet = TRUE)
@@ -73,7 +73,7 @@
 .getKSSL_SoilWeb <- function(f) {
 
   # KSSL site + horizon
-  x <- URLencode(paste0('https://casoilresource.lawr.ucdavis.edu/soil_web/kssl/query.php?gzip=1&format=json&what=site_hz', f))
+  x <- URLencode(paste0('https://soilmap2-1.lawr.ucdavis.edu/soil_web/kssl/query.php?gzip=1&format=json&what=site_hz', f))
 
   # list of dataframe objects; note: missing data are returned as FALSE
   site_hz <- .soilDB_curl_get_JSON(x, gzip = TRUE, quiet = TRUE)
@@ -235,7 +235,7 @@
 #' @seealso \code{\link{fetchOSD}}
 #' @references \url{http://ncsslabdatamart.sc.egov.usda.gov/}
 #' @keywords utilities
-#' @examplesIf curl::has_internet() && requireNamespace("httr", quietly = TRUE) && requireNamespace("aqp", quietly = TRUE)
+#' @examplesIf curl::has_internet() && requireNamespace("httr", quietly = TRUE) && requireNamespace("aqp", quietly = TRUE) && as.logical(Sys.getenv("R_SOILDB_SKIP_LONG_EXAMPLES", unset = TRUE))
 #' \donttest{
 #'     library(aqp)
 #'
@@ -247,10 +247,11 @@
 #'
 #'     # how many pedons
 #'     length(s)
-#'
-#'     # plot
-#'     aqp::plotSPC(s, name='hzn_desgn', max.depth=150)
-#'
+#'     if (inherits(s, "SoilProfileCollection")) {
+#'       # plot
+#'       aqp::plotSPC(s, name='hzn_desgn', max.depth=150)
+#'     }
+#'     
 #'     ##
 #'     ## morphologic data
 #'     ##

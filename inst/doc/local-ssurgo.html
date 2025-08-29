@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Local SSURGO Databases</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Local SSURGO Databases</h1>
+
+
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>The <code>soilDB</code> package provides tools for accessing and
+working with soil survey data from the USDA-NRCS. Two key functions,
+<code>downloadSSURGO()</code> and <code>createSSURGO()</code>,
+streamline the process of acquiring and preparing SSURGO data into a
+local SQLite (GeoPackage) database–similar to the functionality offered
+by <a href="https://nrcs.usda.gov/resources/data-and-reports/ssurgo-portal">SSURGO
+Portal</a>.</p>
+<p>This vignette demonstrates how to use these functions with Morton and
+Stanton counties, Kansas
+(<code>areasymbol = c(&quot;KS129&quot;, &quot;KS187&quot;)</code>).</p>
+</div>
+<div id="download-ssurgo-data" class="section level2">
+<h2>Download SSURGO Data</h2>
+<p><code>downloadSSURGO()</code> will download the official SSURGO
+dataset for the specified <code>areasymbol</code> and return the path to
+the ZIP archive.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(soilDB)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>gpkg_dir <span class="ot">&lt;-</span> <span class="fu">tempdir</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>AREASYMBOLS <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;KS129&quot;</span>, <span class="st">&quot;KS187&quot;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>ssurgo_zip <span class="ot">&lt;-</span> <span class="fu">downloadSSURGO</span>(</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="at">areasymbol =</span> AREASYMBOLS, </span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="at">destdir =</span> gpkg_dir</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>)</span></code></pre></div>
+<p>We specify <code>destdir</code> as the destination directory to
+download ZIP files by areasymbol from Web Soil Survey. If unspecified
+<code>exdir</code> is the same as <code>destdir</code> and is the
+directory the ZIP files get extracted to.</p>
+</div>
+<div id="create-a-local-ssurgo-database" class="section level2">
+<h2>Create a Local SSURGO Database</h2>
+<p>The <code>createSSURGO()</code> function uses the <code>sf</code> and
+<code>RSQLite</code> packages internally to build a SQLite database. The
+suggested SQLite-based format to use is GeoPackage (<code>&quot;.gpkg&quot;</code>
+file).</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Create a local GeoPackage from the downloaded ZIP</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>gpkg_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(gpkg_dir, <span class="st">&quot;ssurgo.gpkg&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">createSSURGO</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  gpkg_path,</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">exdir =</span> gpkg_dir</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>)</span></code></pre></div>
+<p>Here we pass <code>exdir</code> so <code>createSSURGO()</code> knows
+where to look for the data that <code>downloadSSURGO()</code> extracted
+from ZIP files. If we supply <code>con</code> argument instaed of
+<code>filename</code> we can connect to arbitrary DBIConnection objects,
+which could include other SQLite connection types, DuckDB,
+PostgresSQL.</p>
+<p>The resulting <code>.gpkg</code> file is a spatially enabled SQLite
+database that can be used in GIS software or queried directly in R.</p>
+</div>
+<div id="load-and-explore-the-database" class="section level2">
+<h2>Load and Explore the Database</h2>
+<p>Once the GeoPackage is created, you can connect to it using
+<code>DBI</code> and explore its contents. The database follows the
+SSURGO schema, which includes tables like <code>mapunit</code>,
+<code>component</code>, <code>chorizon</code>, and spatial layers such
+as the spatial map unit polygon layer, <code>mupolygon</code>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">library</span>(RSQLite)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># Connect to the GeoPackage</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="fu">SQLite</span>(), gpkg_path)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co"># List available tables</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="fu">dbListTables</span>(con)</span></code></pre></div>
+<div id="view-table-structure" class="section level3">
+<h3>View Table Structure</h3>
+<p>You can inspect the structure of a specific table, such as
+<code>mapunit</code>, which contains general information about each map
+unit.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">dbListFields</span>(con, <span class="st">&quot;mapunit&quot;</span>)</span></code></pre></div>
+</div>
+<div id="preview-data" class="section level3">
+<h3>Preview Data</h3>
+<p>Preview the first few rows of the <code>mapunit</code> table:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, <span class="st">&quot;SELECT * FROM mapunit LIMIT 5&quot;</span>)</span></code></pre></div>
+</div>
+<div id="join-tables" class="section level3">
+<h3>Join Tables</h3>
+<p>You can join tables to explore relationships between map units and
+their components:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>query <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="st">SELECT mu.musym, mu.muname, c.compname, c.comppct_r</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="st">FROM mapunit mu</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="st">JOIN component c ON mu.mukey = c.mukey</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="st">LIMIT 10</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">dbGetQuery</span>(con, query)</span></code></pre></div>
+</div>
+<div id="load-spatial-data" class="section level3">
+<h3>Load Spatial Data</h3>
+<p>To work with spatial features, use the <code>sf</code> package.</p>
+<p>Here we demonstrate how to read the <code>mupolygon</code> layer:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co"># Read spatial map units</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>spatial_mu <span class="ot">&lt;-</span> <span class="fu">st_read</span>(gpkg_path, <span class="at">layer =</span> <span class="st">&quot;mupolygon&quot;</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>spatial_mu</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co"># Plot the map units</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(spatial_mu))</span></code></pre></div>
+<p>This spatial layer can be used for mapping or spatial joins with
+other geospatial datasets. The <code>mukey</code> column is the unique
+mapunit identifier. Any SSURGO data that can be queried or aggregated to
+be 1:1 with <code>mukey</code> can be used in thematic mapping.</p>
+</div>
+</div>
+<div id="visualizing-soil-properties" class="section level2">
+<h2>Visualizing Soil Properties</h2>
+<p>You can visualize soil properties by joining tabular data with the
+<code>mupolygon</code> layer and plotting with base R graphics.</p>
+<div id="load-spatial-and-tabular-data" class="section level3">
+<h3>Load Spatial and Tabular Data</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co"># Read spatial map units</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>spatial_mu <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_read</span>(gpkg_path, <span class="at">layer =</span> <span class="st">&quot;mupolygon&quot;</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co"># Read tabular data</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>mapunit <span class="ot">&lt;-</span> <span class="fu">dbReadTable</span>(con, <span class="st">&quot;mapunit&quot;</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>component <span class="ot">&lt;-</span> <span class="fu">dbReadTable</span>(con, <span class="st">&quot;component&quot;</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co"># Disconnect when done</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con)</span></code></pre></div>
+</div>
+<div id="example-1-dominant-component-percentage-comppct_r" class="section level3">
+<h3>Example 1: Dominant Component Percentage
+(<code>comppct_r</code>)</h3>
+<p>Here we see map units symbolised by the dominant component
+percentage. Numbers closer to 100% are more “pure” concepts.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Get dominant component per map unit</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>dominant_comp <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  comppct_r <span class="sc">~</span> mukey,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="at">data =</span> component, </span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  max</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>)</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co"># Join with spatial data</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>spatial_mu<span class="sc">$</span>comppct_r <span class="ot">&lt;-</span> dominant_comp<span class="sc">$</span>comppct_r[<span class="fu">match</span>(spatial_mu<span class="sc">$</span>mukey, dominant_comp<span class="sc">$</span>mukey)]</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co"># Plot (small subset of extent)</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  spatial_mu[<span class="st">&quot;comppct_r&quot;</span>], </span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">&quot;Dominant Component Percentage (comppct_r)&quot;</span>, </span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">100</span>, <span class="dv">10</span>), </span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>  <span class="at">key.pos =</span> <span class="dv">4</span>,</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>  <span class="at">border =</span> <span class="cn">NA</span>, </span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>  <span class="at">pal =</span> <span class="fu">hcl.colors</span>(<span class="dv">10</span>)</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="example-2-hydrologic-group-hydgrp" class="section level3">
+<h3>Example 2: Hydrologic Group (<code>hydgrp</code>)</h3>
+<p>Here we see map unit dominant condition <a href="https://directives.nrcs.usda.gov/sites/default/files2/1712930597/11905.pdf">Hydrologic
+Group</a>.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Get most common hydgrp per mukey</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>hydgrp_tab <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  hydgrp <span class="sc">~</span> mukey, </span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">data =</span> component,</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  <span class="cf">function</span>(x) <span class="fu">names</span>(<span class="fu">sort</span>(<span class="fu">table</span>(x), <span class="at">decreasing =</span> <span class="cn">TRUE</span>))[<span class="dv">1</span>]</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>)</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co"># Convert to ordered factor</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>hydgrp_tab[[<span class="dv">2</span>]] <span class="ot">&lt;-</span> <span class="fu">NASISChoiceList</span>(hydgrp_tab)[[<span class="dv">2</span>]]</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co"># Join with spatial data</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>spatial_mu<span class="sc">$</span>hydgrp <span class="ot">&lt;-</span> hydgrp_tab<span class="sc">$</span>hydgrp[<span class="fu">match</span>(spatial_mu<span class="sc">$</span>mukey, hydgrp_tab<span class="sc">$</span>mukey)]</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>spatial_mu</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>  spatial_mu[<span class="st">&quot;hydgrp&quot;</span>],</span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">&quot;Hydrologic Group (hydgrp)&quot;</span>, </span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>  <span class="at">key.pos =</span> <span class="dv">4</span>,</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>  <span class="at">border =</span> <span class="cn">NA</span>, </span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>  <span class="at">pal =</span> <span class="fu">rev</span>(<span class="fu">hcl.colors</span>(<span class="dv">7</span>))</span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="example-3-drainage-class-drainagecl" class="section level3">
+<h3>Example 3: Drainage Class (<code>drainagecl</code>)</h3>
+<p>Here we see map unit dominant condition Drainage Class.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Get most common drainage class per mukey</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>drainage_tab <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  drainagecl <span class="sc">~</span> mukey, </span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">data =</span> component, </span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="cf">function</span>(x) <span class="fu">names</span>(<span class="fu">sort</span>(<span class="fu">table</span>(x), <span class="at">decreasing =</span> <span class="cn">TRUE</span>))[<span class="dv">1</span>]</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>)</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="co"># Convert to ordered factor</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>drainage_tab[[<span class="dv">2</span>]] <span class="ot">&lt;-</span> <span class="fu">NASISChoiceList</span>(drainage_tab)[[<span class="dv">2</span>]]</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co"># Join with spatial data</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>spatial_mu<span class="sc">$</span>drainagecl <span class="ot">&lt;-</span> drainage_tab<span class="sc">$</span>drainagecl[<span class="fu">match</span>(spatial_mu<span class="sc">$</span>mukey, drainage_tab<span class="sc">$</span>mukey)]</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>  spatial_mu[<span class="st">&quot;drainagecl&quot;</span>],</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">&quot;Drainage Class (drainagecl)&quot;</span>, </span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>  <span class="at">border =</span> <span class="cn">NA</span>,</span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a>  <span class="at">key.pos =</span> <span class="dv">4</span>,</span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>  <span class="at">pal =</span> <span class="fu">rev</span>(<span class="fu">hcl.colors</span>(<span class="dv">8</span>))</span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>)</span></code></pre></div>
+<hr />
+<p>The previous examples show how to visualize key soil properties using
+only base R and <code>sf</code>.</p>
+<p>The aggregation of dominant component to map unit level values is one
+of the simplest, and most common, transformations of the SSURGO data for
+creating maps.</p>
+<p>You can adapt the aggregation logic depending on your needs (e.g.,
+max, mean, or most frequent value). Many soilDB functions include
+default aggregations, and you can write custom queries of your own using
+<code>SDA_query()</code> or DBI <code>dbGetQuery()</code>.</p>
+</div>
+</div>
+<div id="query-and-aggregation-functions" class="section level2">
+<h2>Query and Aggregation Functions</h2>
+<p>This section describes some existing options in the
+<code>soilDB</code> package for querying and aggregating data for
+thematic maps.</p>
+<p>In the future this section will be expanded.</p>
+<p>All of the <code>get_SDA_*()</code> “SSURGO On Demand” functions can
+be applied to local copies of the SSURGO database by passing the
+<code>dsn</code> argument (either a path to a SQLite database or a
+<em>DBIConnection</em> object).</p>
+<ul>
+<li>“SSURGO On Demand” Queries
+<ul>
+<li>Hydric Soils: <a href="http://ncss-tech.github.io/soilDB/reference/get_SDA_hydric.html"><code>get_SDA_hydric()</code></a></li>
+<li>Soil Interpretations: <a href="http://ncss-tech.github.io/soilDB/reference/get_SDA_interpretation.html"><code>get_SDA_interpretation()</code></a></li>
+<li>Mapunit Aggregate Attributes : <a href="http://ncss-tech.github.io/soilDB/reference/get_SDA_muaggatt.html"><code>get_SDA_muaggatt()</code></a></li>
+<li>Parent Material Groups: <a href="http://ncss-tech.github.io/soilDB/reference/get_SDA_pmgroupname.html"><code>get_SDA_pmgroupname()</code></a></li>
+<li>Component and Horizon Properties: <a href="http://ncss-tech.github.io/soilDB/reference/get_SDA_property.html"><code>get_SDA_property()</code></a></li>
+<li>Component Ecological Classes: <a href="http://ncss-tech.github.io/soilDB/reference/get_SDA_coecoclass.html"><code>get_SDA_coecoclass()</code></a></li>
+<li>Component Surface Morphometry: <a href="http://ncss-tech.github.io/soilDB/reference/get_SDA_cosurfmorph.html"><code>get_SDA_cosurfmorph()</code></a></li>
+</ul></li>
+</ul>
+</div>
+<div id="alternative-tools" class="section level2">
+<h2>Alternative Tools</h2>
+<p>For users who prefer a Python-based solution, the <a href="https://github.com/brownag/SSURGOPortalR">SSURGOPortal R
+package</a> wraps the official <a href="https://www.nrcs.usda.gov/resources/data-and-reports/ssurgo-portal">SSURGO
+Portal Python</a> code for use in R.</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>The <code>downloadSSURGO()</code> and <code>createSSURGO()</code>
+functions provide a reproducible and scriptable way to access SSURGO
+data for offline spatial and tabular analysis in R.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

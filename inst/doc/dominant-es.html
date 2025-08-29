@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Mapping Dominant Ecological Sites using SSURGO Data</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Mapping Dominant Ecological Sites using
+SSURGO Data</h1>
+
+
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>This vignette demonstrates how to extract and map dominant ecological
+site information for a given Area of Interest (AOI) using the
+<code>soilDB</code> package and open-source geospatial tools in R.</p>
+<p>For a general introduction to geospatial data in R, see the <a href="https://r-spatial.github.io/sf/"><code>sf</code> package
+documentation</a>, <a href="https://rspatial.github.io/terra/"><code>terra</code> package
+documentation</a>, the <a href="https://r.geocompx.org/"><em>Geocomputation with R</em> book</a>
+and the <a href="https://rspatial.org/"><em>Spatial Data Science with R
+and <code>terra</code></em> book</a>.</p>
+<p>We will:</p>
+<ul>
+<li><p>Load SSURGO spatial data</p></li>
+<li><p>Query Soil Data Access (SDA) for dominant ecological site
+assignments</p></li>
+<li><p>Join tabular and spatial data</p></li>
+<li><p>Export and visualize the results</p></li>
+</ul>
+</div>
+<div id="prerequisites" class="section level2">
+<h2>Prerequisites</h2>
+<p>In this vignette we will use <code>sf</code> functions and object
+types for processing and storing spatial data. This package is used
+under the hood by <code>soilDB</code> for processing SSURGO data. The
+<code>terra</code> package can be used with only minor changes in
+syntax.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(soilDB)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(sf)</span></code></pre></div>
+</div>
+<div id="load-ssurgo-spatial-data" class="section level2">
+<h2>Load SSURGO Spatial Data</h2>
+<div id="using-soil-data-access" class="section level3">
+<h3>Using Soil Data Access</h3>
+<p>You can use <code>SDA_spatialQuery()</code> and
+<code>fetchSDA_spatial()</code> to retrieve spatial data directly from
+Soil Data Access (SDA), bypassing the need for local files.</p>
+<div id="option-1-use-sda_spatialquery-to-get-mukey-polygons-for-an-aoi" class="section level4">
+<h4>Option 1: Use <code>SDA_spatialQuery()</code> to get mukey polygons
+for an AOI</h4>
+<p>Define Area of Interest (AOI) as a bounding box <code>sf</code>
+POLYGON.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>aoi <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_as_sfc</span>(sf<span class="sc">::</span><span class="fu">st_bbox</span>(<span class="fu">c</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="at">xmin =</span> <span class="sc">-</span><span class="fl">120.85</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">xmax =</span> <span class="sc">-</span><span class="fl">120.775</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="at">ymin =</span> <span class="fl">37.975</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">ymax =</span> <span class="fl">38.0</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>), <span class="at">crs =</span> <span class="dv">4326</span>))</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co"># Query SDA for map unit polygons cropped to the AOI</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>soil_polygons <span class="ot">&lt;-</span> <span class="fu">SDA_spatialQuery</span>(</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  aoi, </span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="at">what =</span> <span class="st">&quot;mupolygon&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>)</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>  soil_polygons[<span class="st">&quot;mukey&quot;</span>],</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">&quot;SSURGO Map Units from SDA_spatialQuery&quot;</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>)</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="fu">head</span>(soil_polygons)</span></code></pre></div>
+<p>You can also set <code>geomIntersection = TRUE</code> so that
+intersecting geometries are cropped to the AOI. This is convenient if
+you have a very specific AOI in mind or would like to reduce the amount
+of data you are going to download.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Query SDA for map unit polygons cropped to the AOI</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>soil_polygons <span class="ot">&lt;-</span> <span class="fu">SDA_spatialQuery</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  aoi, </span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">what =</span> <span class="st">&quot;mupolygon&quot;</span>, </span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">geomIntersection =</span> <span class="cn">TRUE</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  soil_polygons[<span class="st">&quot;mukey&quot;</span>],</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">&quot;Cropped SSURGO Map Units from SDA_spatialQuery&quot;</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>)</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="fu">head</span>(soil_polygons)</span></code></pre></div>
+</div>
+<div id="option-2-use-fetchsda_spatial" class="section level4">
+<h4>Option 2: Use <code>fetchSDA_spatial()</code></h4>
+<p>Next, we use <code>fetchSDA_spatial()</code>.</p>
+<p>This function is different because instead of using an area of
+interest, it takes a vector of map unit or legend identifiers.</p>
+<p>Here, we take the unique map unit keys from the <strong>Option
+1</strong> result and return the <em>full</em> extent of those map units
+(not just the intersecting polygons). This is particularly helpful when
+doing studies that involve the full extent of map unit concepts, as
+opposed to more site-specific analyses.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>mu_ssurgo <span class="ot">&lt;-</span> <span class="fu">fetchSDA_spatial</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="fu">unique</span>(soil_polygons<span class="sc">$</span>mukey), </span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">by.col =</span> <span class="st">&quot;mukey&quot;</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">add.fields =</span> <span class="fu">c</span>(<span class="st">&quot;legend.areaname&quot;</span>, </span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>                 <span class="st">&quot;mapunit.muname&quot;</span>, </span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>                 <span class="st">&quot;mapunit.farmlndcl&quot;</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="fu">plot</span>(mu_ssurgo[<span class="st">&quot;mukey&quot;</span>], <span class="at">main =</span> <span class="st">&quot;SSURGO Map Units from fetchSDA_spatial&quot;</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="fu">head</span>(mu_ssurgo)</span></code></pre></div>
+<p>Note that using <code>add.fields</code> we have included some
+additional contextual information: area name, map unit name, and map
+unit farmland classification.</p>
+<div id="fetchsda_spatial-geometry-sources" class="section level5">
+<h5><code>fetchSDA_spatial()</code> geometry sources</h5>
+<p><code>fetchSDA_spatial()</code> <code>geom.src</code> argument can be
+used to return SSURGO map unit polygons and survey area polygons,
+STATSGO mapunit polygons, and MLRA polygons.</p>
+<p>Here is an example using STATSGO. We use
+<code>SDA_spatialQuery()</code> to fetch the data for our AOI, then
+<code>fetchSDA_spatial()</code> to get the full extent of those map unit
+concepts.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>statsgo_polygons <span class="ot">&lt;-</span> <span class="fu">SDA_spatialQuery</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  aoi, </span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">what =</span> <span class="st">&quot;mupolygon&quot;</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">db =</span> <span class="st">&quot;STATSGO&quot;</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">geomIntersection =</span> <span class="cn">TRUE</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="fu">plot</span>(statsgo_polygons[<span class="st">&quot;mukey&quot;</span>], <span class="at">main =</span> <span class="st">&quot;STATSGO Map Units from SDA_spatialQuery&quot;</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="fu">head</span>(statsgo_polygons)</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>mu_statsgo <span class="ot">&lt;-</span> <span class="fu">fetchSDA_spatial</span>(</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  <span class="fu">unique</span>(statsgo_polygons<span class="sc">$</span>mukey), </span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">by.col =</span> <span class="st">&quot;mukey&quot;</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">db =</span> <span class="st">&quot;STATSGO&quot;</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  <span class="at">add.fields =</span> <span class="fu">c</span>(<span class="st">&quot;legend.areaname&quot;</span>, <span class="st">&quot;mapunit.muname&quot;</span>, <span class="st">&quot;mapunit.farmlndcl&quot;</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>)</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="fu">plot</span>(mu_statsgo[<span class="st">&quot;mukey&quot;</span>], <span class="at">main =</span> <span class="st">&quot;STATSGO Map Units from fetchSDA_spatial&quot;</span>)</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="fu">head</span>(mu_statsgo)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>ssas <span class="ot">&lt;-</span> <span class="fu">SDA_spatialQuery</span>(aoi, <span class="at">what =</span> <span class="st">&quot;areasymbol&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>ssas</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>ssa <span class="ot">&lt;-</span> <span class="fu">fetchSDA_spatial</span>(</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  ssas<span class="sc">$</span>areasymbol, </span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">by.col =</span> <span class="st">&quot;areasymbol&quot;</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">geom.src =</span> <span class="st">&quot;sapolygon&quot;</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">add.fields =</span> <span class="fu">c</span>(<span class="st">&quot;legend.areaname&quot;</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>)</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="fu">plot</span>(ssa[<span class="st">&quot;areasymbol&quot;</span>], <span class="at">main =</span> <span class="st">&quot;SSURGO Soil Survey Area from SDA&quot;</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="fu">head</span>(ssa)</span></code></pre></div>
+</div>
+</div>
+<div id="sda_spatialquery-vs.-fetchsda_spatial" class="section level4">
+<h4><code>SDA_spatialQuery()</code>
+vs. <code>fetchSDA_spatial()</code></h4>
+<ul>
+<li><p><code>SDA_spatialQuery()</code> is ideal for spatial queries
+where you have a specific, possibly complex, area of interest.</p></li>
+<li><p><code>fetchSDA_spatial()</code> returns the full extent of the
+specified map unit concepts, optionally including more legend and map
+unit attributes via <code>add.fields</code> argument.</p></li>
+</ul>
+</div>
+</div>
+<div id="local-data-sources" class="section level3">
+<h3>Local Data Sources</h3>
+<p>If working with large extents, it is generally better to be use a
+local data source. You can download SSURGO data from Web Soil Survey
+using <code>downloadSSURGO()</code>. Then, you can create GeoPackage or
+other database types using <code>createSSURGO()</code> or the <a href="https://www.nrcs.usda.gov/resources/data-and-reports/ssurgo-portal">SSURGOPortal</a>
+tools. This process is described in detail in the <a href="https://ncss-tech.github.io/soilDB/articles/local-ssurgo.html">Local
+SSURGO Databases vignette</a>. See also the <a href="https://github.com/brownag/SSURGOPortalR">SSURGOPortal R
+package</a>.</p>
+<p>Assuming you have a GeoPackage from SSURGOPortal
+(<code>&quot;soilmu_a.gpkg&quot;</code>), then you can read it with
+<code>sf::st_read()</code> or <code>terra::vect()</code></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>ssurgo_path <span class="ot">&lt;-</span> <span class="st">&quot;data/soilmu_a.gpkg&quot;</span>  <span class="co"># Replace with your actual path</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>soil_polygons <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_read</span>(ssurgo_path)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">head</span>(soil_polygons)</span></code></pre></div>
+<p>This <code>soil_polygons</code> object should have the standard set
+of columns we would expect for a SSURGO map unit data source, including:
+map unit key (<code>mukey</code>), area symbol
+(<code>areasymbol</code>), map unit symbol (<code>musym</code>).</p>
+</div>
+</div>
+<div id="query-sda-for-dominant-ecological-site-info" class="section level2">
+<h2>Query SDA for Dominant Ecological Site Info</h2>
+<div id="extract-unique-map-unit-keys" class="section level3">
+<h3>Extract Unique Map Unit Keys</h3>
+<p>As we did above for <code>fetchSDA_spatial()</code> we are going to
+get the unique set of map units in our AOI.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>mukeys <span class="ot">&lt;-</span> <span class="fu">unique</span>(soil_polygons<span class="sc">$</span>mukey)</span></code></pre></div>
+</div>
+<div id="use-get_sda_coecoclass" class="section level3">
+<h3>Use <code>get_SDA_coecoclass()</code></h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>eco_data <span class="ot">&lt;-</span> <span class="fu">get_SDA_coecoclass</span>(<span class="at">mukeys =</span> mukeys)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">head</span>(eco_data)</span></code></pre></div>
+<p>This function returns a data frame including <code>mukey</code>,
+<code>cokey</code>, <code>ecoclassid</code>, and
+<code>ecoclassname</code>.</p>
+<p>There are several methods for aggregating from component to map unit
+level available in <code>get_SDA_coecoclass()</code>. The default
+aggregation method is <code>&quot;none&quot;</code> which will return 1 record per
+map unit <em>component</em>, so many map units will have more than one
+record.</p>
+</div>
+<div id="using-methoddominant-component" class="section level3">
+<h3>Using <code>method=&quot;dominant component&quot;</code></h3>
+<p>Most often, users want “typical” conditions that can apply to a whole
+map unit.</p>
+<p>Sometimes it is helpful to be able to point to a <em>specific</em>
+component, so that you do not have to reason over mathematical
+aggregation of distinct components within map unit concepts. The most
+common method to select one component per map unit is
+<code>&quot;dominant component&quot;</code></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>eco_data_domcond <span class="ot">&lt;-</span> <span class="fu">get_SDA_coecoclass</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="at">mukeys =</span> mukeys,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;dominant component&quot;</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>)</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="fu">head</span>(eco_data_domcond)</span></code></pre></div>
+<p>Note that this output includes information for the dominant component
+(<code>comppct_r</code> and <code>compname</code>).</p>
+</div>
+<div id="using-methoddominant-condition" class="section level3">
+<h3>Using <code>method=&quot;dominant condition&quot;</code></h3>
+<p>The method <code>&quot;dominant condition&quot;</code> is convenient because it
+accounts for the possibility that multiple components have the same
+class (ecological site) and can have their component percentages
+summed.</p>
+<p>For a property like ecological site, it is fairly common for multiple
+components in a map unit to have the same site assigned, so the dominant
+condition makes up a higher percentage of the area of the map unit than
+the dominant component alone.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>eco_data_domcond <span class="ot">&lt;-</span> <span class="fu">get_SDA_coecoclass</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">mukeys =</span> mukeys,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;dominant condition&quot;</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>)</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="fu">head</span>(eco_data_domcond)</span></code></pre></div>
+<p>Note that this result includes the aggregate ecological site
+composition <code>ecoclasspct_r</code>.</p>
+<p>The <code>cokey</code> and <code>comppct_r</code> are from the
+dominant component can be used to link to a specific, common component
+for other more detailed information.</p>
+</div>
+</div>
+<div id="join-tabular-and-spatial-data" class="section level2">
+<h2>Join Tabular and Spatial Data</h2>
+<p>We want to have a 1:1 relationship between our map unit polygons and
+the thematic variable we are mapping, so we will use the map unit
+dominant condition ecological sites (<code>eco_data_domcond</code>).</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>soil_polygons <span class="ot">&lt;-</span> <span class="fu">merge</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  soil_polygons, </span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  eco_data_domcond, </span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">&quot;mukey&quot;</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="visualize-the-result" class="section level2">
+<h2>Visualize the Result</h2>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  soil_polygons[<span class="st">&quot;ecoclassid&quot;</span>],</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">&quot;Dominant Ecological Site by Map Unit&quot;</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>)</span></code></pre></div>
+<p>This same process for merging in aggregate map unit level information
+generalizes to other SSURGO tables. You can easily create thematic maps
+from any data you can aggregate to the point that it is 1:1 with the
+<code>mukey</code>.</p>
+</div>
+<div id="export-spatial-file" class="section level2">
+<h2>Export Spatial File</h2>
+<p>Finally, we can write our result out to a spatial file, such as a
+GeoPackage, using <code>sf</code> or <code>terra</code>.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>sf<span class="sc">::</span><span class="fu">st_write</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  soil_polygons, </span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="st">&quot;ecosite_dominant.gpkg&quot;</span>, </span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>  <span class="at">delete_dsn =</span> <span class="cn">TRUE</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<div id="ssurgo-data-and-tools" class="section level3">
+<h3>SSURGO Data and Tools</h3>
+<ul>
+<li><a href="https://www.nrcs.usda.gov/resources/data-and-reports/ssurgo-portal">SSURGOPortal</a></li>
+<li><a href="https://websoilsurvey.nrcs.usda.gov/app/">Web Soil
+Survey</a></li>
+</ul>
+</div>
+<div id="soildb-functions" class="section level3">
+<h3>soilDB functions</h3>
+<ul>
+<li><a href="https://ncss-tech.github.io/soilDB/reference/SDA_spatialQuery.html"><code>SDA_spatialQuery()</code>
+documentation</a></li>
+<li><a href="https://ncss-tech.github.io/soilDB/reference/fetchSDA_spatial.html"><code>fetchSDA_spatial()</code>
+documentation</a></li>
+<li><a href="https://ncss-tech.github.io/soilDB/reference/get_SDA_coecoclass.html"><code>get_SDA_coecoclass()</code>
+documentation</a></li>
+</ul>
+</div>
+<div id="spatial-analysis-in-r" class="section level3">
+<h3>Spatial Analysis in R</h3>
+<ul>
+<li><a href="https://r-spatial.github.io/sf/"><code>sf</code> package
+documentation</a></li>
+<li><a href="https://rspatial.github.io/terra/"><code>terra</code>
+package documentation</a></li>
+<li><a href="https://r.geocompx.org/"><em>Geocomputation with R</em>
+book</a></li>
+<li><a href="https://rspatial.org/"><em>Spatial Data Science with R and
+<code>terra</code></em> book</a>.</li>
+</ul>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

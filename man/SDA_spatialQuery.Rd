@@ -12,6 +12,7 @@ SDA_spatialQuery(
   db = c("SSURGO", "STATSGO", "SAPOLYGON"),
   byFeature = FALSE,
   idcol = "gid",
+  addFields = NULL,
   query_string = FALSE,
   as_Spatial = getOption("soilDB.return_Spatial", default = FALSE)
 )
@@ -19,7 +20,7 @@ SDA_spatialQuery(
 \arguments{
 \item{geom}{an \code{sf} or \verb{Spatial*} object, with valid CRS. May contain multiple features.}
 
-\item{what}{a character vector specifying what to return. \code{'mukey'}: \code{data.frame} with intersecting map unit keys and names, \code{'mupolygon'}, \code{'mupoint'}, \code{'muline'} overlapping or intersecting map unit polygons, points or lines from selected database, ``featpoint'\code{or}'featline'` for special feature points and lines, 'areasymbol'`: `data.frame` with intersecting soil survey areas, `'sapolygon'`: overlapping or intersecting soil survey area polygons (SSURGO only)}
+\item{what}{a character vector specifying what to return. \code{'mukey'}: \code{data.frame} with intersecting map unit keys and names, \code{'mupolygon'}, \code{'mupoint'}, \code{'muline'} overlapping or intersecting map unit polygons, points or lines from selected database, \code{'featpoint'} or \code{'featline'} for special feature points and lines, \code{'areasymbol'}: \code{data.frame} with intersecting soil survey areas, \code{'sapolygon'}: overlapping or intersecting soil survey area polygons (SSURGO only)}
 
 \item{geomIntersection}{logical; \code{FALSE} (default): overlapping map unit polygons returned, \code{TRUE}: intersection of \code{geom} + map unit polygons is returned.}
 
@@ -30,6 +31,8 @@ SDA_spatialQuery(
 \item{byFeature}{Iterate over features, returning a combined data.frame where each feature is uniquely identified by value in \code{idcol}. Default \code{FALSE}.}
 
 \item{idcol}{Unique IDs used for individual features when \code{byFeature = TRUE}; Default \code{"gid"}}
+
+\item{addFields}{character; Amend result with a query to \code{mapunit} table for additional information? Default: \code{NULL}. A character vector can be used to specify columns from the \code{legend}, \code{mapunit}, and \code{muaggatt} tables (for \code{mupolygon}, \code{mupoint}, \code{muline} and \code{mukey}), \code{legend} table for areasymbol and sapolygon, and \code{featdesc} for \code{featpoint} and \code{featline}.  Mapunit and mapunit aggregate attribute tables are ignored for soil survey area polygon results.}
 
 \item{query_string}{Default: \code{FALSE}; if \code{TRUE} return a character string containing query that would be sent to SDA via \code{SDA_query}}
 
