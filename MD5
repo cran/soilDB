@@ -1,13 +1,13 @@
-c934779fc58de5ed067522d393df1bad *DESCRIPTION
-073f8eb6296734ce81b92cb62fa5a7dc *NAMESPACE
-bb422b127e0881f0c88064dbb1d8f68b *NEWS.md
+8d1b34b4f0bbfc1459cf9306e4dee11f *DESCRIPTION
+bf94cef3e5b8ca4299649a22a7c5d662 *NAMESPACE
+14c082d559d88092745a8f2e94ca7e39 *NEWS.md
 88197d6e87ca596ab89e6a32eb585d72 *R/AAAA.R
 4e590a5c4676165a4ca0dfa7d614e5e2 *R/ISSR800.R
 606c56f0f0d9822e0815a934bcb42a05 *R/KSSL_VG_model.R
 9fb54e268c507fc8bb3d08064c4e95b3 *R/OSDquery.R
 cb7279f6368d31553989c59d03c29577 *R/ROSETTA.R
-69d784c7018c5356661e2577c1fe3fc5 *R/SDA-spatial.R
-ff317a915462866104c295ff1b18850c *R/SDA_query.R
+cf140cc1f4623a694a327d6cd57a4b00 *R/SDA-spatial.R
+d83989b40ceb76133c0f4f9e28b23df2 *R/SDA_query.R
 2752eb0fc0945dd9fc715ff88cbe2e1b *R/SDA_utils.R
 795fa5e8d5a16a6cfef74230af051967 *R/SSURGO_spatial_query.R
 3858a1076d7f6878dce23e83e01d9412 *R/STR.R
@@ -19,7 +19,7 @@ e7c9360ececd88712ba91621d403b8d6 *R/createStaticNASIS.R
 6046407267186bbdeb08e46da00a6571 *R/database-sources.R
 6b9cc3338788eb0a98b621268afaa299 *R/dbQueryNASIS.R
 2af1ab4a8d7a330753c709a29a2fc45f *R/estimateColorMixture.R
-52c0dd55614e74c201cee7f34801996b *R/fetchEDIT_tools.R
+3173364f07bad40477bfb12b6b6d4707 *R/fetchEDIT_tools.R
 3891b5a7ab5802dba789d239532a41e4 *R/fetchHWSD.R
 c5d32a5bfcc77a1330f4dc420f3943d4 *R/fetchHenry.R
 727bbec229466f6e859bc742641c1982 *R/fetchKSSL.R
@@ -45,8 +45,9 @@ e0a6639f90f410002c4a849abb86c0b9 *R/filter_KSSL.R
 2f5042b5a637103d2c8847addcb5c673 *R/getHzErrorsPedonPC.R
 1c1ac2f7fbc96d57c5810e680210b53c *R/get_NASIS_table_key_by_name.R
 2dc65f4f2e808198234a1ad5824258e1 *R/get_NASIS_table_name_by_purpose.R
-a182a63aff62b7b4c68e325705fd9e4b *R/get_OSD.R
+491456d36324378782f89e82b40a79f1 *R/get_OSD.R
 0d8b11b44b5f6a5ca9869dc48fb37d50 *R/get_RMF_from_NASIS_db.R
+6fc6754ea85f684c4541579e0b64cf80 *R/get_SDA_NASIS_keys.R
 c328a091b2957a3cb756f3965cd88afb *R/get_SDA_coecoclass.R
 9e2ba223d09aad76af6828424b95ae53 *R/get_SDA_cosurfmorph.R
 b88bd91475f346be3ddc0c57d4406d5f *R/get_SDA_hydric.R
@@ -54,7 +55,7 @@ b88bd91475f346be3ddc0c57d4406d5f *R/get_SDA_hydric.R
 f8909ae3332eaa8ff6f5b238d2805934 *R/get_SDA_metrics.R
 3d427926e6772fc0294919953e1e4d3c *R/get_SDA_muaggatt.R
 c66f3ab4af9c6575967df4a042564d95 *R/get_SDA_pmgroupname.R
-43e610a60fec7e661d2e4286622782a2 *R/get_SDA_property.R
+7a7e5a5d737e4a01ab552dbf49722221 *R/get_SDA_property.R
 8209ecfd2842e1808e40d940dd6457a5 *R/get_SSURGO_utils.R
 c059fe218d75ec90d5de7e23ad0192b7 *R/get_colors_from_NASIS_db.R
 072bdc99ca77a6a66a9ad579b0e07112 *R/get_colors_from_pedon_db.R
@@ -121,9 +122,9 @@ fa69b53ec23f1e2a63a25516cf1fc834 *inst/doc/dominant-es.html
 b5bdefb15bdb0bbbc9e8d6395602a90a *inst/doc/fetchNASIS.R
 c41242c2f6ba58264d2596970d913c97 *inst/doc/fetchNASIS.Rmd
 07b831cf8e3708d02cee72d6413dcd48 *inst/doc/fetchNASIS.html
-d4d2f89b7ba65358effc76e477538df2 *inst/doc/local-ssurgo.R
-7f08094added2453d898c77d09d15b96 *inst/doc/local-ssurgo.Rmd
-6ed6bd3dbb2f2ac52f7f7c7afc3a43cd *inst/doc/local-ssurgo.html
+53f1232511f5addd2c6d5bd3a468425a *inst/doc/local-ssurgo.R
+d07fb2714ff980e8163a6b91f19c0090 *inst/doc/local-ssurgo.Rmd
+2dd8061090eee575352a8b95b9fc86a0 *inst/doc/local-ssurgo.html
 9d7434f801a66e25a432d4d4900bda60 *inst/doc/wcs-ssurgo.R
 c8cab25f8eaf23b9577b4a24ae0b21e3 *inst/doc/wcs-ssurgo.Rmd
 a0ecc755ff181a2bb171e85ee4a8d63d *inst/doc/wcs-ssurgo.html
@@ -137,7 +138,7 @@ ad2a0c919cf5508e37984e8d0f128812 *man/OSDquery.Rd
 793aeabd865128cfbee5e2090a9b8290 *man/ROSETTA.Rd
 23f20a8a57167af3708b5e80ddf12d4a *man/SCAN_SNOTEL_metadata.Rd
 706679cca0e207d37168d00c58d6a18b *man/SDA_query.Rd
-e2c542a65cf60e9868f172401d2914f0 *man/SDA_spatialQuery.Rd
+b407fccfc8a242ee76203b9f309feb44 *man/SDA_spatialQuery.Rd
 b5227f0b1337d9d4e54d65ed2a4f74c9 *man/STRplot.Rd
 2009ef5b2bb1d76c5716b0a9a39a9ab0 *man/SoilWeb_spatial_query.Rd
 9740262a814847ae19fd3ea43c9aabbf *man/WCS_details.Rd
@@ -176,8 +177,9 @@ c07ac2ab0ac653148ce2a525f34caf8a *man/get_NASIS_table_key_by_name.Rd
 d1f5c2bc2237114f56710ed64e58f854 *man/get_NASIS_table_name_by_purpose.Rd
 c95bd802ff910eb4d955c88be97fb89b *man/get_NOAA_GHCND.Rd
 07d0905293d2a4696174cfbc69668709 *man/get_NOAA_stations_nearXY.Rd
-38cfdaf54333a4760e07bdfb6ac03ad8 *man/get_OSD.Rd
+365cdbb84e359d0eca41839216c6547c *man/get_OSD.Rd
 1fc9a6a80aa1c3c69d64e75daddf01d7 *man/get_RMF_from_NASIS_db.Rd
+11fed6507975178f11f9042c661fd286 *man/get_SDA_NASIS_key.Rd
 de6f49c33ad3e522dbed736f6e70906e *man/get_SDA_coecoclass.Rd
 36d1ea90ce452f2189d2e8639892f382 *man/get_SDA_cosurfmorph.Rd
 82ac81b4dbd4c37203269465c1fa00ae *man/get_SDA_hydric.Rd
@@ -218,7 +220,7 @@ b48c559617c7b38aa71b47e7eed544a7 *man/get_veg_other_from_MT_veg_db.Rd
 8f95d424066e1e2a4747f5121c40a58e *man/loafercreek.Rd
 b438fd71ecb180749a976a2292ecb975 *man/local_NASIS_defined.Rd
 9f06b6872eafa8d4e4cd19500e785f95 *man/makeChunks.Rd
-39e89d4f85e46aff19b3accb0ed8738f *man/make_EDIT_service_URL.Rd
+dd32984686d0e3051b72aa4b616ef6c1 *man/make_EDIT_service_URL.Rd
 bad98f282ab93f8cb6b747d01d48093d *man/metadata.Rd
 f2f9101db41dd086006d5f166c099700 *man/mukey.wcs.Rd
 1ff0688c0e7466c5c33ca5a53771f318 *man/parseWebReport.Rd
@@ -239,7 +241,7 @@ abc2b0e4bab86d4ac015588f839bc484 *man/uncode.Rd
 0941da940469f4badafcc265cd68534f *tests/testthat/test-ISSR800.R
 a92fbfde75b8cf18f069a92eea571c32 *tests/testthat/test-OSDquery.R
 23499959ca5f82f4e9607147fe3a4c36 *tests/testthat/test-ROSETTA.R
-59a66de43f0c225400322e541744bdc3 *tests/testthat/test-SDA_query.R
+53878b23b88df8c64b20c6acb56e52d5 *tests/testthat/test-SDA_query.R
 14e186f4dc45ebfdf5b4e5951f526039 *tests/testthat/test-SoilDataViewer.R
 72e87ffc641114554b2f774f5ad10e8a *tests/testthat/test-aqp_data.R
 9252ce3cfee2e69e2dfabf9077005b76 *tests/testthat/test-dbQueryNASIS.R
@@ -248,8 +250,8 @@ eb6c33e6aee09dfb34e2190d160d6031 *tests/testthat/test-estimateColorMixture.R
 6c117b75fa42a404e5c437eeebf2a26c *tests/testthat/test-fetchEDIT_tools.R
 c9a3897f76fe3a3c9fb90962a52d4a99 *tests/testthat/test-fetchHenry.R
 ed888c0814a28ed3d2944de7502de422 *tests/testthat/test-fetchKSSL.R
-651f2c39f0da3a2addd4c90ab1adb432 *tests/testthat/test-fetchLDM.R
-c4e214e202b2d07a0335eaddbef5644c *tests/testthat/test-fetchNASIS.R
+081547ea15bc9dec43b7ecdd41e77434 *tests/testthat/test-fetchLDM.R
+56c7b622f7c5b6ee9e843b3ef46aaa7d *tests/testthat/test-fetchNASIS.R
 0bc9ec25239f264e8272f989d523f35b *tests/testthat/test-fetchNASISLabData.R
 b694e30fe6ea361b7f88574b3f767ed1 *tests/testthat/test-fetchNASISWebReport.R
 806925a9cd8f6d06e16bd039ba18e25e *tests/testthat/test-fetchOSD.R
@@ -280,5 +282,5 @@ f2487d52d63432deb3d921de15b44125 *tests/testthat/test-soilDBdata.R
 b4e9528e25dd5e5febe662e2ca233aa3 *tests/testthat/test-waterDayYear.R
 5f0a8852fc569a143476e5dc016237ef *vignettes/dominant-es.Rmd
 c41242c2f6ba58264d2596970d913c97 *vignettes/fetchNASIS.Rmd
-7f08094added2453d898c77d09d15b96 *vignettes/local-ssurgo.Rmd
+d07fb2714ff980e8163a6b91f19c0090 *vignettes/local-ssurgo.Rmd
 c8cab25f8eaf23b9577b4a24ae0b21e3 *vignettes/wcs-ssurgo.Rmd
