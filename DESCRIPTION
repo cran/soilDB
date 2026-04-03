@@ -1,7 +1,7 @@
 Package: soilDB
 Type: Package
 Title: Soil Database Interface
-Version: 2.8.13
+Version: 2.9.1
 Authors@R: c(person(given="Dylan", family="Beaudette", role = c("aut"), email = "dylan.beaudette@usda.gov", comment=c(ORCID="0009-0008-2780-4785")),
              person(given="Jay", family="Skovlin", role = c("aut")), 
              person(given="Stephen", family="Roecker", role = c("aut")), 
@@ -10,26 +10,26 @@ Maintainer: Andrew Brown <andrew.g.brown@usda.gov>
 Description: A collection of functions for reading soil data from U.S. Department of Agriculture Natural Resources Conservation Service (USDA-NRCS) and National Cooperative Soil Survey (NCSS) databases.
 License: GPL (>= 3)
 LazyLoad: yes
-Depends: R (>= 3.5.0)
-Imports: grDevices, graphics, stats, utils, methods, aqp (>= 2.1.0),
-        data.table, DBI, curl
-Suggests: jsonlite, xml2, httr, rvest, odbc, RSQLite, sf, wk, terra,
-        raster, knitr, rmarkdown, testthat
+Depends: R (>= 4.1.0)
+Imports: grDevices, graphics, stats, utils, methods, data.table, DBI,
+        curl, jsonlite
+Suggests: aqp (>= 2.1.0), xml2, httr, rvest, odbc, RSQLite, sf, wk,
+        terra, raster, knitr, rmarkdown, testthat
 Repository: CRAN
 URL: https://github.com/ncss-tech/soilDB/,
         https://ncss-tech.github.io/soilDB/,
         https://ncss-tech.github.io/AQP/
 BugReports: https://github.com/ncss-tech/soilDB/issues
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Encoding: UTF-8
 Language: en-US
 LazyData: false
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2025-09-26 23:22:02 UTC; Andrew.G.Brown
+Packaged: 2026-04-02 02:50:32 UTC; andrew
 Author: Dylan Beaudette [aut] (ORCID: <https://orcid.org/0009-0008-2780-4785>),
   Jay Skovlin [aut],
   Stephen Roecker [aut],
   Andrew Brown [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-4565-533X>)
-Date/Publication: 2025-09-27 04:00:21 UTC
+Date/Publication: 2026-04-03 06:50:09 UTC

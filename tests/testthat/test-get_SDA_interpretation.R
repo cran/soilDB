@@ -1,17 +1,40 @@
-target_areas <-  c("CA649", "CA630")
-target_area_rows <- 221
-target_area_rows_all <- 1021
-
+target_areas <- c("CA649", "CA630")
 target_mukeys <- c(463263, 463264)
+  
+test_that("dynamically determine target row counts", {
+
+  skip_if_offline()
+
+  skip_on_cran()
+
+  q <- "SELECT areasymbol, mapunit.mukey, muname FROM mapunit
+        INNER JOIN legend ON mapunit.lkey = legend.lkey 
+        %s"
+  
+  area_in <- sprintf(" AND legend.areasymbol IN %s",
+                     format_SQL_in_statement(target_areas))
+  comp_in <- paste(area_in, sprintf(" INNER JOIN component ON component.mukey = mapunit.mukey %s", 
+                     c("", sprintf("AND compkind %s 'Miscellaneous area'", c("!=", "=")))))
+
+  r1 <- SDA_query(sprintf(q, area_in))
+  r2a <- SDA_query(sprintf(q, comp_in[1]))
+  
+  expect_true(inherits(r1, 'data.frame') || is.null(r1))
+  
+  target_area_rows <<- nrow(r1) # 1:1 with mukey
+  target_area_rows_all <<- nrow(r2a) # 1:1 with component
+
+})
+
 
 test_that("SDA interpretations (dominant component) works", {
-  
-  skip_if_not_installed("httr")
   
   skip_if_offline()
 
   skip_on_cran()
 
+  skip_if(is.null(target_area_rows))
+  
   res <- get_SDA_interpretation("FOR - Potential Seedling Mortality",
                                 method = "Dominant Component", areasymbols = target_areas)
   expect_equivalent(nrow(res), target_area_rows)
@@ -24,59 +47,54 @@ test_that("SDA interpretations (dominant component) works", {
 
 test_that("SDA interpretations (dominant condition) works", {
   
-  skip_if_not_installed("httr")
-  
   skip_if_offline()
 
   skip_on_cran()
+  
+  skip_if(is.null(target_area_rows))
 
   res <- get_SDA_interpretation("FOR - Potential Seedling Mortality",
                                 method = "Dominant Condition", areasymbols = target_areas)
-  skip_if(is.null(res))
   expect_equivalent(nrow(res), target_area_rows)
 
 
   res <- get_SDA_interpretation(c("FOR - Potential Seedling Mortality",
                                   "FOR - Road Suitability (Natural Surface)"),
                                 method = "Dominant Condition", mukeys = target_mukeys)
-  skip_if(is.null(res))
   expect_equivalent(sort(res$mukey), sort(target_mukeys))
 })
 
 test_that("SDA interpretations (weighted average) works", {
   
-  skip_if_not_installed("httr")
-  
   skip_if_offline()
 
   skip_on_cran()
-
+  
+  skip_if(is.null(target_area_rows))
+  
   res <- get_SDA_interpretation("FOR - Potential Seedling Mortality",
                                 method = "Weighted Average", areasymbols = target_areas)
-  skip_if(is.null(res))
   expect_equivalent(nrow(res), target_area_rows)
 
 
   res <- get_SDA_interpretation(c("FOR - Potential Seedling Mortality",
                                   "FOR - Road Suitability (Natural Surface)"),
                                 method = "Weighted Average", mukeys = target_mukeys)
-  skip_if(is.null(res))
   expect_equivalent(sort(res$mukey), sort(target_mukeys))
 })
 
 test_that("SDA interpretations (no aggregation) works", {
   
-  skip_if_not_installed("httr")
-  
   skip_if_offline()
 
   skip_on_cran()
-
+  
+  skip_if(is.null(target_area_rows_all))
+  
   res <- get_SDA_interpretation(c("FOR - Potential Seedling Mortality",
                                   "FOR - Road Suitability (Natural Surface)"),
                                 method = "NONE",
                                 areasymbols = target_areas)
-  skip_if(is.null(res))
   expect_equivalent(nrow(res), target_area_rows_all)
 
 

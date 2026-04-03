@@ -1,0 +1,2658 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Soil Data Access</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Soil Data Access</h1>
+
+
+
+<div id="introduction-to-soil-data-access-sda" class="section level2">
+<h2>Introduction to Soil Data Access (SDA)</h2>
+<p>The Soil Data Access (SDA) system provides REST-based access to the
+SSURGO and STATSGO2 databases maintained by USDA-NRCS. Instead of
+downloading large databases, SDA allows you to query exactly what you
+need via a web service.</p>
+<p><code>soilDB</code> provides several functions that help with
+generating requests to the web service at a low level, as well as
+higher-level functions that can return complex data structures like the
+<code>SoilProfileCollection</code> from the <code>aqp</code> package or
+spatial object types.</p>
+<div id="what-is-sda" class="section level3">
+<h3>What is SDA?</h3>
+<p>SDA provides access to a SQL Server database containing a variety of
+soil information:</p>
+<ul>
+<li><strong>Tabular data</strong>: map units, components, horizons,
+interpretations, ecological classes, laboratory characterization
+results, and more</li>
+<li><strong>Spatial data</strong>: map unit polygons with geometry
+(available via WKT or for spatial queries), point locations (XY
+coordinates)</li>
+</ul>
+<p>The SDA REST endpoint is available at:</p>
+<pre><code>https://sdmdataaccess.sc.egov.usda.gov/tabular/post.rest</code></pre>
+<p>All queries to SDA are executed through the <code>SDA_query()</code>
+function in <code>soilDB</code>, which handles the HTTP POST requests
+and JSON response parsing automatically.</p>
+</div>
+<div id="ssurgo-and-statsgo2-data" class="section level3">
+<h3>SSURGO and STATSGO2 Data</h3>
+<p>SDA contains both the detailed Soil Survey Geographic Database
+(<strong>SSURGO</strong>) and the generalized U.S. General Soil Map
+(<strong>STATSGO2</strong>).</p>
+<ul>
+<li><strong>SSURGO</strong>: Detailed mapping (scales 1:12,000 to
+1:24,000). Identified by specific area symbols (e.g.,
+<code>CA630</code>, <code>IN005</code>).</li>
+<li><strong>STATSGO2</strong>: Generalized mapping (scale 1:250,000) for
+regional/national analysis. Identified by the single area symbol
+<code>&#39;US&#39;</code>.</li>
+</ul>
+<p>See the Data Filters section below for details on filtering out
+STATSGO2 data.</p>
+</div>
+<div id="when-to-use-sda-vs.-local-ssurgo" class="section level3">
+<h3>When to Use SDA vs. Local SSURGO</h3>
+<p>Use SDA for current data from NRCS without manual downloads, queries
+across multiple survey areas, quick one-time analyses, or access to
+interpretations and aggregated properties. Use local SSURGO databases
+for repeated queries to the same survey areas (faster), offline access,
+complete survey databases with all tables, or direct SQLite
+manipulation.</p>
+<p>The same <code>get_SDA_*()</code> functions documented in this
+vignette can be applied to local SSURGO databases by passing the
+<code>dsn</code> parameter. See the <a href="local-ssurgo.html">Local
+SSURGO vignette</a> for downloading and creating local SSURGO GeoPackage
+databases, and for examples of using these functions with local
+data.</p>
+</div>
+<div id="package-requirements" class="section level3">
+<h3>Package Requirements</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(soilDB)</span></code></pre></div>
+<p>For spatial data examples, use <code>sf</code> and
+<code>terra</code>, which are both optional but recommended.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">&quot;sf&quot;</span>, <span class="st">&quot;terra&quot;</span>))</span></code></pre></div>
+<hr />
+</div>
+</div>
+<div id="basic-sda_query-function" class="section level2">
+<h2>Basic <code>SDA_query()</code> Function</h2>
+<div id="core-syntax" class="section level3">
+<h3>Core Syntax</h3>
+<p>The <code>SDA_query()</code> function executes SQL queries directly
+against the SDA database:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Simple query to get the first 5 map units from an area</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="st">SELECT TOP 5</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="st">  mapunit.mukey,</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="st">  mapunit.nationalmusym,</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="st">  legend.areasymbol,</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="st">  mapunit.musym,</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="st">  mapunit.muname</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="st">FROM legend</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="st">INNER JOIN mapunit ON mapunit.lkey = legend.lkey</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="st">WHERE legend.areasymbol = &#39;CA630&#39;</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="st">ORDER BY mapunit.musym</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="fu">head</span>(result)</span></code></pre></div>
+</div>
+<div id="handling-errors" class="section level3">
+<h3>Handling Errors</h3>
+<p>If <code>SDA_query()</code> errors for any reason, the result will
+not be a data.frame with data. Instead it will be an object of class
+<code>&quot;try-error&quot;</code>. You can handle the possibility of error using
+<code>inherits()</code>. For example:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># check if the result is an error response</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">inherits</span>(result, <span class="st">&#39;try-error&#39;</span>)){</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="fu">head</span>(result)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="co"># stop with error message extracted from result</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">&quot;Error occured! &quot;</span>, result[<span class="dv">1</span>])</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>}</span></code></pre></div>
+<p>You can set up a loop to retry a query that fails in the event of
+intermittent network or server issues. You should have a brief period of
+wait time (<code>Sys.sleep()</code>) between requests.</p>
+<p>For repeated failures, it is best to increase that wait time in
+between each try up to, for example, a maximum of 3 attempts. The
+following example uses “exponential backoff” which increases the wait
+time in between requests incrementally from ~3 seconds to ~20 seconds
+over the course of several attempts.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>n_tries <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="cf">while</span> (n_tries <span class="sc">&lt;=</span> <span class="dv">3</span>){</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  </span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="co"># check if the result is an error response</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">inherits</span>(result, <span class="st">&#39;try-error&#39;</span>)){</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>    <span class="fu">head</span>(result)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>    </span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>    <span class="co"># if no error, break out of the loop</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>    <span class="cf">break</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>    <span class="co"># on error, increment the number of tries</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>    <span class="co"># and sleep (time in seconds)</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="fu">exp</span>(n_tries))</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>    </span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>    n_tries <span class="ot">&lt;-</span> n_tries <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>    <span class="cf">if</span> (n_tries <span class="sc">&gt;</span> <span class="dv">3</span>) {</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>      <span class="fu">stop</span>(<span class="st">&quot;Error occured! &quot;</span>, result[<span class="dv">1</span>])</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>    }</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>  }</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="understanding-sda-sql" class="section level3">
+<h3>Understanding SDA SQL</h3>
+<p>SDA uses <strong>Microsoft SQL Server Transact-SQL (T-SQL)</strong>
+dialect.</p>
+<p>Key differences of T-SQL from SQLite and other SQL dialects that are
+relevant to queries used in soilDB include:</p>
+<table>
+<colgroup>
+<col width="25%" />
+<col width="31%" />
+<col width="22%" />
+<col width="20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>T-SQL</th>
+<th>SQLite</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Row limit</td>
+<td><code>TOP 10</code></td>
+<td><code>LIMIT 10</code></td>
+<td>Place after SELECT</td>
+</tr>
+<tr class="even">
+<td>NULL functions</td>
+<td><code>ISNULL(col, 0)</code></td>
+<td><code>IFNULL(col, 0)</code></td>
+<td>Different function names</td>
+</tr>
+<tr class="odd">
+<td>String concatenation</td>
+<td><code>col1 + col2</code></td>
+<td><code>col1 || col2</code></td>
+<td>Different operators</td>
+</tr>
+</tbody>
+</table>
+<p>When using <code>SDA_query()</code> with a <strong>local SQLite
+database</strong> (via <code>dsn</code> parameter), <code>soilDB</code>
+automatically converts some T-SQL syntax to SQLite equivalents to allow
+for both to work. This behavior is triggered when the <code>dsn</code>
+argument is specified. You can view the queries (and save them to run
+yourself) by passing the <code>query_string=TRUE</code> argument.</p>
+</div>
+<div id="basic-table-joins" class="section level3">
+<h3>Basic Table Joins</h3>
+<p>Many custom SSURGO queries follow a standard pattern of relationships
+from legend, to mapunit, to component, to a related table to component
+such as component horizon.</p>
+<p>In SSURGO data model primary and foreign key physical column names
+all end with the word <code>&quot;key&quot;</code>. The primary key is a unique
+identifier of a particular record.</p>
+<p>Foreign keys are references to primary keys of other tables and
+define the relationships between tables that can be used for joins.</p>
+<p>Here we select a handful of values from all of the above mentioned
+tables corresponding to the first 10 component horizon
+(<code>chorizon</code>) in the SDA table.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Get map unit, component, and horizon data</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="st">SELECT TOP 10</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="st">  mu.mukey,</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="st">  leg.areasymbol,</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="st">  mu.musym,</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="st">  co.compname,</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="st">  co.comppct_r,</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="st">  ch.hzname,</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="st">  ch.hzdept_r,</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="st">  ch.hzdepb_r,</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="st">  ch.claytotal_r</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="st">FROM legend AS leg</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="st">INNER JOIN mapunit AS mu ON mu.lkey = leg.lkey</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="st">INNER JOIN component AS co ON co.mukey = mu.mukey</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="st">LEFT JOIN chorizon AS ch ON ch.cokey = co.cokey</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="st">WHERE leg.areasymbol = &#39;CA630&#39;</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="st">  AND co.majcompflag = &#39;Yes&#39;</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="st">  AND ch.claytotal_r IS NOT NULL</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="st">ORDER BY mu.musym, co.comppct_r DESC, ch.hzdept_r</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="fu">head</span>(result, <span class="dv">10</span>)</span></code></pre></div>
+<p>We supplied all of the filtering constraints in a <code>WHERE</code>
+clause for clarity, with joins only using primary and foreign keys.</p>
+<p>In general, the same constraints can be expressed as part of a join
+to relevant tables, which can be more efficient in complex queries.</p>
+</div>
+<div id="understanding-left-join-vs-inner-join" class="section level3">
+<h3>Understanding LEFT JOIN vs INNER JOIN</h3>
+<p>One of the most important considerations in SSURGO queries is
+<strong>data completeness</strong>: not all relationships in the SSURGO
+database are populated for all soils or components. Understanding when
+to use LEFT JOIN vs. INNER JOIN is critical for correct analysis.</p>
+<div id="when-data-are-complete-inner-join" class="section level4">
+<h4>When Data are Complete: INNER JOIN</h4>
+<p>Use <code>INNER JOIN</code> when the relationship <strong>must
+exist</strong> for meaningful results:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># These relationships are always present in SSURGO:</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="co"># - mapunit always belongs to a legend (survey area)</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co"># - component always belongs to a mapunit</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="st">SELECT TOP 10</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="st">  leg.areasymbol,</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="st">  mu.musym,</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="st">  co.compname,</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="st">  co.comppct_r</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="st">FROM legend AS leg</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="st">INNER JOIN mapunit AS mu ON mu.lkey = leg.lkey</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="st">INNER JOIN component AS co ON co.mukey = mu.mukey</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="st">WHERE leg.areasymbol = &#39;CA630&#39;</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="st">ORDER BY mu.musym, co.comppct_r DESC</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co"># Every row represents a valid component with all parent relationships</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="fu">head</span>(result)</span></code></pre></div>
+</div>
+<div id="when-data-may-be-missing-left-join" class="section level4">
+<h4>When Data May Be Missing: LEFT JOIN</h4>
+<p>Use <code>LEFT JOIN</code> when a parent record may exist
+<strong>without child records</strong>. Two example cases:</p>
+<p><strong>Case 1: Components Without Horizons</strong> Some soil
+components in SSURGO do <strong>not</strong> have associated horizon
+data. These are often “non-soil” components (<code>compkind</code>
+“Miscellaneous Area”) or minor components (<code>majcompflag</code>
+“No”) which may lack detailed horizon description:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Some components have NO horizons defined</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co"># INNER JOIN would exclude these components entirely</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co"># LEFT JOIN preserves components even without horizon data</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="st">SELECT</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="st">  leg.areasymbol,</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="st">  mu.mukey,</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="st">  mu.musym,</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="st">  co.compname,</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="st">  co.comppct_r,</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="st">  ch.chkey,</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="st">  ch.hzdept_r,</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="st">  ch.hzdepb_r</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="st">FROM legend AS leg</span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="st">INNER JOIN mapunit AS mu ON mu.lkey = leg.lkey</span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="st">INNER JOIN component AS co ON co.mukey = mu.mukey</span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="st">LEFT JOIN chorizon AS ch ON ch.cokey = co.cokey</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="st">WHERE leg.areasymbol = &#39;CA630&#39;</span></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="st">  AND co.majcompflag = &#39;Yes&#39;</span></span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="st">ORDER BY mu.musym, co.comppct_r DESC, ch.hzdept_r</span></span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a></span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a><span class="co"># Check for components without horizons:</span></span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a><span class="co"># Rows with NA in horizon columns indicate a component with no horizon data</span></span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.data.frame</span>(result) <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(result) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>  components_no_horizons <span class="ot">&lt;-</span> result[<span class="fu">is.na</span>(result<span class="sc">$</span>chkey), ]</span>
+<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">nrow</span>(components_no_horizons) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">&#39;Found&#39;</span>, <span class="fu">nrow</span>(components_no_horizons), <span class="st">&#39;components without horizon data:</span><span class="sc">\n</span><span class="st">&#39;</span>)</span>
+<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>    <span class="fu">print</span>(components_no_horizons[, <span class="fu">c</span>(<span class="st">&#39;musym&#39;</span>, <span class="st">&#39;compname&#39;</span>, <span class="st">&#39;comppct_r&#39;</span>)])</span>
+<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>  }</span>
+<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Comparison: INNER JOIN would have excluded those
+components:</strong></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Using INNER JOIN on horizons drops components that lack horizon data</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>q_inner <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="st">SELECT</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="st">  leg.areasymbol,</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="st">  mu.mukey,</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="st">  mu.musym,</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="st">  co.compname,</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="st">  co.comppct_r,</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="st">  ch.desgnmaster,</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="st">  ch.hzdept_r,</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="st">  ch.hzdepb_r</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="st">FROM legend AS leg</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="st">INNER JOIN mapunit AS mu ON mu.lkey = leg.lkey</span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="st">INNER JOIN component AS co ON co.mukey = mu.mukey</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="st">INNER JOIN chorizon AS ch ON ch.cokey = co.cokey</span></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="st">WHERE leg.areasymbol = &#39;CA630&#39;</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="st">  AND co.majcompflag = &#39;Yes&#39;</span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="st">ORDER BY mu.musym, co.comppct_r DESC, ch.hzdept_r</span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>result_inner <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q_inner)</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a><span class="co"># number of rows in LEFT JOIN result</span></span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a><span class="fu">nrow</span>(result)</span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a><span class="co"># number of rows in INNER JOIN result</span></span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a><span class="fu">nrow</span>(result_inner)</span></code></pre></div>
+<p><strong>Case 2: Horizons Without Rock Fragments</strong></p>
+<p>Similarly, not all horizons have child table rock fragment volume
+recorded. An empty chfrags table is conventionally used for horizons
+with no fragments, but in some cases may be used for soils that have
+non-zero fragment weight fractions (for example, those with human
+artifacts). When you need to include horizons regardless of fragment
+availability, use LEFT JOIN:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Some horizons have NO rock fragment data recorded</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co"># LEFT JOIN preserves horizons even without fragment information</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="st">SELECT</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="st">  mu.musym,</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="st">  co.compname,</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="st">  ch.desgnmaster,</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="st">  ch.hzdept_r,</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="st">  ch.hzdepb_r,</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="st">  rf.fragsize_h,</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="st">  rf.fragvol_r</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="st">FROM legend AS leg</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="st">INNER JOIN mapunit AS mu ON mu.lkey = leg.lkey</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="st">INNER JOIN component AS co ON co.mukey = mu.mukey</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="st">LEFT JOIN chorizon AS ch ON ch.cokey = co.cokey</span></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="st">LEFT JOIN chfrags AS rf ON rf.chkey = ch.chkey</span></span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="st">WHERE leg.areasymbol = &#39;CA630&#39;</span></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a><span class="st">  AND co.majcompflag = &#39;Yes&#39;</span></span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="st">ORDER BY mu.musym, co.comppct_r DESC, ch.hzdept_r</span></span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a></span>
+<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a><span class="co"># Check for horizons without fragments:</span></span>
+<span id="cb11-25"><a href="#cb11-25" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.data.frame</span>(result) <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(result) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb11-26"><a href="#cb11-26" tabindex="-1"></a>  horizons_no_frags <span class="ot">&lt;-</span> result[<span class="sc">!</span><span class="fu">duplicated</span>(result<span class="sc">$</span>chkey) <span class="sc">&amp;</span> <span class="fu">is.na</span>(result<span class="sc">$</span>fragsize_h), ]</span>
+<span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">nrow</span>(horizons_no_frags) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb11-28"><a href="#cb11-28" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">&#39;Found&#39;</span>, <span class="fu">nrow</span>(horizons_no_frags), <span class="st">&#39;horizons without rock fragment data:</span><span class="sc">\n</span><span class="st">&#39;</span>)</span>
+<span id="cb11-29"><a href="#cb11-29" tabindex="-1"></a>    <span class="fu">print</span>(horizons_no_frags[, <span class="fu">c</span>(<span class="st">&#39;musym&#39;</span>, <span class="st">&#39;compname&#39;</span>, <span class="st">&#39;desgnmaster&#39;</span>, <span class="st">&#39;fragvol_r&#39;</span>)])</span>
+<span id="cb11-30"><a href="#cb11-30" tabindex="-1"></a>  }</span>
+<span id="cb11-31"><a href="#cb11-31" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="summary-when-to-use-each-join-type" class="section level4">
+<h4>Summary: When to Use Each Join Type</h4>
+<table>
+<colgroup>
+<col width="36%" />
+<col width="36%" />
+<col width="26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Situation</th>
+<th>Join Type</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Query result must have values at all levels</td>
+<td>INNER</td>
+<td>Filter out incomplete records</td>
+</tr>
+<tr class="even">
+<td>Parent may exist without children (components without horizons,
+horizons without fragments)</td>
+<td>LEFT</td>
+<td>Preserve parent records even when children are missing</td>
+</tr>
+<tr class="odd">
+<td>Calculating aggregations (COUNT, SUM, AVG) with missing data</td>
+<td>Depends</td>
+<td>LEFT includes zero-occurrence groups; INNER ignores them</td>
+</tr>
+<tr class="even">
+<td>Applying WHERE filters to child tables</td>
+<td>Typically LEFT</td>
+<td>INNER JOIN combined with WHERE can lose parents unintentionally</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tip:</strong> When using LEFT JOIN, always check for
+<code>NA</code> values in child table columns to identify records with
+missing child data.</p>
+<hr />
+</div>
+</div>
+<div id="aggregation-functions" class="section level3">
+<h3>Aggregation Functions</h3>
+<p>SDA supports standard SQL aggregate functions (COUNT, SUM, AVG, MIN,
+MAX, etc.):</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Get component statistics per map unit</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="st">SELECT</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="st">  mu.mukey,</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="st">  mu.musym,</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="st">  mu.muname,</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="st">  COUNT(co.cokey) AS n_components,</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="st">  SUM(co.comppct_r) AS total_comppct,</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="st">  AVG(co.comppct_r) AS avg_comppct</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="st">FROM legend AS leg</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="st">INNER JOIN mapunit AS mu ON mu.lkey = leg.lkey</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="st">INNER JOIN component AS co ON co.mukey = mu.mukey</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="st">WHERE leg.areasymbol = &#39;CA630&#39;</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="st">GROUP BY mu.mukey, mu.musym, mu.muname</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="st">ORDER BY mu.musym</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="fu">head</span>(result)</span></code></pre></div>
+<p>Here we use SQL <code>GROUP BY</code> to define the columns used to
+determine unique groups. Other columns that are not part of the GROUP BY
+statement need to be included in some sort of aggregation expression to
+be used in SELECT clause.</p>
+<p>When calculating map unit weighted averages using custom SQL, be
+aware that <code>comppct_r</code> (Component Percentage) does not always
+sum to 100% for a map unit due to minor component inclusions that may
+not be exported or missing data.</p>
+<p>A robust weighted average should normalize weights by the sum of
+component percentages present in the data, rather than assuming a sum of
+100. This is especially important if you are relying on INNER JOIN to
+chorizon table, as many mapunits have at least some components with no
+horizon data.</p>
+</div>
+<div id="data-filters" class="section level3">
+<h3>Data Filters</h3>
+<div id="filtering-ssurgo-vs.-statsgo2" class="section level4">
+<h4>Filtering SSURGO vs. STATSGO2</h4>
+<p>When querying SDA, especially without specific map unit keys or area
+symbols, it is often important to exclude STATSGO2 data to prevent
+mixing these two distinct datasets.</p>
+<p><strong>Common filter to exclude STATSGO2:</strong></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="kw">WHERE</span> areasymbol <span class="op">!=</span> <span class="st">&#39;US&#39;</span></span></code></pre></div>
+</div>
+<div id="filtering-horizon-data" class="section level4">
+<h4>Filtering Horizon Data</h4>
+<p>When aggregating soil properties, it is sometimes important to
+exclude layers that do not represent mineral soil so that depth-weighted
+averages and other statistics are not skewed.</p>
+<p>Note that if zero values are present for a soil property they can
+drag down averages. If you include a weighting factor in a custom query
+for the thickness of a layer with a <code>NULL</code> value, that is
+essentially the same as if the property value were <code>0</code>.</p>
+<p>The two most common types of non-mineral soil layers to exclude
+are:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Bedrock and other Root-Limiting Layers:</strong> Below
+the “bottom of the soil” (e.g., <code>R</code>, <code>Cr</code>
+horizons).</p></li>
+<li><p><strong>Dry Surface Organic Layers (Duff):</strong> High-carbon,
+low bulk density, dry organic (O) horizons</p></li>
+</ol>
+</div>
+<div id="filtering-strategy" class="section level4">
+<h4>Filtering Strategy</h4>
+<p>Since SSURGO data spans decades of standards, no single column
+perfectly identifies these non-soil layers.</p>
+<p>The safest approach is to use the new computed <code>horztype</code>
+column <em>in combination with</em> in lieu texture class codes.
+Currently <code>horztype</code> only supports identification of dry
+organic layers on the surface, but it may be extended to other material
+types in the future.</p>
+<p><strong>1. Filter Bedrock:</strong></p>
+<p>Bedrock layers often have <code>NULL</code> property values, which is
+not much of a problem provided there are data available for the
+overlying soil layers; but you will need to exclude the thickness of the
+bedrock layers for accurate depth-weighted average calculations.</p>
+<p>The <code>horztype</code> column does not capture bedrock. You must
+filter by texture code:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co">/* Exclude Bedrock */</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="kw">AND</span> texturerv <span class="kw">NOT</span> <span class="kw">IN</span> (<span class="st">&#39;BR&#39;</span>, <span class="st">&#39;WB&#39;</span>, <span class="st">&#39;UWB&#39;</span>) </span></code></pre></div>
+<p>This includes the modern “bedrock” (BR), as well as the obsolete
+“weathered bedrock” and “unweathered bedrock”. For the purposes of
+excluding non-soil bedrock material, they can be treated as equivalent
+and will cover many cases.</p>
+<p>There are a variety of other “in lieu” texture codes that are used to
+identify cemented materials (“CEM”, “IND”, “MAT”) which may or may not
+have other texture information and may also need to be considered for
+exclusion.</p>
+<p>While it might be tempting to just filter on horizon designation
+(e.g. excluding R or Cr layers explicitly), as discussed below this is
+not completely reliable on its own.</p>
+<p><strong>2. Filter Dry Organics (Duff):</strong></p>
+<p>The <code>horztype</code> column is currently primarily for
+identifying “Dry Organic” layers. This is a new column that has been
+programmatically populated to help users filter out a common set of
+data.</p>
+<p>Combine <code>horztype</code> with texture codes like
+<code>&quot;SPM&quot;</code> (which is the least-decomposed organic soil material:
+dry fibric material) for more robust confirmation of filtering logic.
+You can also include <code>&quot;MPM&quot;</code> and <code>&quot;HPM&quot;</code> if you
+are interested in excluding even more decomposed dry organic
+materials:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co">/* Exclude &quot;Duff&quot; / Dry Organics */</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="kw">AND</span> ISNULL(horztype, <span class="st">&#39;&#39;</span>) <span class="op">!=</span> <span class="st">&#39;Dry Organic&#39;</span></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="kw">AND</span> texturerv <span class="kw">NOT</span> <span class="kw">IN</span> (<span class="st">&#39;SPM&#39;</span>, <span class="st">&#39;MPM&#39;</span>, <span class="st">&#39;HPM&#39;</span>) </span></code></pre></div>
+<p>The population of O horizons in SSURGO is inconsistent due to
+evolving data collection standards. While modern surveys often include
+numerical data for organic surface layers, legacy data may only mention
+them in descriptions without populated properties.</p>
+<p>Retain these layers when analyzing data completeness or identifying
+diagnostic features like folistic epipedons. However, for analyses
+focused on mineral soil properties, excluding them is often necessary to
+prevent skewing depth-weighted averages.</p>
+<p><strong>Note:</strong> We generally want to <em>keep</em> “Wet
+Organic” layers (PEAT, MPT [mucky peat], and MUCK) as these may be
+diagnostic for Histosols, Histic epipedons etc., which are important
+concepts for identification of hydric soils.</p>
+<p><strong>3. Filter by Horizon Designation</strong></p>
+<p>It is also possible, but not completely reliable due to soil survey
+vintage and patterns in historical data population, to filter by horizon
+designation.</p>
+<p>For instance, a logical statement to exclude the master horizon
+designation “O” for organics:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="kw">AND</span> desgnmaster <span class="op">!=</span> <span class="st">&#39;O&#39;</span></span></code></pre></div>
+<p>While using horizon designations is conceptually appealing, it is
+problematic when it is the only logic you are using. Horizon
+designations were not historically populated for the aggregate soil
+component data (SSURGO).</p>
+<p>In the last two decades layers in the <code>chorizon</code> table
+have been assigned morphologic horizon designations, but this has not
+been done retroactively. Some older soil surveys still use “H” as the
+master horizon designation for all layers e.g. H1, H2, H3 instead of A,
+B, C. If this is the case the only way to identify bedrock, or organic
+layers, is to use other data elements such as in lieu texture class.</p>
+</div>
+<div id="soil-materials" class="section level4">
+<h4>Soil Materials</h4>
+<p>This section demonstrates filtering horizon data based on material
+types.</p>
+<p>We will start with a custom query that targets components with
+“Histic” taxonomic subgroup formative element.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="st">SELECT TOP 10</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="st">  component.compname,</span></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="st">  ch.hzname,</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="st">  ch.hzdept_r,</span></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="st">  ch.hzdepb_r,</span></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="st">  ch.texturerv,</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="st">  ch.horztype,</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="st">  ch.claytotal_r,</span></span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a><span class="st">  ch.om_r</span></span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="st">FROM chorizon AS ch</span></span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="st">INNER JOIN component ON component.cokey = ch.cokey AND taxsubgrp LIKE &#39;%Histic%&#39;</span></span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="st">ORDER BY component.cokey, hzdept_r</span></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a></span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a>result</span></code></pre></div>
+<p>Here is a sample query to select mineral and wet organic soil
+layers:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="st">SELECT TOP 10</span></span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="st">  ch.hzname,</span></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="st">  ch.hzdept_r,</span></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="st">  ch.hzdepb_r,</span></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a><span class="st">  ch.texturerv,</span></span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="st">  ch.horztype,</span></span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="st">  ch.claytotal_r,</span></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a><span class="st">  ch.om_r</span></span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a><span class="st">FROM chorizon AS ch</span></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="st">WHERE </span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a><span class="st">  -- 1. Exclude Bedrock</span></span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a><span class="st">  ch.texturerv NOT IN (&#39;BR&#39;, &#39;WB&#39;, &#39;UWB&#39;) </span></span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a><span class="st">  </span></span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a><span class="st">  -- 2. Exclude Dry Organic / Duff</span></span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a><span class="st">  AND ISNULL(ch.horztype, &#39;&#39;) != &#39;Dry Organic&#39;</span></span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a><span class="st">  AND ch.texturerv NOT IN (&#39;SPM&#39;, &#39;MPM&#39;, &#39;HPM&#39;)</span></span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a><span class="st">ORDER BY cokey, hzdept_r</span></span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a></span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a><span class="fu">head</span>(result)</span></code></pre></div>
+<p>In contrast to bedrock, organic soil materials are soil materials,
+whether they are wet or dry–but it is important to know when you may
+need to look past them. Organic layers have very low bulk density and
+very high organic carbon content, both of which can skew “mineral soil”
+averages if included in depth-weighted calculations.</p>
+<p>Take for example the K factor for estimating erosion hazard: users
+often want properties for an exposed mineral soil surface rather than
+that of an organic layer over the mineral soil surface. In general, the
+concept of K factor does not apply to the organic surface.</p>
+<p>To demonstrate, we will look at the whole SSURGO database. We count
+the number of horizons with master designation “O” and horizon top depth
+<code>0</code> within groups of different combinations of
+<code>Kw</code> and <code>Kf</code>, and sort in decreasing order.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="st">SELECT </span></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="st">  COUNT(chkey) AS n, </span></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="st">  kwfact, </span></span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="st">  kffact </span></span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a><span class="st">FROM chorizon </span></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a><span class="st">WHERE desgnmaster = &#39;O&#39; AND hzdept_r = 0</span></span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a><span class="st">GROUP BY kwfact, kffact</span></span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a><span class="st">ORDER BY n DESC</span></span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a>result<span class="sc">$</span>percent <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">prop.table</span>(result<span class="sc">$</span>n) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a><span class="fu">head</span>(result, <span class="dv">10</span>)</span></code></pre></div>
+<p>This query shows that many O horizons at the soil surface have NULL K
+factor values.</p>
+<p>The take away from this should be: if your analysis relies on having
+K factor <strong>everywhere</strong> you will either need to filter out
+the O horizons, or come up with a way to impute a value to replace the
+NULL values.</p>
+</div>
+</div>
+<div id="rock-fragment-data" class="section level3">
+<h3>Rock Fragment Data</h3>
+<p>Rock fragments are particles larger than 2 mm. In SSURGO, fragment
+data are stored in several places both aggregated up to the horizon
+level, and in child tables of horizon.</p>
+<p>Fragments are classified by size class (e.g. gravel, cobbles, stones,
+boulders) and recorded as volume percentages. Derived weight fractions
+are also stored at the horizon level.</p>
+<div id="basic-rock-fragment-query" class="section level4">
+<h4>Basic Rock Fragment Query</h4>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="co"># Query horizons with their rock fragment content</span></span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a><span class="st">SELECT TOP 20</span></span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a><span class="st">  mu.musym,</span></span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a><span class="st">  co.compname,</span></span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a><span class="st">  ch.hzname,</span></span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="st">  ch.hzdept_r,</span></span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a><span class="st">  ch.hzdepb_r,</span></span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a><span class="st">  rf.fragkind,</span></span>
+<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a><span class="st">  rf.fragsize_h,</span></span>
+<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a><span class="st">  rf.fragvol_r</span></span>
+<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a><span class="st">FROM legend AS leg</span></span>
+<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a><span class="st">INNER JOIN mapunit AS mu ON mu.lkey = leg.lkey</span></span>
+<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a><span class="st">INNER JOIN component AS co ON co.mukey = mu.mukey</span></span>
+<span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a><span class="st">LEFT JOIN chorizon AS ch ON ch.cokey = co.cokey</span></span>
+<span id="cb20-16"><a href="#cb20-16" tabindex="-1"></a><span class="st">LEFT JOIN chfrags AS rf ON rf.chkey = ch.chkey</span></span>
+<span id="cb20-17"><a href="#cb20-17" tabindex="-1"></a><span class="st">WHERE leg.areasymbol = &#39;CA630&#39;</span></span>
+<span id="cb20-18"><a href="#cb20-18" tabindex="-1"></a><span class="st">  AND co.majcompflag = &#39;Yes&#39;</span></span>
+<span id="cb20-19"><a href="#cb20-19" tabindex="-1"></a><span class="st">ORDER BY mu.musym, co.comppct_r DESC, ch.hzdept_r, rf.fragsize_h</span></span>
+<span id="cb20-20"><a href="#cb20-20" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb20-21"><a href="#cb20-21" tabindex="-1"></a></span>
+<span id="cb20-22"><a href="#cb20-22" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb20-23"><a href="#cb20-23" tabindex="-1"></a><span class="fu">head</span>(result, <span class="dv">20</span>)</span></code></pre></div>
+<p>Above you can see multiple fragment size classes can exist in a
+single horizon (a many-to-one relationship). Horizons without fragments
+generally have no records in the <code>chfrags</code> table.</p>
+<ul>
+<li><p><code>chfrags</code> table contains individual fragment records
+per horizon and size class (e.g. at least one each for gravel, cobbles,
+stones, boulders, where present)</p></li>
+<li><p><code>fragsize_h</code> indicates upper end of fragment size
+range for a specific record</p></li>
+<li><p><code>fragvol_r</code> is the representative volume percentage
+for that specific record</p></li>
+</ul>
+</div>
+<div id="aggregating-rock-fragments-by-horizon" class="section level4">
+<h4>Aggregating Rock Fragments by Horizon</h4>
+<p>Sum fragment volumes to get total rock fragment content per
+horizon:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co"># Total rock fragment content per horizon</span></span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a><span class="st">SELECT</span></span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="st">  mu.musym,</span></span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a><span class="st">  co.compname,</span></span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a><span class="st">  co.comppct_r,</span></span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="st">  ch.hzname,</span></span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="st">  ch.hzdept_r,</span></span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a><span class="st">  ch.hzdepb_r,</span></span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="st">  SUM(rf.fragvol_r) AS calc_fragvoltot_r,</span></span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="st">  COUNT(DISTINCT rf.fragsize_h) AS n_frag_classes</span></span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="st">FROM legend AS leg</span></span>
+<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a><span class="st">INNER JOIN mapunit AS mu ON mu.lkey = leg.lkey</span></span>
+<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a><span class="st">INNER JOIN component AS co ON co.mukey = mu.mukey</span></span>
+<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a><span class="st">LEFT JOIN chorizon AS ch ON ch.cokey = co.cokey</span></span>
+<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a><span class="st">LEFT JOIN chfrags AS rf ON rf.chkey = ch.chkey</span></span>
+<span id="cb21-17"><a href="#cb21-17" tabindex="-1"></a><span class="st">WHERE leg.areasymbol = &#39;CA630&#39;</span></span>
+<span id="cb21-18"><a href="#cb21-18" tabindex="-1"></a><span class="st">  AND co.majcompflag = &#39;Yes&#39;</span></span>
+<span id="cb21-19"><a href="#cb21-19" tabindex="-1"></a><span class="st">GROUP BY mu.musym, co.compname, co.comppct_r, ch.hzname,</span></span>
+<span id="cb21-20"><a href="#cb21-20" tabindex="-1"></a><span class="st">         ch.hzdept_r, ch.hzdepb_r, ch.chkey</span></span>
+<span id="cb21-21"><a href="#cb21-21" tabindex="-1"></a><span class="st">ORDER BY mu.musym, co.comppct_r DESC, ch.hzdept_r</span></span>
+<span id="cb21-22"><a href="#cb21-22" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb21-23"><a href="#cb21-23" tabindex="-1"></a></span>
+<span id="cb21-24"><a href="#cb21-24" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb21-25"><a href="#cb21-25" tabindex="-1"></a><span class="fu">head</span>(result)</span></code></pre></div>
+<p><strong>Note:</strong> T-SQL is strict about aggregation syntax.
+Every column in the SELECT clause that is not wrapped in an aggregate
+function (SUM, COUNT, etc.) MUST be listed in the GROUP BY clause.</p>
+</div>
+<div id="rock-fragment-properties-via-get_sda_property" class="section level4">
+<h4>Rock Fragment Properties via get_SDA_property()</h4>
+<p>Use <code>get_SDA_property()</code> to retrieve rock fragment
+properties with aggregation:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="co"># Get rock fragment weight percentages (3-10 inch class)</span></span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a>frag_3_10 <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;Rock Fragments 3 - 10 inches - Rep Value&quot;</span>,  <span class="co"># equivalent to &#39;frag3to10_r&#39;</span></span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Component (Numeric)&quot;</span>, <span class="co"># dominant component, weighted average by depth</span></span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a>  <span class="at">top_depth =</span> <span class="dv">0</span>,</span>
+<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a>  <span class="at">bottom_depth =</span> <span class="dv">100</span>  <span class="co"># depth range for averaging</span></span>
+<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a>)</span>
+<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" tabindex="-1"></a><span class="fu">head</span>(frag_3_10)</span>
+<span id="cb22-11"><a href="#cb22-11" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" tabindex="-1"></a><span class="co"># get fragment volume (fragvoltot_l, fragvoltot_r, fragvoltot_h)</span></span>
+<span id="cb22-13"><a href="#cb22-13" tabindex="-1"></a>fragvol_total <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb22-14"><a href="#cb22-14" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;fragvoltot_r&quot;</span>,</span>
+<span id="cb22-15"><a href="#cb22-15" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Weighted Average&quot;</span>, <span class="co"># weighted by component percentage and depth</span></span>
+<span id="cb22-16"><a href="#cb22-16" tabindex="-1"></a>  <span class="at">top_depth =</span> <span class="dv">0</span>,</span>
+<span id="cb22-17"><a href="#cb22-17" tabindex="-1"></a>  <span class="at">bottom_depth =</span> <span class="dv">100</span>,</span>
+<span id="cb22-18"><a href="#cb22-18" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb22-19"><a href="#cb22-19" tabindex="-1"></a>)</span>
+<span id="cb22-20"><a href="#cb22-20" tabindex="-1"></a></span>
+<span id="cb22-21"><a href="#cb22-21" tabindex="-1"></a><span class="fu">head</span>(fragvol_total)</span></code></pre></div>
+<p><strong>Note:</strong> Fragment weight fraction properties in
+<code>chorizon</code> (like <code>frag3to10_r</code> and
+<code>fraggt10_r</code>) are always populated, but currently the
+<code>fragvoltot_*</code> columns are not and data availability depends
+on the vintage of the specific SSURGO map unit data.</p>
+<hr />
+</div>
+</div>
+</div>
+<div id="sda-query-limits-and-strategies" class="section level2">
+<h2>SDA Query Limits and Strategies</h2>
+<div id="sda-query-limitations" class="section level3">
+<h3>SDA Query Limitations</h3>
+<p>The SDA system has important hard limits:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Record Limit</strong>: Queries that return more than
+<strong>100,000 records</strong> are rejected</p></li>
+<li><p><strong>Result Size</strong>: Response serialization limited to
+approximately <strong>32 Mb</strong></p></li>
+<li><p><strong>Memory Limit</strong>: Queries generally cannot exceed
+approximately <strong>300 Mb</strong> memory usage</p></li>
+<li><p><strong>Timeouts and Complexity</strong>: Long-running queries
+may timeout or hit other internal limits during query planning</p></li>
+</ol>
+<p><strong>Note on Local vs. Remote:</strong> These limits primarily
+apply to the <strong>Remote SDA API</strong>. When querying a
+<strong>local SQLite database</strong> (e.g. created via
+<code>createSSURGO()</code> or <code>downloadSSURGO()</code>), you are
+generally unrestricted by record counts or timeouts. Complex tabular
+queries can often be run on entire states or the whole country locally
+without the need for chunking or simplification.</p>
+</div>
+<div id="strategies-for-large-queries" class="section level3">
+<h3>Strategies for Large Queries</h3>
+<ol style="list-style-type: decimal">
+<li><strong>Add WHERE clause</strong> to reduce result set:</li>
+</ol>
+<p>This query will return &gt;100k records (all components across all of
+SSURGO and STATSGO) (<strong>bad</strong>):</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> component</span></code></pre></div>
+<p>This query selects a specific component name pattern in
+<code>WHERE</code> clause (good):</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> component </span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a><span class="kw">WHERE</span> compname <span class="kw">LIKE</span> <span class="st">&#39;Miami%&#39;</span></span></code></pre></div>
+<ol start="2" style="list-style-type: decimal">
+<li><strong>Use TOP clause</strong> to limit number of results (useful
+for testing):</li>
+</ol>
+<p>Use a <code>TOP</code> clause to test with small result set first</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="kw">SELECT</span> TOP <span class="dv">100</span> <span class="op">*</span> <span class="kw">FROM</span> chorizon</span></code></pre></div>
+<p>TOP can be used after sorting with <code>ORDER BY</code> to easily
+find the values associated with an ordered sequence. For instance, if
+you <code>ORDER BY comppct_r DESC</code> (order by component percentage
+in descending order), then take <code>TOP 1</code> you will get the
+records associated with the dominant component. This is a very common
+aggregation scheme available as an option in most tools that use SSURGO
+data.</p>
+<p>TOP is also generally useful for testing queries, or checking table
+result structure for a few resulting rows. If testing is successful,
+remove TOP, add filtering with WHERE or in JOIN condition (see below),
+or increase the TOP limit.</p>
+<ol start="3" style="list-style-type: decimal">
+<li><strong>Aggregate and apply JOIN constraints early</strong> in the
+query:</li>
+</ol>
+<p>Efficient queries often perform filtering operations as part of their
+JOIN statements. This can improve server-side query planning and reduce
+overhead that is not needed for the final result.</p>
+<p>Return aggregated results (fewer rows) instead of raw data and
+constrain musym in join to mapunit instead of WHERE:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="kw">SELECT</span> mu.mukey, </span>
+<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>  <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> n_hz,</span>
+<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a>  <span class="fu">AVG</span>(ch.claytotal_r) <span class="kw">AS</span> avg_clay</span>
+<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a><span class="kw">FROM</span> component co</span>
+<span id="cb26-5"><a href="#cb26-5" tabindex="-1"></a><span class="kw">INNER</span> <span class="kw">JOIN</span> mapunit mu <span class="kw">ON</span> mu.mukey <span class="op">=</span> co.mukey <span class="kw">AND</span></span>
+<span id="cb26-6"><a href="#cb26-6" tabindex="-1"></a><span class="kw">INNER</span> <span class="kw">JOIN</span> chorizon ch <span class="kw">ON</span> ch.cokey <span class="op">=</span> co.cokey</span>
+<span id="cb26-7"><a href="#cb26-7" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> mu.mukey</span>
+<span id="cb26-8"><a href="#cb26-8" tabindex="-1"></a><span class="kw">WHERE</span> compname <span class="kw">LIKE</span> <span class="st">&#39;Musick%&#39;</span></span></code></pre></div>
+<ol start="4" style="list-style-type: decimal">
+<li><strong>Explicitly</strong> select the columns you need:</li>
+</ol>
+<p>Efficient queries also are explicit about columns in the SELECT
+clause.</p>
+<p>While <code>SELECT *</code> is fine to use for testing, it is prone
+to issues if schemas change, as well as returning more data than is
+necessary in most cases.</p>
+<p><code>SELECT *</code> will return all columns, usually including many
+columns you do not need:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="kw">SELECT</span> TOP <span class="dv">1</span> <span class="op">*</span></span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a><span class="kw">FROM</span> mapunit</span>
+<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a><span class="kw">INNER</span> <span class="kw">JOIN</span> component <span class="kw">ON</span> mapunit.mukey <span class="op">=</span> component.mukey</span>
+<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a><span class="kw">WHERE</span> compname <span class="kw">LIKE</span> <span class="st">&#39;Musick%&#39;</span></span></code></pre></div>
+<p>Use <code>SELECT column1, column2, ...</code> for concise results,
+with no duplicated columns in complex joins:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="kw">SELECT</span> TOP <span class="dv">1</span> mapunit.mukey, musym, muname, </span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a>             compname, localphase, comppct_r, majcompflag, compkind, cokey</span>
+<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a><span class="kw">FROM</span> mapunit</span>
+<span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a><span class="kw">INNER</span> <span class="kw">JOIN</span> component <span class="kw">ON</span> mapunit.mukey <span class="op">=</span> component.mukey</span>
+<span id="cb28-5"><a href="#cb28-5" tabindex="-1"></a><span class="kw">WHERE</span> compname <span class="kw">LIKE</span> <span class="st">&#39;Musick%&#39;</span></span></code></pre></div>
+<p>If a column name occurs multiple times in different tables, you need
+specify which one you want it to come from with
+<code>&lt;tablename&gt;.&lt;columname&gt;</code> syntax.</p>
+<p>If you do need all columns from a specific table use
+<code>&lt;tablename&gt;.*</code> syntax, for example here we get all
+columns from <code>chfrags</code>, and specific columns from
+<code>chorizon</code> and <code>component</code>:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a><span class="kw">SELECT</span> hzname, chfrags.<span class="op">*</span>, component.cokey</span>
+<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a><span class="kw">FROM</span> chfrags</span>
+<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a><span class="kw">INNER</span> <span class="kw">JOIN</span> chorizon <span class="kw">ON</span> chorizon.chkey <span class="op">=</span> chfrags.chkey</span>
+<span id="cb29-4"><a href="#cb29-4" tabindex="-1"></a><span class="kw">INNER</span> <span class="kw">JOIN</span> component <span class="kw">ON</span> component.cokey <span class="op">=</span> chorizon.cokey</span>
+<span id="cb29-5"><a href="#cb29-5" tabindex="-1"></a><span class="kw">WHERE</span> compname <span class="kw">LIKE</span> <span class="st">&#39;Musick%&#39;</span></span></code></pre></div>
+<ol start="5" style="list-style-type: decimal">
+<li><strong>Use <code>makeChunks()</code> for large vectors</strong>
+(see next section)</li>
+</ol>
+<p><code>makeChunks()</code> is a helper function in the `soilDB``
+package. It takes a vector of values as input, and assigns each value a
+group (chunk) number. You can then calculate the unique chunk numbers
+and iterate over them to process data in bite-sized pieces. This is
+covered extensively in the next section.</p>
+</div>
+</div>
+<div id="sql-dialect-handling" class="section level2">
+<h2>SQL Dialect Handling</h2>
+<div id="t-sql-syntax-specifics" class="section level3">
+<h3>T-SQL Syntax Specifics</h3>
+<div id="null-handling" class="section level4">
+<h4>NULL Handling</h4>
+<p>Check and filter for non-NULL - SDA uses IS NULL / IS NOT NULL:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="kw">SELECT</span> TOP <span class="dv">10</span> <span class="op">*</span> <span class="kw">FROM</span> chorizon <span class="kw">WHERE</span> claytotal_r <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span></code></pre></div>
+<p>Use <code>ISNULL()</code> to provide defaults such as converting
+missing clay content to 0</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a><span class="kw">SELECT</span> TOP <span class="dv">10</span> chkey, claytotal_r, ISNULL(claytotal_r, <span class="dv">0</span>) <span class="kw">AS</span> clay </span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a><span class="kw">FROM</span> chorizon</span></code></pre></div>
+</div>
+<div id="type-casting" class="section level4">
+<h4>Type Casting</h4>
+<p>Use <code>CAST()</code> for explicit type conversion:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a><span class="kw">SELECT</span> TOP <span class="dv">10</span> </span>
+<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a>  claytotal_r,</span>
+<span id="cb32-3"><a href="#cb32-3" tabindex="-1"></a>  <span class="fu">CAST</span>(claytotal_r <span class="kw">AS</span> <span class="dt">INT</span>) <span class="kw">AS</span> clay_int,</span>
+<span id="cb32-4"><a href="#cb32-4" tabindex="-1"></a>  <span class="fu">CAST</span>(chkey <span class="kw">AS</span> <span class="dt">CHAR</span>(<span class="dv">10</span>)) <span class="kw">AS</span> chkey_str</span>
+<span id="cb32-5"><a href="#cb32-5" tabindex="-1"></a><span class="kw">FROM</span> chorizon</span>
+<span id="cb32-6"><a href="#cb32-6" tabindex="-1"></a><span class="kw">WHERE</span> claytotal_r <span class="op">!=</span> <span class="fu">CAST</span>(claytotal_r <span class="kw">AS</span> <span class="dt">INT</span>) </span></code></pre></div>
+<p><strong>Note:</strong> in example above, casting to INT is equivalent
+to truncating the value by removing decimals, it does not follow the
+rounding rules that R <code>round()</code> does, for example.</p>
+</div>
+<div id="string-operations" class="section level4">
+<h4>String Operations</h4>
+<p>You can use wildcards with <code>LIKE</code> operator:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> mapunit <span class="kw">WHERE</span> muname <span class="kw">LIKE</span> <span class="st">&#39;%clay%&#39;</span></span></code></pre></div>
+<p>Perform string concatenation with <code>+</code> operator:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="kw">SELECT</span> areasymbol <span class="op">+</span> <span class="st">&#39;-&#39;</span> <span class="op">+</span> musym <span class="kw">AS</span> areamusym <span class="kw">FROM</span> mapunit</span></code></pre></div>
+<hr />
+</div>
+</div>
+</div>
+<div id="query-chunking-for-large-datasets" class="section level2">
+<h2>Query Chunking for Large Datasets</h2>
+<div id="why-chunking" class="section level3">
+<h3>Why “Chunking”?</h3>
+<p>When you need data for many map units, components, soil survey areas,
+or other entities, a single query can exceed SDA’s limits.</p>
+<p>SDA is a shared public resource, so it is generally encouraged to
+make requests that are as small and efficient as possible.</p>
+<p>The <code>makeChunks()</code> function divides a large vector into
+smaller chunks for iterative querying.</p>
+<p>Before implementing any chunked query approach, you should also be
+certain that your query can run properly on a small set, for example
+just single chunk, or a result that is truncated using a
+<code>TOP</code> clause.</p>
+</div>
+<div id="using-makechunks" class="section level3">
+<h3>Using <code>makeChunks()</code></h3>
+<p>Suppose you have 5000 map unit keys to query. We can break that set
+up into chunks of 1000 map units, and iterate over each chunk using
+<code>lapply()</code></p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a>large_mukey_list <span class="ot">&lt;-</span> <span class="dv">461994</span><span class="sc">:</span><span class="dv">466995</span></span>
+<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a><span class="co"># Divide into chunks of 1000</span></span>
+<span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a>chunks <span class="ot">&lt;-</span> soilDB<span class="sc">::</span><span class="fu">makeChunks</span>(large_mukey_list, <span class="dv">1000</span>)</span>
+<span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a></span>
+<span id="cb35-6"><a href="#cb35-6" tabindex="-1"></a><span class="co"># Now loop through chunks</span></span>
+<span id="cb35-7"><a href="#cb35-7" tabindex="-1"></a>results_list <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">split</span>(large_mukey_list, chunks), <span class="cf">function</span>(chunk_keys) {</span>
+<span id="cb35-8"><a href="#cb35-8" tabindex="-1"></a>  </span>
+<span id="cb35-9"><a href="#cb35-9" tabindex="-1"></a>  <span class="co"># Build IN clause</span></span>
+<span id="cb35-10"><a href="#cb35-10" tabindex="-1"></a>  in_clause <span class="ot">&lt;-</span> soilDB<span class="sc">::</span><span class="fu">format_SQL_in_statement</span>(chunk_keys) </span>
+<span id="cb35-11"><a href="#cb35-11" tabindex="-1"></a>  </span>
+<span id="cb35-12"><a href="#cb35-12" tabindex="-1"></a>  <span class="co"># construct query </span></span>
+<span id="cb35-13"><a href="#cb35-13" tabindex="-1"></a>  q <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(</span>
+<span id="cb35-14"><a href="#cb35-14" tabindex="-1"></a>    <span class="st">&quot;SELECT mukey, musym, muname FROM mapunit WHERE mukey IN %s&quot;</span>, in_clause</span>
+<span id="cb35-15"><a href="#cb35-15" tabindex="-1"></a>  )</span>
+<span id="cb35-16"><a href="#cb35-16" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;Chunk mukey %d to %d</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="fu">min</span>(chunk_keys), <span class="fu">max</span>(chunk_keys))) </span>
+<span id="cb35-17"><a href="#cb35-17" tabindex="-1"></a>  <span class="fu">SDA_query</span>(q)</span>
+<span id="cb35-18"><a href="#cb35-18" tabindex="-1"></a>})</span>
+<span id="cb35-19"><a href="#cb35-19" tabindex="-1"></a></span>
+<span id="cb35-20"><a href="#cb35-20" tabindex="-1"></a><span class="co"># Combine results</span></span>
+<span id="cb35-21"><a href="#cb35-21" tabindex="-1"></a>all_results <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, results_list)</span></code></pre></div>
+<p>The above approach is readily converted to parallel processing, for
+example using <code>future::future.lapply()</code>, or other custom
+iterator functions that allow for progress reporting and other
+diagnostics.</p>
+<p>If you do choose to use parallel processing, you should limit the
+number of concurrent connections made to the API to a reasonable number,
+say, 2 to 5 requests at a time, with a maximum of about 10. You should
+also implement proper error handling and retry mechanisms (see Handling
+Errors section above).</p>
+</div>
+<div id="example-chunked-property-query" class="section level3">
+<h3>Example Chunked Property Query</h3>
+<p>Here we query soil properties for 6 soil survey areas in chunks of
+2.</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a>test_areasymbols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;CA067&quot;</span>, <span class="st">&quot;CA077&quot;</span>, <span class="st">&quot;CA632&quot;</span>, <span class="st">&quot;CA644&quot;</span>, <span class="st">&quot;CA630&quot;</span>, <span class="st">&quot;CA649&quot;</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a></span>
+<span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a><span class="co"># Chunk into groups of 5</span></span>
+<span id="cb36-4"><a href="#cb36-4" tabindex="-1"></a>chunks <span class="ot">&lt;-</span> soilDB<span class="sc">::</span><span class="fu">makeChunks</span>(test_areasymbols, <span class="dv">2</span>)</span>
+<span id="cb36-5"><a href="#cb36-5" tabindex="-1"></a></span>
+<span id="cb36-6"><a href="#cb36-6" tabindex="-1"></a>results_list <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">split</span>(test_areasymbols, chunks), <span class="cf">function</span>(chunk_keys) {</span>
+<span id="cb36-7"><a href="#cb36-7" tabindex="-1"></a>  </span>
+<span id="cb36-8"><a href="#cb36-8" tabindex="-1"></a>  <span class="co"># Build IN clause</span></span>
+<span id="cb36-9"><a href="#cb36-9" tabindex="-1"></a>  in_clause <span class="ot">&lt;-</span> soilDB<span class="sc">::</span><span class="fu">format_SQL_in_statement</span>(chunk_keys) </span>
+<span id="cb36-10"><a href="#cb36-10" tabindex="-1"></a>  </span>
+<span id="cb36-11"><a href="#cb36-11" tabindex="-1"></a>  q <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">&quot;</span></span>
+<span id="cb36-12"><a href="#cb36-12" tabindex="-1"></a><span class="st">    SELECT</span></span>
+<span id="cb36-13"><a href="#cb36-13" tabindex="-1"></a><span class="st">      mu.mukey,</span></span>
+<span id="cb36-14"><a href="#cb36-14" tabindex="-1"></a><span class="st">      mu.musym,</span></span>
+<span id="cb36-15"><a href="#cb36-15" tabindex="-1"></a><span class="st">      mu.muname,</span></span>
+<span id="cb36-16"><a href="#cb36-16" tabindex="-1"></a><span class="st">      co.cokey,</span></span>
+<span id="cb36-17"><a href="#cb36-17" tabindex="-1"></a><span class="st">      co.compname,</span></span>
+<span id="cb36-18"><a href="#cb36-18" tabindex="-1"></a><span class="st">      SUM(hzdepb_r - hzdept_r) AS sum_hz_thickness</span></span>
+<span id="cb36-19"><a href="#cb36-19" tabindex="-1"></a><span class="st">    FROM legend AS leg</span></span>
+<span id="cb36-20"><a href="#cb36-20" tabindex="-1"></a><span class="st">    INNER JOIN mapunit AS mu ON mu.lkey = leg.lkey</span></span>
+<span id="cb36-21"><a href="#cb36-21" tabindex="-1"></a><span class="st">    INNER JOIN component AS co ON co.mukey = mu.mukey</span></span>
+<span id="cb36-22"><a href="#cb36-22" tabindex="-1"></a><span class="st">    INNER JOIN chorizon AS ch ON ch.cokey = co.cokey</span></span>
+<span id="cb36-23"><a href="#cb36-23" tabindex="-1"></a><span class="st">    WHERE leg.areasymbol IN %s</span></span>
+<span id="cb36-24"><a href="#cb36-24" tabindex="-1"></a><span class="st">    GROUP BY mu.mukey, mu.musym, mu.muname, co.cokey, co.compname</span></span>
+<span id="cb36-25"><a href="#cb36-25" tabindex="-1"></a><span class="st">  &quot;</span>, in_clause)</span>
+<span id="cb36-26"><a href="#cb36-26" tabindex="-1"></a>  </span>
+<span id="cb36-27"><a href="#cb36-27" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;Chunk %s completed</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="fu">paste0</span>(chunk_keys, <span class="at">collapse =</span> <span class="st">&quot;, &quot;</span>)))</span>
+<span id="cb36-28"><a href="#cb36-28" tabindex="-1"></a>  <span class="fu">SDA_query</span>(q)</span>
+<span id="cb36-29"><a href="#cb36-29" tabindex="-1"></a>})</span>
+<span id="cb36-30"><a href="#cb36-30" tabindex="-1"></a></span>
+<span id="cb36-31"><a href="#cb36-31" tabindex="-1"></a>all_results <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, results_list)</span>
+<span id="cb36-32"><a href="#cb36-32" tabindex="-1"></a><span class="fu">head</span>(all_results)</span></code></pre></div>
+<p><strong>Note:</strong> The above sample query is <strong>not</strong>
+a good way to determine soil thickness, as it does not exclude thickness
+of non-soil layers (e.g. bedrock) that should not be counted as part of
+the soil depth. As an exercise, use the logic from the previous sections
+to improve this example to filter out bedrock.</p>
+</div>
+<div id="recommended-chunk-sizes" class="section level3">
+<h3>Recommended Chunk Sizes</h3>
+<ul>
+<li><p><strong>Typical queries</strong>: 1000-10000 items per chunk
+(safe for most queries)</p></li>
+<li><p><strong>Simple lookups</strong>: 10000-100000 items per chunk
+(less data per item)</p></li>
+<li><p><strong>Complex joins</strong>: 500-1000 items per chunk (more
+processing per item)</p></li>
+</ul>
+<p>Monitor your query results and adjust based on SDA response
+times.</p>
+<p>You may get an error:</p>
+<blockquote>
+<p>Invalid query: The query processor ran out of internal resources and
+could not produce a query plan. This is a rare event and only expected
+for extremely complex queries or queries that reference a very large
+number of tables or partitions. Please simplify the query. If you
+believe you have received this message in error, contact Customer
+Support Services for more information.</p>
+</blockquote>
+<p>If you see this, first confirm that your query syntax is correct for
+the result you are trying to obtain, for instance by trying it on a
+minimal small set of data. Critically evaluate the need for joins,
+subqueries, and complex filtering logic. Identify any areas of repeated
+logic and refactor to simplify redundant steps. If your query works as
+expected on a small data set, and you have optimized it, then consider
+breaking your big query up into (more) chunks.</p>
+<hr />
+</div>
+</div>
+<div id="spatial-queries" class="section level2">
+<h2>Spatial Queries</h2>
+<p>This document mainly focuses on details of custom spatial queries
+using the low-level <code>SDA_query()</code> function, but there are
+several functions that provide high-level convenience interface for
+spatial queries in <code>soilDB</code>. First we will discuss converting
+spatial data to Well-Known Text for use in generating custom queries.
+Then we will discuss the high- and low-level interfaces in
+<code>soilDB</code>.</p>
+<div id="converting-sf-objects-to-wkt" class="section level3">
+<h3>Converting sf Objects to WKT</h3>
+<p><strong>Important:</strong> SDA requires spatial inputs (WKT) to be
+in <strong>WGS84 (EPSG:4326)</strong> geographic coordinates.</p>
+<p>Passing projected coordinates (like UTM or Albers) will result in
+query failures or zero results.</p>
+<p>SDA does store an alternate projected version of the geometry data
+(e.g. <code>mupolygonproj</code>, rather than
+<code>mupolygongeo</code>). The projection is a Web Mercator projection
+(<code>&quot;EPSG:3857&quot;</code>) so it is best avoided in analysis, though it
+is an option for visualization web map applications that lack capability
+to project the data.</p>
+<p>You can use <code>sf</code> to define a geometry, such as a bounding
+recatangle, and convert it to WKT (Well-Known Text) for spatial
+queries:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a></span>
+<span id="cb37-3"><a href="#cb37-3" tabindex="-1"></a><span class="co"># Define a bounding box for a region of interest</span></span>
+<span id="cb37-4"><a href="#cb37-4" tabindex="-1"></a><span class="co"># (xmin, ymin, xmax, ymax)</span></span>
+<span id="cb37-5"><a href="#cb37-5" tabindex="-1"></a>bbox <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">120.9</span>, <span class="fl">37.7</span>, <span class="sc">-</span><span class="fl">120.8</span>, <span class="fl">37.8</span>)</span>
+<span id="cb37-6"><a href="#cb37-6" tabindex="-1"></a>bbox_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sfc</span>(<span class="fu">st_bbox</span>(<span class="fu">c</span>(</span>
+<span id="cb37-7"><a href="#cb37-7" tabindex="-1"></a>  <span class="at">xmin =</span> bbox[<span class="dv">1</span>],</span>
+<span id="cb37-8"><a href="#cb37-8" tabindex="-1"></a>  <span class="at">ymin =</span> bbox[<span class="dv">2</span>],</span>
+<span id="cb37-9"><a href="#cb37-9" tabindex="-1"></a>  <span class="at">xmax =</span> bbox[<span class="dv">3</span>],</span>
+<span id="cb37-10"><a href="#cb37-10" tabindex="-1"></a>  <span class="at">ymax =</span> bbox[<span class="dv">4</span>]</span>
+<span id="cb37-11"><a href="#cb37-11" tabindex="-1"></a>), <span class="at">crs =</span> <span class="dv">4326</span>))</span>
+<span id="cb37-12"><a href="#cb37-12" tabindex="-1"></a></span>
+<span id="cb37-13"><a href="#cb37-13" tabindex="-1"></a>wkt <span class="ot">&lt;-</span> <span class="fu">st_as_text</span>(bbox_sf)</span>
+<span id="cb37-14"><a href="#cb37-14" tabindex="-1"></a></span>
+<span id="cb37-15"><a href="#cb37-15" tabindex="-1"></a>wkt</span></code></pre></div>
+</div>
+<div id="high-level-functions" class="section level3">
+<h3>High-level Functions</h3>
+<p>The soilDB package provides two higher-level functions
+(<code>SDA_spatialQuery()</code> and <code>fetchSDA_spatial()</code>)
+that make obtaining spatial data easier. Both of these functions
+internally use <code>SDA_query()</code> and are often a better option
+for most use cases compared to crafting a custom spatial query.</p>
+<ul>
+<li><p><strong><code>SDA_spatialQuery()</code></strong>: spatial inputs
+(e.g. point location, AOI rectangle) =&gt; spatial or tabular
+outputs</p></li>
+<li><p><strong><code>fetchSDA_spatial()</code></strong>: tabular inputs
+(e.g. map unit key, area symbol, ecological site ID) =&gt; spatial
+outputs</p></li>
+</ul>
+<p>The functions take different inputs, and support various outputs
+including SSURGO and STATSGO2 map unit polygon geometry, special feature
+points/lines/polygons, soil survey area boundaries, Major Land Resource
+Area (MLRA) boundaries, or simple tabular information using spatial data
+as input. These functions will handle projection to
+<code>&quot;EPSG:4326&quot;</code> internally as long as the input data has the
+correct CRS metadata.</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a><span class="co"># Example: Retrieve map unit polygons that intersect a bounding box</span></span>
+<span id="cb38-2"><a href="#cb38-2" tabindex="-1"></a><span class="co"># This handles the WKT conversion and query construction automatically</span></span>
+<span id="cb38-3"><a href="#cb38-3" tabindex="-1"></a><span class="co"># geomIntersection = TRUE clips the polygons to the bounding box</span></span>
+<span id="cb38-4"><a href="#cb38-4" tabindex="-1"></a></span>
+<span id="cb38-5"><a href="#cb38-5" tabindex="-1"></a>polygons <span class="ot">&lt;-</span> <span class="fu">SDA_spatialQuery</span>(bbox_sf, <span class="at">what =</span> <span class="st">&quot;mupolygon&quot;</span>, <span class="at">geomIntersection =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb38-6"><a href="#cb38-6" tabindex="-1"></a>polygons</span></code></pre></div>
+<p>Note that <code>bbox_sf</code> could be any geometry. Here is is a
+rectangular polygon, but it could be a point, or collection of points,
+or lines, or similar.</p>
+<p><code>SDA_spatialQuery()</code> allows you to get tabular data based
+on a spatial geometry.</p>
+<p>For instance, to simply identify what soil survey area or map unit a
+single point overlaps with, you can do something like the following.</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a><span class="co"># Example: get some legend and mapunit-level tabular data at a point</span></span>
+<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a>point_sf <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_as_sf</span>(<span class="fu">data.frame</span>(<span class="at">wkt =</span> <span class="st">&quot;POINT (-120.85 37.75)&quot;</span>),</span>
+<span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a>                         <span class="at">wkt =</span> <span class="st">&quot;wkt&quot;</span>,</span>
+<span id="cb39-4"><a href="#cb39-4" tabindex="-1"></a>                         <span class="at">crs =</span> <span class="st">&quot;EPSG:4236&quot;</span>)</span>
+<span id="cb39-5"><a href="#cb39-5" tabindex="-1"></a>ssa <span class="ot">&lt;-</span> <span class="fu">SDA_spatialQuery</span>(</span>
+<span id="cb39-6"><a href="#cb39-6" tabindex="-1"></a>  point_sf,</span>
+<span id="cb39-7"><a href="#cb39-7" tabindex="-1"></a>  <span class="at">what =</span> <span class="st">&quot;areasymbol&quot;</span></span>
+<span id="cb39-8"><a href="#cb39-8" tabindex="-1"></a>)</span>
+<span id="cb39-9"><a href="#cb39-9" tabindex="-1"></a>ssa</span>
+<span id="cb39-10"><a href="#cb39-10" tabindex="-1"></a></span>
+<span id="cb39-11"><a href="#cb39-11" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">SDA_spatialQuery</span>(</span>
+<span id="cb39-12"><a href="#cb39-12" tabindex="-1"></a>  point_sf,</span>
+<span id="cb39-13"><a href="#cb39-13" tabindex="-1"></a>  <span class="at">what =</span> <span class="st">&quot;mukey&quot;</span></span>
+<span id="cb39-14"><a href="#cb39-14" tabindex="-1"></a>)</span>
+<span id="cb39-15"><a href="#cb39-15" tabindex="-1"></a>mu</span></code></pre></div>
+<p>Above we pass a WKT string (the result of
+<code>sf::st_centroid(bbox_sf)</code>) within a data.frame to
+<code>sf::st_as_sf()</code>. We specify the <code>wkt</code> argument to
+specify which column the WKT string is stored in to construct our
+spatial query object.</p>
+<p>This section will be expanded in the future, but for now an example
+application of the two higher-level functions is available in the <a href="dominant-es.html">“Dominant Ecological Site” vignette</a>.</p>
+</div>
+<div id="spatial-queries-the-two-step-pattern" class="section level3">
+<h3>Spatial Queries: The Two-Step Pattern</h3>
+<p>For optimal performance, separate your spatial and tabular queries.
+Fetch the list of intersecting map unit keys (<code>mukey</code>) first,
+then use those keys to query attribute tables.</p>
+<p>This avoids joining heavy geometry columns with complex attribute
+tables, which can trigger the 32Mb serialization limit. Then we can use
+the WKT in a custom SDA query to get map units intersecting the bounding
+box:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a><span class="co"># Step 1: Get the mukeys that intersect the bounding box</span></span>
+<span id="cb40-2"><a href="#cb40-2" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">&quot;</span></span>
+<span id="cb40-3"><a href="#cb40-3" tabindex="-1"></a><span class="st">  SELECT DISTINCT mu.mukey</span></span>
+<span id="cb40-4"><a href="#cb40-4" tabindex="-1"></a><span class="st">  FROM mapunit AS mu</span></span>
+<span id="cb40-5"><a href="#cb40-5" tabindex="-1"></a><span class="st">  INNER JOIN mupolygon AS mp ON mp.mukey = mu.mukey</span></span>
+<span id="cb40-6"><a href="#cb40-6" tabindex="-1"></a><span class="st">  WHERE mp.mupolygongeo.STIntersects(geometry::STGeomFromText(&#39;%s&#39;, 4326)) = 1</span></span>
+<span id="cb40-7"><a href="#cb40-7" tabindex="-1"></a><span class="st">&quot;</span>, wkt)</span>
+<span id="cb40-8"><a href="#cb40-8" tabindex="-1"></a></span>
+<span id="cb40-9"><a href="#cb40-9" tabindex="-1"></a>spatial_result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb40-10"><a href="#cb40-10" tabindex="-1"></a><span class="fu">head</span>(spatial_result, <span class="dv">5</span>)</span></code></pre></div>
+<p>This query uses special geospatial functions defined in SQL Server to
+perform the geometric operations (in this case “intersection”)</p>
+</div>
+<div id="sda-spatial-helper-functions" class="section level3">
+<h3>SDA Spatial Helper Functions</h3>
+<p>In addition to standard T-SQL spatial functions, SDA provides
+pre-defined <strong>Table-Valued Functions</strong> (TVFs) optimized for
+intersections.</p>
+<ul>
+<li><code>SDA_Get_Mukey_from_intersection_with_WktWgs84(wkt)</code>:
+Returns <code>mukey</code> values intersecting the input WKT.</li>
+<li><code>SDA_Get_MupolygonWktWgs84_from_Mukey(mukey)</code>: Returns
+WKT geometry for a specific <code>mukey</code>.</li>
+</ul>
+<p>This makes the logic much simpler for the common operations of
+finding <code>mukey</code> given a spatial location or geometry:</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a><span class="co"># Input MUST be WKT in WGS84 (EPSG:4326)</span></span>
+<span id="cb41-2"><a href="#cb41-2" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="st">&quot;SELECT * FROM SDA_Get_Mukey_from_intersection_with_WktWgs84(&#39;POINT(-120.9 37.7)&#39;)&quot;</span></span>
+<span id="cb41-3"><a href="#cb41-3" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span></code></pre></div>
+<p>Also, you can do the inverse (map unit key to geometry):</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" tabindex="-1"></a><span class="co"># Step 2: Get Geometry from Map Unit Key (mukey)</span></span>
+<span id="cb42-2"><a href="#cb42-2" tabindex="-1"></a><span class="co"># Useful for retrieving the polygon boundary for a specific map unit</span></span>
+<span id="cb42-3"><a href="#cb42-3" tabindex="-1"></a>target_mukey <span class="ot">&lt;-</span> <span class="dv">461994</span></span>
+<span id="cb42-4"><a href="#cb42-4" tabindex="-1"></a></span>
+<span id="cb42-5"><a href="#cb42-5" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">&quot;SELECT * FROM SDA_Get_MupolygonWktWgs84_from_Mukey(&#39;%s&#39;)&quot;</span>, target_mukey)</span>
+<span id="cb42-6"><a href="#cb42-6" tabindex="-1"></a></span>
+<span id="cb42-7"><a href="#cb42-7" tabindex="-1"></a><span class="co"># Result contains the mukey and the geometry in WKT format</span></span>
+<span id="cb42-8"><a href="#cb42-8" tabindex="-1"></a>geometry_df <span class="ot">&lt;-</span> <span class="fu">SDA_query</span>(q)</span>
+<span id="cb42-9"><a href="#cb42-9" tabindex="-1"></a></span>
+<span id="cb42-10"><a href="#cb42-10" tabindex="-1"></a><span class="fu">head</span>(geometry_df)</span></code></pre></div>
+<p>Using the <code>sf</code> (or <code>terra</code>) package, you can
+convert the resulting text WKT column to a spatial object:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;sf&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>) <span class="sc">&amp;&amp;</span></span>
+<span id="cb43-2"><a href="#cb43-2" tabindex="-1"></a>   <span class="sc">!</span><span class="fu">is.null</span>(geometry_df)) {</span>
+<span id="cb43-3"><a href="#cb43-3" tabindex="-1"></a>  <span class="co"># Parse WKT column (usually named &#39;mupolygongeo&#39; in mupolygon table, but &#39;MupolygonWktWgs84&#39; in TVF result)</span></span>
+<span id="cb43-4"><a href="#cb43-4" tabindex="-1"></a>  poly_sf <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_as_sfc</span>(geometry_df<span class="sc">$</span>MupolygonWktWgs84, <span class="at">crs =</span> <span class="dv">4326</span>)</span>
+<span id="cb43-5"><a href="#cb43-5" tabindex="-1"></a>  </span>
+<span id="cb43-6"><a href="#cb43-6" tabindex="-1"></a>  <span class="fu">plot</span>(poly_sf, <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">&quot;Geometry for mukey=&quot;</span>, target_mukey))</span>
+<span id="cb43-7"><a href="#cb43-7" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Note:</strong> The TVF function name implies the CRS is WGS84
+(authority:code <code>EPSG:4326</code>, SRS ID <code>4326</code>; or,
+more correctly, <code>OGC:CRS84</code>).</p>
+<p>See the <a href="https://sdmdataaccess.nrcs.usda.gov/documents/AdvancedQueries.html">SDA
+Advanced Query Guide</a> for more details on TVF functions and other
+high-level features built into SDA.</p>
+</div>
+<div id="spatial-and-tabular-property-integration" class="section level3">
+<h3>Spatial and Tabular Property Integration</h3>
+<p>We can use the result of our spatial filtering with property
+queries.</p>
+<p>Here we extract the unique map unit keys and pass as
+<code>mukeys</code> argument to <code>get_SDA_property()</code></p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" tabindex="-1"></a><span class="co"># Step 2: Use the mukeys to fetch tabular data</span></span>
+<span id="cb44-2"><a href="#cb44-2" tabindex="-1"></a><span class="co"># First, get mukeys in bounding box</span></span>
+<span id="cb44-3"><a href="#cb44-3" tabindex="-1"></a>spatial_mukeys <span class="ot">&lt;-</span> <span class="fu">unique</span>(spatial_result<span class="sc">$</span>mukey)</span>
+<span id="cb44-4"><a href="#cb44-4" tabindex="-1"></a></span>
+<span id="cb44-5"><a href="#cb44-5" tabindex="-1"></a><span class="co"># Then query properties for those mukeys</span></span>
+<span id="cb44-6"><a href="#cb44-6" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(spatial_mukeys) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb44-7"><a href="#cb44-7" tabindex="-1"></a>  clay_in_bbox <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb44-8"><a href="#cb44-8" tabindex="-1"></a>    <span class="at">property =</span> <span class="st">&quot;Total Clay - Rep Value&quot;</span>,</span>
+<span id="cb44-9"><a href="#cb44-9" tabindex="-1"></a>    <span class="at">method =</span> <span class="st">&quot;Weighted Average&quot;</span>,</span>
+<span id="cb44-10"><a href="#cb44-10" tabindex="-1"></a>    <span class="at">mukeys =</span> spatial_mukeys,</span>
+<span id="cb44-11"><a href="#cb44-11" tabindex="-1"></a>    <span class="at">top_depth =</span> <span class="dv">0</span>,</span>
+<span id="cb44-12"><a href="#cb44-12" tabindex="-1"></a>    <span class="at">bottom_depth =</span> <span class="dv">50</span></span>
+<span id="cb44-13"><a href="#cb44-13" tabindex="-1"></a>  )</span>
+<span id="cb44-14"><a href="#cb44-14" tabindex="-1"></a>  </span>
+<span id="cb44-15"><a href="#cb44-15" tabindex="-1"></a>  <span class="fu">head</span>(clay_in_bbox)</span>
+<span id="cb44-16"><a href="#cb44-16" tabindex="-1"></a>}</span></code></pre></div>
+<p>This shows how to get the data, see the <a href="local-ssurgo.html">Local SSURGO vignette</a> for more spatial
+visualization examples using <code>sf</code>.</p>
+<hr />
+</div>
+</div>
+<div id="get_sda_property-component-and-horizon-properties" class="section level2">
+<h2><code>get_SDA_property()</code>: Component and Horizon
+Properties</h2>
+<p>The <code>get_SDA_property()</code> function queries the “SSURGO On
+Demand” service to retrieve soil component and horizon properties with
+automatic aggregation to the map unit level.</p>
+<p>By default <code>get_SDA_property()</code> includes minor components
+(<code>include_minors=TRUE</code>) but excludes miscellaneous areas
+<code>miscellaneous_areas=FALSE</code>. Even miscellaneous areas that
+have some soil data are excluded.</p>
+<div id="available-properties" class="section level3">
+<h3>Available Properties</h3>
+<p>SDA has 80+ horizon properties and 40+ component properties.</p>
+<p>Here are some common examples.</p>
+<p><strong>Component properties:</strong></p>
+<ul>
+<li><code>&quot;Taxonomic Order&quot;</code>, <code>&quot;Taxonomic Suborder&quot;</code>,
+<code>&quot;Taxonomic Temperature Regime&quot;</code></li>
+<li><code>&quot;Drainage Class&quot;</code>, <code>&quot;Hydrologic Group&quot;</code></li>
+<li><code>&quot;Corrosion of Steel&quot;</code>,
+<code>&quot;Corrosion of Concrete&quot;</code></li>
+<li><code>&quot;Range Production - Favorable/Normal/Unfavorable Year&quot;</code></li>
+</ul>
+<p><strong>Horizon properties:</strong></p>
+<ul>
+<li><p><strong>Water</strong>:
+<code>&quot;Available Water Capacity - Rep Value&quot;</code>,
+<code>&quot;0.1 bar H2O - Rep Value&quot;</code>,
+<code>&quot;0.33 bar H2O - Rep Value&quot;</code>,
+<code>&quot;15 bar H2O - Rep Value&quot;</code></p></li>
+<li><p><strong>Bulk Density</strong>:
+<code>&quot;Bulk Density 0.1 bar H2O - Rep Value&quot;</code>,
+<code>&quot;Bulk Density 0.33 bar H2O - Rep Value&quot;</code>,
+<code>&quot;Bulk Density 15 bar H2O - Rep Value&quot;</code>,
+<code>&quot;Bulk Density oven dry - Rep Value&quot;</code></p></li>
+<li><p><strong>Texture</strong>: <code>&quot;Total Sand - Rep Value&quot;</code>,
+<code>&quot;Total Silt - Rep Value&quot;</code>,
+<code>&quot;Total Clay - Rep Value&quot;</code>, and sand/silt
+sub-fractions</p></li>
+<li><p><strong>Chemistry</strong>:
+<code>&quot;pH 1:1 water - Rep Value&quot;</code>,
+<code>&quot;Electrical Conductivity - Rep Value&quot;</code>,
+<code>&quot;Cation Exchange Capacity - Rep Value&quot;</code>,
+<code>&quot;Sodium Adsorption Ratio - Rep Value&quot;</code>,
+<code>&quot;Calcium Carbonate - Rep Value&quot;</code>,
+<code>&quot;Gypsum - Rep Value&quot;</code></p></li>
+<li><p><strong>Other</strong>:
+<code>&quot;Saturated Hydraulic Conductivity - Rep Value&quot;</code>,
+<code>&quot;Organic Matter - Rep Value&quot;</code>,
+<code>&quot;Free Iron - Rep Value&quot;</code>,
+<code>&quot;Oxalate Iron - Rep Value&quot;</code></p></li>
+</ul>
+<p>Alternately, you can directly use physical column names from the
+SSURGO schema like <code>&quot;claytotal_r&quot;</code>,
+<code>&quot;ph1to1h2o_r&quot;</code>, <code>&quot;ksat_r&quot;</code>, etc.</p>
+</div>
+<div id="method-dominant-component-category" class="section level3">
+<h3>Method: Dominant Component (Category)</h3>
+<p>Dominant component (category) get the categorical value from the
+dominant soil component. This query is a distinct method as categorical
+data need to be handled differently from numeric data; the numeric
+method is described below.</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" tabindex="-1"></a><span class="co"># Get taxonomic classification from dominant component</span></span>
+<span id="cb45-2"><a href="#cb45-2" tabindex="-1"></a>tax_order <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb45-3"><a href="#cb45-3" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;Taxonomic Suborder&quot;</span>,</span>
+<span id="cb45-4"><a href="#cb45-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Component (Category)&quot;</span>,</span>
+<span id="cb45-5"><a href="#cb45-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb45-6"><a href="#cb45-6" tabindex="-1"></a>)</span>
+<span id="cb45-7"><a href="#cb45-7" tabindex="-1"></a></span>
+<span id="cb45-8"><a href="#cb45-8" tabindex="-1"></a><span class="fu">head</span>(tax_order)</span></code></pre></div>
+</div>
+<div id="method-dominant-component-numeric" class="section level3">
+<h3>Method: Dominant Component (Numeric)</h3>
+<p>Dominant component (numeric) retrieves properties from the dominant
+component, optionally averaged over a depth range (in centimeters):</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a><span class="co"># Get bulk density at 0-25 cm depth</span></span>
+<span id="cb46-2"><a href="#cb46-2" tabindex="-1"></a>bulk_density <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb46-3"><a href="#cb46-3" tabindex="-1"></a>  <span class="at">property =</span> <span class="fu">c</span>(<span class="st">&quot;dbthirdbar_l&quot;</span>, <span class="st">&quot;dbthirdbar_r&quot;</span>, <span class="st">&quot;dbthirdbar_h&quot;</span>),</span>
+<span id="cb46-4"><a href="#cb46-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Component (Numeric)&quot;</span>,</span>
+<span id="cb46-5"><a href="#cb46-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb46-6"><a href="#cb46-6" tabindex="-1"></a>  <span class="at">top_depth =</span> <span class="dv">0</span>,</span>
+<span id="cb46-7"><a href="#cb46-7" tabindex="-1"></a>  <span class="at">bottom_depth =</span> <span class="dv">25</span></span>
+<span id="cb46-8"><a href="#cb46-8" tabindex="-1"></a>)</span>
+<span id="cb46-9"><a href="#cb46-9" tabindex="-1"></a></span>
+<span id="cb46-10"><a href="#cb46-10" tabindex="-1"></a><span class="fu">head</span>(bulk_density)</span></code></pre></div>
+</div>
+<div id="method-weighted-average" class="section level3">
+<h3>Method: Weighted Average</h3>
+<p>The weighted average method retrieves component percentage and
+depth-weighted average across all components in a map unit. In this
+example we explicitly exclude minor components by changing the default
+<code>include_minors</code> argument.</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" tabindex="-1"></a><span class="co"># Get weighted average clay content (0-50 cm)</span></span>
+<span id="cb47-2"><a href="#cb47-2" tabindex="-1"></a>clay_avg <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb47-3"><a href="#cb47-3" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;Total Clay - Rep Value&quot;</span>,</span>
+<span id="cb47-4"><a href="#cb47-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Weighted Average&quot;</span>,</span>
+<span id="cb47-5"><a href="#cb47-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb47-6"><a href="#cb47-6" tabindex="-1"></a>  <span class="at">top_depth =</span> <span class="dv">0</span>,</span>
+<span id="cb47-7"><a href="#cb47-7" tabindex="-1"></a>  <span class="at">bottom_depth =</span> <span class="dv">50</span>,</span>
+<span id="cb47-8"><a href="#cb47-8" tabindex="-1"></a>  <span class="at">include_minors =</span> <span class="cn">FALSE</span></span>
+<span id="cb47-9"><a href="#cb47-9" tabindex="-1"></a>)</span>
+<span id="cb47-10"><a href="#cb47-10" tabindex="-1"></a></span>
+<span id="cb47-11"><a href="#cb47-11" tabindex="-1"></a><span class="fu">head</span>(clay_avg)</span></code></pre></div>
+</div>
+<div id="method-minmax" class="section level3">
+<h3>Method: Min/Max</h3>
+<p>Method `“Min/Max” is used to get minimum or maximum values across all
+components in a mapunit.</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" tabindex="-1"></a><span class="co"># Get maximum sand content in any component</span></span>
+<span id="cb48-2"><a href="#cb48-2" tabindex="-1"></a>sand_max <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb48-3"><a href="#cb48-3" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;Total Sand - Rep Value&quot;</span>,</span>
+<span id="cb48-4"><a href="#cb48-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Min/Max&quot;</span>,</span>
+<span id="cb48-5"><a href="#cb48-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb48-6"><a href="#cb48-6" tabindex="-1"></a>  <span class="at">FUN =</span> <span class="st">&quot;MAX&quot;</span>,</span>
+<span id="cb48-7"><a href="#cb48-7" tabindex="-1"></a>  <span class="at">top_depth =</span> <span class="dv">0</span>,</span>
+<span id="cb48-8"><a href="#cb48-8" tabindex="-1"></a>  <span class="at">bottom_depth =</span> <span class="dv">50</span></span>
+<span id="cb48-9"><a href="#cb48-9" tabindex="-1"></a>)</span>
+<span id="cb48-10"><a href="#cb48-10" tabindex="-1"></a></span>
+<span id="cb48-11"><a href="#cb48-11" tabindex="-1"></a><span class="fu">head</span>(sand_max)</span></code></pre></div>
+</div>
+<div id="method-dominant-condition" class="section level3">
+<h3>Method: Dominant Condition</h3>
+<p>Dominant condition aggregates components with the same category value
+for the properties of interest, then picks the dominant percentage. This
+gives extra weight to categories where multiple soils in the same map
+unit have the same value.</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" tabindex="-1"></a><span class="co"># Get dominant drainage class condition</span></span>
+<span id="cb49-2"><a href="#cb49-2" tabindex="-1"></a>drain_dominant <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb49-3"><a href="#cb49-3" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;Drainage Class&quot;</span>,</span>
+<span id="cb49-4"><a href="#cb49-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Condition&quot;</span>,</span>
+<span id="cb49-5"><a href="#cb49-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb49-6"><a href="#cb49-6" tabindex="-1"></a>)</span>
+<span id="cb49-7"><a href="#cb49-7" tabindex="-1"></a></span>
+<span id="cb49-8"><a href="#cb49-8" tabindex="-1"></a><span class="fu">head</span>(drain_dominant)</span></code></pre></div>
+</div>
+<div id="method-none" class="section level3">
+<h3>Method: None</h3>
+<p>Method <code>&quot;none&quot;</code> returns one row per component or component
+horizon, depending on the property selected, with no map unit
+aggregation. This generally returns much more data, but allows for
+custom aggregation outside of the SQL query, and deeper inspection of
+the source data.</p>
+<p>You cannot mix component-level and horizon-level properties with this
+method. Run it twice, once for horizon-level and once for
+component-level, then join the component data to the horizon data using
+the <code>cokey</code> column to get a single data frame.</p>
+<p>Also, the <code>top_depth</code> and <code>bottom_depth</code>
+arguments are deliberately ignored with this method. Apply your own
+filtering to the result if you only need a specific depth range.</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" tabindex="-1"></a><span class="co"># Get all pH values by component and horizon</span></span>
+<span id="cb50-2"><a href="#cb50-2" tabindex="-1"></a>ph_all <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb50-3"><a href="#cb50-3" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;pH 1:1 water - Rep Value&quot;</span>,</span>
+<span id="cb50-4"><a href="#cb50-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;None&quot;</span>,</span>
+<span id="cb50-5"><a href="#cb50-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb50-6"><a href="#cb50-6" tabindex="-1"></a>)</span>
+<span id="cb50-7"><a href="#cb50-7" tabindex="-1"></a></span>
+<span id="cb50-8"><a href="#cb50-8" tabindex="-1"></a><span class="fu">head</span>(ph_all)</span></code></pre></div>
+</div>
+<div id="inspecting-generated-queries" class="section level3">
+<h3>Inspecting Generated Queries</h3>
+<p>We can use <code>query_string = TRUE</code> to see the SQL generated
+by <code>get_SDA_property()</code>:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb51-2"><a href="#cb51-2" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;Taxonomic Suborder&quot;</span>,</span>
+<span id="cb51-3"><a href="#cb51-3" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Component (Category)&quot;</span>,</span>
+<span id="cb51-4"><a href="#cb51-4" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb51-5"><a href="#cb51-5" tabindex="-1"></a>  <span class="at">query_string =</span> <span class="cn">TRUE</span></span>
+<span id="cb51-6"><a href="#cb51-6" tabindex="-1"></a>)</span>
+<span id="cb51-7"><a href="#cb51-7" tabindex="-1"></a></span>
+<span id="cb51-8"><a href="#cb51-8" tabindex="-1"></a><span class="co"># View first 500 characters of query</span></span>
+<span id="cb51-9"><a href="#cb51-9" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">substr</span>(q, <span class="dv">1</span>, <span class="dv">500</span>), <span class="st">&quot;...</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<hr />
+</div>
+</div>
+<div id="get_sda_interpretation-soil-interpretations" class="section level2">
+<h2><code>get_SDA_interpretation()</code>: Soil Interpretations</h2>
+<p>Soil interpretations are ratings that assess how suitable or limited
+a soil is for various land uses. An interpretation for a specific
+component or map unit includes a rating class, and a numeric value
+(“fuzzy rating”). The <code>get_SDA_interpretation()</code> function
+retrieves these ratings with multiple aggregation methods.</p>
+<div id="available-interpretations" class="section level3">
+<h3>Available Interpretations</h3>
+<p>SDA contains 600+ interpretations organized by category:</p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Category</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>FOR</code> (Forestry)</td>
+<td>Potential Seedling Mortality, Road Suitability, Harvest Suitability,
+Equipment Operability</td>
+</tr>
+<tr class="even">
+<td><code>AGR</code> (Agriculture)</td>
+<td>Crop Yield, Irrigation Suitability, Pesticide Pollution
+Potential</td>
+</tr>
+<tr class="odd">
+<td><code>ENG</code> (Engineering)</td>
+<td>Septic Tank Absorption Fields, Construction Roads, Dwelling
+Foundations, Dam Sites</td>
+</tr>
+<tr class="even">
+<td><code>URB/REC</code> (Urban/Recreation)</td>
+<td>Trails, Playgrounds, Picnic Areas, Recreational Development</td>
+</tr>
+<tr class="odd">
+<td><code>AWM</code> (Animal Waste Management)</td>
+<td>Wastewater Application Sites, Manure Storage</td>
+</tr>
+<tr class="even">
+<td><code>WMS</code> (Water Management System)</td>
+<td>Irrigation Suitability, Drainage, Wetland Rating</td>
+</tr>
+<tr class="odd">
+<td><code>CPI</code> (Commodity Crop Productivity Index)</td>
+<td>National Commodity Crop Productivity Index</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="method-dominant-component" class="section level3">
+<h3>Method: Dominant Component</h3>
+<p>Get the rating from the dominant soil component:</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" tabindex="-1"></a><span class="co"># Get forestry ratings for dominant component</span></span>
+<span id="cb52-2"><a href="#cb52-2" tabindex="-1"></a>for_ratings <span class="ot">&lt;-</span> <span class="fu">get_SDA_interpretation</span>(</span>
+<span id="cb52-3"><a href="#cb52-3" tabindex="-1"></a>  <span class="at">rulename =</span> <span class="fu">c</span>(<span class="st">&quot;FOR - Potential Seedling Mortality&quot;</span>,</span>
+<span id="cb52-4"><a href="#cb52-4" tabindex="-1"></a>               <span class="st">&quot;FOR - Road Suitability (Natural Surface)&quot;</span>),</span>
+<span id="cb52-5"><a href="#cb52-5" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Component&quot;</span>,</span>
+<span id="cb52-6"><a href="#cb52-6" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb52-7"><a href="#cb52-7" tabindex="-1"></a>)</span>
+<span id="cb52-8"><a href="#cb52-8" tabindex="-1"></a></span>
+<span id="cb52-9"><a href="#cb52-9" tabindex="-1"></a><span class="fu">head</span>(for_ratings)</span></code></pre></div>
+</div>
+<div id="method-dominant-condition-1" class="section level3">
+<h3>Method: Dominant Condition</h3>
+<p>Aggregate similar ratings, then return the dominant:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" tabindex="-1"></a><span class="co"># Get dominant engineering interpretation</span></span>
+<span id="cb53-2"><a href="#cb53-2" tabindex="-1"></a>eng_ratings <span class="ot">&lt;-</span> <span class="fu">get_SDA_interpretation</span>(</span>
+<span id="cb53-3"><a href="#cb53-3" tabindex="-1"></a>  <span class="at">rulename =</span> <span class="st">&quot;ENG - Septic Tank Absorption Fields&quot;</span>,</span>
+<span id="cb53-4"><a href="#cb53-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Condition&quot;</span>,</span>
+<span id="cb53-5"><a href="#cb53-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA649&quot;</span></span>
+<span id="cb53-6"><a href="#cb53-6" tabindex="-1"></a>)</span>
+<span id="cb53-7"><a href="#cb53-7" tabindex="-1"></a></span>
+<span id="cb53-8"><a href="#cb53-8" tabindex="-1"></a><span class="fu">head</span>(eng_ratings)</span></code></pre></div>
+</div>
+<div id="method-weighted-average-1" class="section level3">
+<h3>Method: Weighted Average</h3>
+<p>Component-percentage-weighted average of ratings:</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" tabindex="-1"></a><span class="co"># Get weighted average agricultural rating</span></span>
+<span id="cb54-2"><a href="#cb54-2" tabindex="-1"></a>agr_weighted <span class="ot">&lt;-</span> <span class="fu">get_SDA_interpretation</span>(</span>
+<span id="cb54-3"><a href="#cb54-3" tabindex="-1"></a>  <span class="at">rulename =</span> <span class="st">&quot;AGR - Winter Wheat Yield (MT)&quot;</span>,</span>
+<span id="cb54-4"><a href="#cb54-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Weighted Average&quot;</span>,</span>
+<span id="cb54-5"><a href="#cb54-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;MT041&quot;</span>,</span>
+<span id="cb54-6"><a href="#cb54-6" tabindex="-1"></a>  <span class="at">include_minors =</span> <span class="cn">TRUE</span></span>
+<span id="cb54-7"><a href="#cb54-7" tabindex="-1"></a>)</span>
+<span id="cb54-8"><a href="#cb54-8" tabindex="-1"></a></span>
+<span id="cb54-9"><a href="#cb54-9" tabindex="-1"></a><span class="fu">head</span>(agr_weighted)</span></code></pre></div>
+<p><strong>Note:</strong> in this example, a regional (Montana-specific)
+interpretation is used, so we used a Montana areasymbol (MT041). Some
+interpretations are only exported for specific states, regions, or soil
+survey areas.</p>
+</div>
+<div id="method-none-1" class="section level3">
+<h3>Method: None</h3>
+<p>Return one row per component with no map unit aggregation:</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" tabindex="-1"></a><span class="co"># Get all component-level ratings</span></span>
+<span id="cb55-2"><a href="#cb55-2" tabindex="-1"></a>all_ratings <span class="ot">&lt;-</span> <span class="fu">get_SDA_interpretation</span>(</span>
+<span id="cb55-3"><a href="#cb55-3" tabindex="-1"></a>  <span class="at">rulename =</span> <span class="st">&quot;FOR - Mechanical Planting Suitability&quot;</span>,</span>
+<span id="cb55-4"><a href="#cb55-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;None&quot;</span>,</span>
+<span id="cb55-5"><a href="#cb55-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb55-6"><a href="#cb55-6" tabindex="-1"></a>)</span>
+<span id="cb55-7"><a href="#cb55-7" tabindex="-1"></a></span>
+<span id="cb55-8"><a href="#cb55-8" tabindex="-1"></a><span class="fu">head</span>(all_ratings)</span></code></pre></div>
+</div>
+<div id="understanding-output-columns" class="section level3">
+<h3>Understanding Output Columns</h3>
+<p>Use <code>wide_reason = TRUE</code> to pivot reason columns into
+separate sub-rule columns:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" tabindex="-1"></a><span class="co"># Get detailed ratings with reasons pivoted</span></span>
+<span id="cb56-2"><a href="#cb56-2" tabindex="-1"></a>detailed <span class="ot">&lt;-</span> <span class="fu">get_SDA_interpretation</span>(</span>
+<span id="cb56-3"><a href="#cb56-3" tabindex="-1"></a>  <span class="at">rulename =</span> <span class="st">&quot;FOR - Mechanical Planting Suitability&quot;</span>,</span>
+<span id="cb56-4"><a href="#cb56-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Component&quot;</span>,</span>
+<span id="cb56-5"><a href="#cb56-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb56-6"><a href="#cb56-6" tabindex="-1"></a>  <span class="at">wide_reason =</span> <span class="cn">TRUE</span></span>
+<span id="cb56-7"><a href="#cb56-7" tabindex="-1"></a>)</span>
+<span id="cb56-8"><a href="#cb56-8" tabindex="-1"></a></span>
+<span id="cb56-9"><a href="#cb56-9" tabindex="-1"></a><span class="fu">head</span>(detailed)</span></code></pre></div>
+<hr />
+</div>
+</div>
+<div id="get_sda_hydric-hydric-soil-classifications" class="section level2">
+<h2><code>get_SDA_hydric()</code>: Hydric Soil Classifications</h2>
+<p>Hydric soils are inundated or saturated long enough during the
+growing season to develop anaerobic conditions. The
+<code>get_SDA_hydric()</code> function evaluates the proportion of
+hydric components in a map unit.</p>
+<div id="method-mapunit-default" class="section level3">
+<h3>Method: MAPUNIT (Default)</h3>
+<p>Returns an overall classification for each map unit:</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" tabindex="-1"></a>hydric_class <span class="ot">&lt;-</span> <span class="fu">get_SDA_hydric</span>(</span>
+<span id="cb57-2"><a href="#cb57-2" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="fu">c</span>(<span class="st">&quot;CA077&quot;</span>, <span class="st">&quot;CA630&quot;</span>),</span>
+<span id="cb57-3"><a href="#cb57-3" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;MAPUNIT&quot;</span></span>
+<span id="cb57-4"><a href="#cb57-4" tabindex="-1"></a>)</span>
+<span id="cb57-5"><a href="#cb57-5" tabindex="-1"></a></span>
+<span id="cb57-6"><a href="#cb57-6" tabindex="-1"></a><span class="fu">head</span>(hydric_class)</span>
+<span id="cb57-7"><a href="#cb57-7" tabindex="-1"></a></span>
+<span id="cb57-8"><a href="#cb57-8" tabindex="-1"></a><span class="co"># Check unique ratings</span></span>
+<span id="cb57-9"><a href="#cb57-9" tabindex="-1"></a><span class="fu">unique</span>(hydric_class<span class="sc">$</span>HYDRIC_RATING)</span></code></pre></div>
+<p>Possible classifications:</p>
+<ul>
+<li><p><code>&quot;Nonhydric&quot;</code> - No hydric components</p></li>
+<li><p><code>&quot;Hydric&quot;</code> - All major components are hydric</p></li>
+<li><p><code>&quot;Predominantly Hydric&quot;</code> - Hydric components &gt;=
+50%</p></li>
+<li><p><code>&quot;Partially Hydric&quot;</code> - One or more major components
+are hydric</p></li>
+<li><p><code>&quot;Predominantly Nonhydric&quot;</code> - Hydric components &lt;
+50%</p></li>
+</ul>
+<p>The output includes:</p>
+<ul>
+<li><p><code>hydric_majors</code> - Percentage of hydric major
+components</p></li>
+<li><p><code>hydric_inclusions</code> - Percentage of hydric
+minor/inclusion components</p></li>
+<li><p><code>total_comppct</code> - Total component percentage (should
+sum to 100)</p></li>
+</ul>
+</div>
+<div id="method-dominant-component-1" class="section level3">
+<h3>Method: DOMINANT COMPONENT</h3>
+<p>Get hydric status of the dominant component only:</p>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" tabindex="-1"></a>hydric_dom <span class="ot">&lt;-</span> <span class="fu">get_SDA_hydric</span>(</span>
+<span id="cb58-2"><a href="#cb58-2" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb58-3"><a href="#cb58-3" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;DOMINANT COMPONENT&quot;</span></span>
+<span id="cb58-4"><a href="#cb58-4" tabindex="-1"></a>)</span>
+<span id="cb58-5"><a href="#cb58-5" tabindex="-1"></a></span>
+<span id="cb58-6"><a href="#cb58-6" tabindex="-1"></a><span class="fu">head</span>(hydric_dom)</span></code></pre></div>
+</div>
+<div id="method-dominant-condition-2" class="section level3">
+<h3>Method: DOMINANT CONDITION</h3>
+<p>Aggregate by hydric condition (Yes/No), then pick the dominant:</p>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" tabindex="-1"></a>hydric_cond <span class="ot">&lt;-</span> <span class="fu">get_SDA_hydric</span>(</span>
+<span id="cb59-2"><a href="#cb59-2" tabindex="-1"></a>  <span class="at">mukeys =</span> <span class="fu">c</span>(<span class="dv">461994</span>, <span class="dv">461995</span>, <span class="dv">462205</span>),</span>
+<span id="cb59-3"><a href="#cb59-3" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;DOMINANT CONDITION&quot;</span></span>
+<span id="cb59-4"><a href="#cb59-4" tabindex="-1"></a>)</span>
+<span id="cb59-5"><a href="#cb59-5" tabindex="-1"></a></span>
+<span id="cb59-6"><a href="#cb59-6" tabindex="-1"></a><span class="fu">head</span>(hydric_cond)</span></code></pre></div>
+</div>
+<div id="method-none-2" class="section level3">
+<h3>Method: NONE</h3>
+<p>Return one row per component (component-level hydric status):</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" tabindex="-1"></a>hydric_all <span class="ot">&lt;-</span> <span class="fu">get_SDA_hydric</span>(</span>
+<span id="cb60-2"><a href="#cb60-2" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb60-3"><a href="#cb60-3" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;NONE&quot;</span></span>
+<span id="cb60-4"><a href="#cb60-4" tabindex="-1"></a>)</span>
+<span id="cb60-5"><a href="#cb60-5" tabindex="-1"></a></span>
+<span id="cb60-6"><a href="#cb60-6" tabindex="-1"></a><span class="fu">head</span>(hydric_all)</span></code></pre></div>
+<hr />
+</div>
+</div>
+<div id="get_sda_muaggatt-map-unit-aggregate-attributes" class="section level2">
+<h2><code>get_SDA_muaggatt()</code>: Map Unit Aggregate Attributes</h2>
+<p>Map unit aggregate attributes are pre-computed statistics summarizing
+the components in a map unit. These include surface texture, slope
+range, permeability, and other physical properties.</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" tabindex="-1"></a>muagg <span class="ot">&lt;-</span> <span class="fu">get_SDA_muaggatt</span>(</span>
+<span id="cb61-2"><a href="#cb61-2" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb61-3"><a href="#cb61-3" tabindex="-1"></a>)</span>
+<span id="cb61-4"><a href="#cb61-4" tabindex="-1"></a></span>
+<span id="cb61-5"><a href="#cb61-5" tabindex="-1"></a><span class="fu">head</span>(muagg)</span>
+<span id="cb61-6"><a href="#cb61-6" tabindex="-1"></a><span class="fu">str</span>(muagg)</span></code></pre></div>
+<p>This function returns a data frame with one row per map unit,
+containing dozens of pre-calculated aggregate properties. See the
+<code>get_SDA_muaggatt()</code> documentation for the full list of
+available columns.</p>
+<div id="filtering-results" class="section level3">
+<h3>Filtering Results</h3>
+<p>You can filter by area symbol, map unit key, or custom WHERE
+clause:</p>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" tabindex="-1"></a><span class="co"># Get aggregate attributes for specific mukeys</span></span>
+<span id="cb62-2"><a href="#cb62-2" tabindex="-1"></a>muagg_filtered <span class="ot">&lt;-</span> <span class="fu">get_SDA_muaggatt</span>(</span>
+<span id="cb62-3"><a href="#cb62-3" tabindex="-1"></a>  <span class="at">mukeys =</span> <span class="fu">c</span>(<span class="dv">461994</span>, <span class="dv">461995</span>, <span class="dv">463264</span>)</span>
+<span id="cb62-4"><a href="#cb62-4" tabindex="-1"></a>)</span>
+<span id="cb62-5"><a href="#cb62-5" tabindex="-1"></a></span>
+<span id="cb62-6"><a href="#cb62-6" tabindex="-1"></a><span class="fu">head</span>(muagg_filtered)</span></code></pre></div>
+<hr />
+</div>
+</div>
+<div id="get_sda_pmgroupname-parent-material-groups" class="section level2">
+<h2><code>get_SDA_pmgroupname()</code>: Parent Material Groups</h2>
+<p>Parent material groups classify the primary geological or organic
+origin of soil material. The <code>get_SDA_pmgroupname()</code> function
+retrieves parent material classifications by component.</p>
+<div id="method-dominant-component-2" class="section level3">
+<h3>Method: DOMINANT COMPONENT</h3>
+<p>Get parent material from the dominant component:</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" tabindex="-1"></a>pm_dom <span class="ot">&lt;-</span> <span class="fu">get_SDA_pmgroupname</span>(</span>
+<span id="cb63-2"><a href="#cb63-2" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb63-3"><a href="#cb63-3" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;DOMINANT COMPONENT&quot;</span>,</span>
+<span id="cb63-4"><a href="#cb63-4" tabindex="-1"></a>  <span class="at">simplify =</span> <span class="cn">FALSE</span></span>
+<span id="cb63-5"><a href="#cb63-5" tabindex="-1"></a>)</span>
+<span id="cb63-6"><a href="#cb63-6" tabindex="-1"></a></span>
+<span id="cb63-7"><a href="#cb63-7" tabindex="-1"></a><span class="fu">head</span>(pm_dom)</span></code></pre></div>
+</div>
+<div id="method-dominant-condition-3" class="section level3">
+<h3>Method: DOMINANT CONDITION</h3>
+<p>Aggregate parent materials by group, then return the dominant:</p>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" tabindex="-1"></a>pm_cond <span class="ot">&lt;-</span> <span class="fu">get_SDA_pmgroupname</span>(</span>
+<span id="cb64-2"><a href="#cb64-2" tabindex="-1"></a>  <span class="at">mukeys =</span> <span class="fu">c</span>(<span class="dv">461994</span>, <span class="dv">461995</span>, <span class="dv">462205</span>),</span>
+<span id="cb64-3"><a href="#cb64-3" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;DOMINANT CONDITION&quot;</span></span>
+<span id="cb64-4"><a href="#cb64-4" tabindex="-1"></a>)</span>
+<span id="cb64-5"><a href="#cb64-5" tabindex="-1"></a></span>
+<span id="cb64-6"><a href="#cb64-6" tabindex="-1"></a><span class="fu">head</span>(pm_cond)</span></code></pre></div>
+</div>
+<div id="simplify-parameter" class="section level3">
+<h3>Simplify Parameter</h3>
+<p>By default, <code>simplify = TRUE</code> groups parent materials into
+broader categories. Set <code>simplify = FALSE</code> to get detailed
+group names:</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" tabindex="-1"></a><span class="co"># Simplified (broader groups)</span></span>
+<span id="cb65-2"><a href="#cb65-2" tabindex="-1"></a>pm_simple <span class="ot">&lt;-</span> <span class="fu">get_SDA_pmgroupname</span>(</span>
+<span id="cb65-3"><a href="#cb65-3" tabindex="-1"></a>  <span class="at">mukeys =</span> <span class="fu">c</span>(<span class="dv">461994</span>, <span class="dv">461995</span>),</span>
+<span id="cb65-4"><a href="#cb65-4" tabindex="-1"></a>  <span class="at">simplify =</span> <span class="cn">TRUE</span></span>
+<span id="cb65-5"><a href="#cb65-5" tabindex="-1"></a>)</span>
+<span id="cb65-6"><a href="#cb65-6" tabindex="-1"></a></span>
+<span id="cb65-7"><a href="#cb65-7" tabindex="-1"></a><span class="fu">head</span>(pm_simple)</span>
+<span id="cb65-8"><a href="#cb65-8" tabindex="-1"></a></span>
+<span id="cb65-9"><a href="#cb65-9" tabindex="-1"></a><span class="co"># Detailed (specific groups)</span></span>
+<span id="cb65-10"><a href="#cb65-10" tabindex="-1"></a>pm_detailed <span class="ot">&lt;-</span> <span class="fu">get_SDA_pmgroupname</span>(</span>
+<span id="cb65-11"><a href="#cb65-11" tabindex="-1"></a>  <span class="at">mukeys =</span> <span class="fu">c</span>(<span class="dv">461994</span>, <span class="dv">461995</span>),</span>
+<span id="cb65-12"><a href="#cb65-12" tabindex="-1"></a>  <span class="at">simplify =</span> <span class="cn">FALSE</span></span>
+<span id="cb65-13"><a href="#cb65-13" tabindex="-1"></a>)</span>
+<span id="cb65-14"><a href="#cb65-14" tabindex="-1"></a></span>
+<span id="cb65-15"><a href="#cb65-15" tabindex="-1"></a><span class="fu">head</span>(pm_detailed)</span></code></pre></div>
+<hr />
+</div>
+</div>
+<div id="get_sda_coecoclass-component-ecological-classes" class="section level2">
+<h2><code>get_SDA_coecoclass()</code>: Component Ecological Classes</h2>
+<p>Ecological classes describe potential natural vegetation and
+ecological conditions. The <code>get_SDA_coecoclass()</code> function
+retrieves ecological site classifications by component.</p>
+<p>A worked example of this function is available in the <a href="dominant-es.html">“Dominant Ecological Site” vignette</a>.</p>
+<div id="method-none-default" class="section level3">
+<h3>Method: NONE (Default)</h3>
+<p>Return component-level ecological classes without aggregation:</p>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" tabindex="-1"></a>eco_none <span class="ot">&lt;-</span> <span class="fu">get_SDA_coecoclass</span>(</span>
+<span id="cb66-2"><a href="#cb66-2" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;None&quot;</span>,</span>
+<span id="cb66-3"><a href="#cb66-3" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb66-4"><a href="#cb66-4" tabindex="-1"></a>)</span>
+<span id="cb66-5"><a href="#cb66-5" tabindex="-1"></a></span>
+<span id="cb66-6"><a href="#cb66-6" tabindex="-1"></a><span class="fu">head</span>(eco_none)</span></code></pre></div>
+<p>The default behavior targets the NRCS Ecological Site
+database-related entries, but there are many other ecological/vegetation
+class types in SSURGO.</p>
+<p>Columns include:</p>
+<ul>
+<li><p><code>ecoclassid</code> - Ecological Class ID</p></li>
+<li><p><code>ecoclassname</code> - Full ecological class name</p></li>
+<li><p><code>ecoclasstypename</code> - Type (e.g.,
+<code>&quot;NRCS Rangeland Site&quot;</code>,
+<code>&quot;NRCS Forestland Site&quot;</code>)</p></li>
+<li><p><code>ecoclassref</code> - Reference document</p></li>
+</ul>
+</div>
+<div id="method-dominant-component-3" class="section level3">
+<h3>Method: DOMINANT COMPONENT</h3>
+<p>Get ecological site from the dominant component only:</p>
+<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" tabindex="-1"></a>eco_dom <span class="ot">&lt;-</span> <span class="fu">get_SDA_coecoclass</span>(</span>
+<span id="cb67-2"><a href="#cb67-2" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Component&quot;</span>,</span>
+<span id="cb67-3"><a href="#cb67-3" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb67-4"><a href="#cb67-4" tabindex="-1"></a>)</span>
+<span id="cb67-5"><a href="#cb67-5" tabindex="-1"></a></span>
+<span id="cb67-6"><a href="#cb67-6" tabindex="-1"></a><span class="fu">head</span>(eco_dom)</span></code></pre></div>
+</div>
+<div id="method-dominant-condition-4" class="section level3">
+<h3>Method: DOMINANT CONDITION</h3>
+<p>Aggregate ecological classes by ID, then return the dominant:</p>
+<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" tabindex="-1"></a>eco_cond <span class="ot">&lt;-</span> <span class="fu">get_SDA_coecoclass</span>(</span>
+<span id="cb68-2"><a href="#cb68-2" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Condition&quot;</span>,</span>
+<span id="cb68-3"><a href="#cb68-3" tabindex="-1"></a>  <span class="at">mukeys =</span> <span class="fu">c</span>(<span class="dv">461994</span>, <span class="dv">461995</span>, <span class="dv">462205</span>),</span>
+<span id="cb68-4"><a href="#cb68-4" tabindex="-1"></a>  <span class="at">ecoclasstypename =</span> <span class="st">&quot;NRCS Forestland Site&quot;</span></span>
+<span id="cb68-5"><a href="#cb68-5" tabindex="-1"></a>)</span>
+<span id="cb68-6"><a href="#cb68-6" tabindex="-1"></a></span>
+<span id="cb68-7"><a href="#cb68-7" tabindex="-1"></a><span class="fu">head</span>(eco_cond)</span></code></pre></div>
+</div>
+<div id="method-all" class="section level3">
+<h3>Method: ALL</h3>
+<p>Return all ecological sites per map unit in wide format:</p>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" tabindex="-1"></a>eco_all <span class="ot">&lt;-</span> <span class="fu">get_SDA_coecoclass</span>(</span>
+<span id="cb69-2"><a href="#cb69-2" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;All&quot;</span>,</span>
+<span id="cb69-3"><a href="#cb69-3" tabindex="-1"></a>  <span class="at">mukeys =</span> <span class="fu">c</span>(<span class="dv">461994</span>, <span class="dv">461995</span>),</span>
+<span id="cb69-4"><a href="#cb69-4" tabindex="-1"></a>  <span class="at">threshold =</span> <span class="dv">5</span></span>
+<span id="cb69-5"><a href="#cb69-5" tabindex="-1"></a>)</span>
+<span id="cb69-6"><a href="#cb69-6" tabindex="-1"></a></span>
+<span id="cb69-7"><a href="#cb69-7" tabindex="-1"></a><span class="fu">head</span>(eco_all)</span></code></pre></div>
+<p>Filtering by ecological class type:</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" tabindex="-1"></a><span class="co"># Get rangeland sites only</span></span>
+<span id="cb70-2"><a href="#cb70-2" tabindex="-1"></a>eco_range <span class="ot">&lt;-</span> <span class="fu">get_SDA_coecoclass</span>(</span>
+<span id="cb70-3"><a href="#cb70-3" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Condition&quot;</span>,</span>
+<span id="cb70-4"><a href="#cb70-4" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb70-5"><a href="#cb70-5" tabindex="-1"></a>  <span class="at">ecoclasstypename =</span> <span class="st">&quot;NRCS Rangeland Site&quot;</span></span>
+<span id="cb70-6"><a href="#cb70-6" tabindex="-1"></a>)</span>
+<span id="cb70-7"><a href="#cb70-7" tabindex="-1"></a></span>
+<span id="cb70-8"><a href="#cb70-8" tabindex="-1"></a><span class="fu">head</span>(eco_range)</span></code></pre></div>
+<hr />
+</div>
+</div>
+<div id="get_sda_cosurfmorph-component-surface-morphometry" class="section level2">
+<h2><code>get_SDA_cosurfmorph()</code>: Component Surface
+Morphometry</h2>
+<p>Surface morphometry describes the three-dimensional shape and
+position of a landscape. The <code>get_SDA_cosurfmorph()</code> function
+returns component-level geomorphic classifications aggregated in various
+ways.</p>
+<div id="available-tables" class="section level3">
+<h3>Available Tables</h3>
+<p>SDA contains four cosurfmorph tables:</p>
+<table>
+<colgroup>
+<col width="22%" />
+<col width="35%" />
+<col width="41%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Table</th>
+<th>Variables</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>cosurfmorphgc</code></td>
+<td><code>geomposmntn</code>, <code>geomposhill</code>,
+<code>geomposflats</code>, <code>geompostrce</code></td>
+<td>3D geomorphic classification</td>
+</tr>
+<tr class="even">
+<td><code>cosurfmorphhpp</code></td>
+<td><code>hillslopeprof</code></td>
+<td>2D hillslope position profile</td>
+</tr>
+<tr class="odd">
+<td><code>cosurfmorphss</code></td>
+<td><code>shapeacross</code>, <code>shapedown</code></td>
+<td>Surface shape (convex/concave/linear)</td>
+</tr>
+<tr class="even">
+<td><code>cosurfmorphmr</code></td>
+<td><code>geomicrorelief</code></td>
+<td>Microrelief (slope complexity)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="example-3d-geomorphic-classification" class="section level3">
+<h3>Example: 3D Geomorphic Classification</h3>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" tabindex="-1"></a><span class="co"># Get geomorphic position by component name</span></span>
+<span id="cb71-2"><a href="#cb71-2" tabindex="-1"></a>geom_3d <span class="ot">&lt;-</span> <span class="fu">get_SDA_cosurfmorph</span>(</span>
+<span id="cb71-3"><a href="#cb71-3" tabindex="-1"></a>  <span class="at">table =</span> <span class="st">&quot;cosurfmorphgc&quot;</span>,</span>
+<span id="cb71-4"><a href="#cb71-4" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb71-5"><a href="#cb71-5" tabindex="-1"></a>)</span>
+<span id="cb71-6"><a href="#cb71-6" tabindex="-1"></a></span>
+<span id="cb71-7"><a href="#cb71-7" tabindex="-1"></a><span class="fu">head</span>(geom_3d)</span></code></pre></div>
+<p>Output includes columns like:</p>
+<ul>
+<li><p><code>compname</code> - Component name</p></li>
+<li><p><code>geomposmntn</code>, <code>geomposmntn_n</code> - Mountain
+position (count)</p></li>
+<li><p><code>p_geomposmntn</code> - Mountain position
+proportion</p></li>
+</ul>
+</div>
+<div id="example-hillslope-position-by-area" class="section level3">
+<h3>Example: Hillslope Position by Area</h3>
+<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" tabindex="-1"></a><span class="co"># Get hillslope position aggregated by area symbol</span></span>
+<span id="cb72-2"><a href="#cb72-2" tabindex="-1"></a>geom_hill <span class="ot">&lt;-</span> <span class="fu">get_SDA_cosurfmorph</span>(</span>
+<span id="cb72-3"><a href="#cb72-3" tabindex="-1"></a>  <span class="at">table =</span> <span class="st">&quot;cosurfmorphhpp&quot;</span>,</span>
+<span id="cb72-4"><a href="#cb72-4" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">&quot;areasymbol&quot;</span>,</span>
+<span id="cb72-5"><a href="#cb72-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb72-6"><a href="#cb72-6" tabindex="-1"></a>)</span>
+<span id="cb72-7"><a href="#cb72-7" tabindex="-1"></a></span>
+<span id="cb72-8"><a href="#cb72-8" tabindex="-1"></a><span class="fu">head</span>(geom_hill)</span></code></pre></div>
+</div>
+<div id="example-surface-shape" class="section level3">
+<h3>Example: Surface Shape</h3>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" tabindex="-1"></a><span class="co"># Get surface shape classes</span></span>
+<span id="cb73-2"><a href="#cb73-2" tabindex="-1"></a>geom_shape <span class="ot">&lt;-</span> <span class="fu">get_SDA_cosurfmorph</span>(</span>
+<span id="cb73-3"><a href="#cb73-3" tabindex="-1"></a>  <span class="at">table =</span> <span class="st">&quot;cosurfmorphss&quot;</span>,</span>
+<span id="cb73-4"><a href="#cb73-4" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA649&quot;</span></span>
+<span id="cb73-5"><a href="#cb73-5" tabindex="-1"></a>)</span>
+<span id="cb73-6"><a href="#cb73-6" tabindex="-1"></a></span>
+<span id="cb73-7"><a href="#cb73-7" tabindex="-1"></a><span class="fu">head</span>(geom_shape)</span></code></pre></div>
+</div>
+<div id="example-microrelief" class="section level3">
+<h3>Example: Microrelief</h3>
+<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" tabindex="-1"></a><span class="co"># Get microrelief by component name</span></span>
+<span id="cb74-2"><a href="#cb74-2" tabindex="-1"></a>geom_micro <span class="ot">&lt;-</span> <span class="fu">get_SDA_cosurfmorph</span>(</span>
+<span id="cb74-3"><a href="#cb74-3" tabindex="-1"></a>  <span class="at">table =</span> <span class="st">&quot;cosurfmorphmr&quot;</span>,</span>
+<span id="cb74-4"><a href="#cb74-4" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb74-5"><a href="#cb74-5" tabindex="-1"></a>)</span>
+<span id="cb74-6"><a href="#cb74-6" tabindex="-1"></a></span>
+<span id="cb74-7"><a href="#cb74-7" tabindex="-1"></a><span class="fu">head</span>(geom_micro)</span></code></pre></div>
+<hr />
+</div>
+</div>
+<div id="fetchsda-get-soil-profile-collection" class="section level2">
+<h2><code>fetchSDA()</code>: Get Soil Profile Collection</h2>
+<p>The <code>fetchSDA()</code> function is a high-level wrapper around
+<code>SDA_query()</code> that simplifies the process of downloading and
+assembling soil profile data into a <code>SoilProfileCollection</code>
+object from the package <code>aqp</code>. It automatically handles the
+complex joins between map unit, component, and horizon tables.</p>
+<div id="basic-usage" class="section level3">
+<h3>Basic Usage</h3>
+<p>You can fetch all components and horizons for a specific area or set
+of map units using the <code>WHERE</code> argument:</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" tabindex="-1"></a><span class="fu">library</span>(aqp)</span>
+<span id="cb75-2"><a href="#cb75-2" tabindex="-1"></a></span>
+<span id="cb75-3"><a href="#cb75-3" tabindex="-1"></a><span class="co"># Query soil components by areasymbol and musym</span></span>
+<span id="cb75-4"><a href="#cb75-4" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="fu">fetchSDA</span>(<span class="at">WHERE =</span> <span class="st">&quot;areasymbol = &#39;IN005&#39; AND musym = &#39;MnpB2&#39;&quot;</span>)</span>
+<span id="cb75-5"><a href="#cb75-5" tabindex="-1"></a></span>
+<span id="cb75-6"><a href="#cb75-6" tabindex="-1"></a><span class="co"># The result is a SoilProfileCollection</span></span>
+<span id="cb75-7"><a href="#cb75-7" tabindex="-1"></a>s</span>
+<span id="cb75-8"><a href="#cb75-8" tabindex="-1"></a></span>
+<span id="cb75-9"><a href="#cb75-9" tabindex="-1"></a><span class="co"># Check the horizon data</span></span>
+<span id="cb75-10"><a href="#cb75-10" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">horizons</span>(s))</span></code></pre></div>
+<p>This function is very powerful for getting a quick snapshot of the
+soil profiles in an area.</p>
+<p>It is worth noting that <code>fetchSDA()</code> returns data from
+<em>both</em> SSURGO and STATSGO2. To limit to SSURGO, use
+<code>WHERE = &quot;areasymbol != &#39;US&#39;&quot;</code> (see the Data Filtering
+section), or specify a SSURGO area symbol.</p>
+</div>
+<div id="handling-duplicates" class="section level3">
+<h3>Handling Duplicates</h3>
+<p>The <code>duplicates</code> argument (defaulting to
+<code>FALSE</code>) controls how components that appear in multiple
+survey areas are handled.</p>
+<ul>
+<li><strong><code>duplicates = FALSE</code> (Default)</strong>: Returns
+only one instance of a component per <code>nationalmusym</code>. This
+eliminates “duplication” where multiple survey area (legend) map units
+are linked to the same source <code>mapunit</code> and
+<code>component</code> records. This is generally preferred for
+statistical analysis of soil properties.</li>
+<li><strong><code>duplicates = TRUE</code></strong>: Returns a record
+for each unique map unit key (<code>mukey</code>). This is useful for
+visualization or when you need to account for every occurrence of a
+component across different survey area correlations.</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="fetchldm-get-laboratory-data" class="section level2">
+<h2><code>fetchLDM()</code>: Get Laboratory Data</h2>
+<p>The <code>fetchLDM()</code> function provides access to the Kellogg
+Soil Survey Laboratory (KSSL) Data Mart via Soil Data Access. It allows
+for querying laboratory data by various criteria and returning it as a
+<code>SoilProfileCollection</code>.</p>
+<div id="basic-usage-1" class="section level3">
+<h3>Basic Usage</h3>
+<p>You can fetch lab data by specifying an identifier (like an area
+symbol) and the column it corresponds to (<code>what</code>
+argument):</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" tabindex="-1"></a><span class="co"># Fetch KSSL data for a specific soil survey area (CA630)</span></span>
+<span id="cb76-2"><a href="#cb76-2" tabindex="-1"></a><span class="co"># &#39;what&#39; argument specifies we are searching by &#39;area_code&#39;</span></span>
+<span id="cb76-3"><a href="#cb76-3" tabindex="-1"></a><span class="co"># &#39;tables&#39; argument specifies which data tables to include (defaults to core tables)</span></span>
+<span id="cb76-4"><a href="#cb76-4" tabindex="-1"></a>ldm_data <span class="ot">&lt;-</span> <span class="fu">fetchLDM</span>(<span class="st">&quot;CA630&quot;</span>, <span class="at">what =</span> <span class="st">&quot;area_code&quot;</span>)</span>
+<span id="cb76-5"><a href="#cb76-5" tabindex="-1"></a></span>
+<span id="cb76-6"><a href="#cb76-6" tabindex="-1"></a><span class="co"># The result is a SoilProfileCollection</span></span>
+<span id="cb76-7"><a href="#cb76-7" tabindex="-1"></a>ldm_data</span>
+<span id="cb76-8"><a href="#cb76-8" tabindex="-1"></a></span>
+<span id="cb76-9"><a href="#cb76-9" tabindex="-1"></a><span class="co"># Inspect site data</span></span>
+<span id="cb76-10"><a href="#cb76-10" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">site</span>(ldm_data))</span></code></pre></div>
+</div>
+<div id="querying-by-taxon-name" class="section level3">
+<h3>Querying by Taxon Name</h3>
+<p>You can also search by correlated or sampled-as taxon names using a
+custom <code>WHERE</code> clause:</p>
+<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" tabindex="-1"></a><span class="co"># Fetch lab data where the correlated or sampled name is &#39;Musick&#39; or &#39;Holland&#39;</span></span>
+<span id="cb77-2"><a href="#cb77-2" tabindex="-1"></a><span class="co"># CASE statement handles differences between correlated and sampled names</span></span>
+<span id="cb77-3"><a href="#cb77-3" tabindex="-1"></a>ldm_taxon <span class="ot">&lt;-</span> <span class="fu">fetchLDM</span>(<span class="at">WHERE =</span> <span class="st">&quot;(CASE WHEN corr_name IS NOT NULL </span></span>
+<span id="cb77-4"><a href="#cb77-4" tabindex="-1"></a><span class="st">                                THEN LOWER(corr_name) </span></span>
+<span id="cb77-5"><a href="#cb77-5" tabindex="-1"></a><span class="st">                                ELSE LOWER(samp_name) </span></span>
+<span id="cb77-6"><a href="#cb77-6" tabindex="-1"></a><span class="st">                            END) IN (&#39;musick&#39;, &#39;holland&#39;)&quot;</span>)</span>
+<span id="cb77-7"><a href="#cb77-7" tabindex="-1"></a></span>
+<span id="cb77-8"><a href="#cb77-8" tabindex="-1"></a>ldm_taxon</span></code></pre></div>
+</div>
+<div id="advanced-usage-specific-tables" class="section level3">
+<h3>Advanced Usage: Specific Tables</h3>
+<p>By default, <code>fetchLDM()</code> retrieves a standard set of
+tables. You can request specific data, such as physical properties,
+using the <code>tables</code> argument:</p>
+<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" tabindex="-1"></a><span class="co"># Fetch physical properties for soils correlated as &quot;Typic Argialbolls&quot;</span></span>
+<span id="cb78-2"><a href="#cb78-2" tabindex="-1"></a>ldm_phys <span class="ot">&lt;-</span> <span class="fu">fetchLDM</span>(<span class="at">x =</span> <span class="st">&quot;Typic Argialbolls&quot;</span>, </span>
+<span id="cb78-3"><a href="#cb78-3" tabindex="-1"></a>                     <span class="at">what =</span> <span class="st">&quot;corr_taxsubgrp&quot;</span>, </span>
+<span id="cb78-4"><a href="#cb78-4" tabindex="-1"></a>                     <span class="at">tables =</span> <span class="st">&quot;lab_physical_properties&quot;</span>)</span>
+<span id="cb78-5"><a href="#cb78-5" tabindex="-1"></a></span>
+<span id="cb78-6"><a href="#cb78-6" tabindex="-1"></a><span class="co"># Inspect the available horizon data columns</span></span>
+<span id="cb78-7"><a href="#cb78-7" tabindex="-1"></a><span class="fu">names</span>(<span class="fu">horizons</span>(ldm_phys))</span></code></pre></div>
+<p><code>fetchLDM</code> supports retrieving data from various KSSL
+tables, including chemical properties, mineralogy, and x-ray
+analysis.</p>
+<hr />
+</div>
+</div>
+<div id="integration-examples-combining-multiple-functions" class="section level2">
+<h2>Integration Examples: Combining Multiple Functions</h2>
+<div id="example-1-multi-method-property-comparison" class="section level3">
+<h3>Example 1: Multi-Method Property Comparison</h3>
+<p>Compare the same property using different aggregation methods:</p>
+<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" tabindex="-1"></a><span class="co"># Get clay content using three different methods</span></span>
+<span id="cb79-2"><a href="#cb79-2" tabindex="-1"></a>methods <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Dominant Component (Numeric)&quot;</span>, <span class="st">&quot;Weighted Average&quot;</span>, <span class="st">&quot;Max&quot;</span>)</span>
+<span id="cb79-3"><a href="#cb79-3" tabindex="-1"></a></span>
+<span id="cb79-4"><a href="#cb79-4" tabindex="-1"></a>clay_results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb79-5"><a href="#cb79-5" tabindex="-1"></a></span>
+<span id="cb79-6"><a href="#cb79-6" tabindex="-1"></a><span class="cf">for</span> (method <span class="cf">in</span> methods) {</span>
+<span id="cb79-7"><a href="#cb79-7" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb79-8"><a href="#cb79-8" tabindex="-1"></a>    <span class="at">property =</span> <span class="st">&quot;Total Clay - Rep Value&quot;</span>,</span>
+<span id="cb79-9"><a href="#cb79-9" tabindex="-1"></a>    <span class="at">method =</span> method,</span>
+<span id="cb79-10"><a href="#cb79-10" tabindex="-1"></a>    <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb79-11"><a href="#cb79-11" tabindex="-1"></a>    <span class="at">top_depth =</span> <span class="dv">0</span>,</span>
+<span id="cb79-12"><a href="#cb79-12" tabindex="-1"></a>    <span class="at">bottom_depth =</span> <span class="dv">50</span></span>
+<span id="cb79-13"><a href="#cb79-13" tabindex="-1"></a>  )</span>
+<span id="cb79-14"><a href="#cb79-14" tabindex="-1"></a>  </span>
+<span id="cb79-15"><a href="#cb79-15" tabindex="-1"></a>  result<span class="sc">$</span>method <span class="ot">&lt;-</span> method</span>
+<span id="cb79-16"><a href="#cb79-16" tabindex="-1"></a>  clay_results <span class="ot">&lt;-</span> <span class="fu">rbind</span>(clay_results, result)</span>
+<span id="cb79-17"><a href="#cb79-17" tabindex="-1"></a>}</span>
+<span id="cb79-18"><a href="#cb79-18" tabindex="-1"></a></span>
+<span id="cb79-19"><a href="#cb79-19" tabindex="-1"></a><span class="co"># compare methods for a single map unit</span></span>
+<span id="cb79-20"><a href="#cb79-20" tabindex="-1"></a><span class="fu">subset</span>(clay_results, mukey <span class="sc">==</span> <span class="dv">1865918</span>)</span></code></pre></div>
+</div>
+<div id="example-2-properties-and-interpretations-for-land-use-planning" class="section level3">
+<h3>Example 2: Properties and Interpretations for Land Use Planning</h3>
+<p>Combine soil properties and interpretations for a land use
+suitability assessment:</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" tabindex="-1"></a><span class="co"># Get drainage class and hydrologic group</span></span>
+<span id="cb80-2"><a href="#cb80-2" tabindex="-1"></a>drain_hydro <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb80-3"><a href="#cb80-3" tabindex="-1"></a>  <span class="at">property =</span> <span class="fu">c</span>(<span class="st">&quot;Drainage Class&quot;</span>, <span class="st">&quot;Hydrologic Group&quot;</span>),</span>
+<span id="cb80-4"><a href="#cb80-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Condition&quot;</span>,</span>
+<span id="cb80-5"><a href="#cb80-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb80-6"><a href="#cb80-6" tabindex="-1"></a>)</span>
+<span id="cb80-7"><a href="#cb80-7" tabindex="-1"></a></span>
+<span id="cb80-8"><a href="#cb80-8" tabindex="-1"></a><span class="co"># Get an engineering interpretation</span></span>
+<span id="cb80-9"><a href="#cb80-9" tabindex="-1"></a>eng_interp <span class="ot">&lt;-</span> <span class="fu">get_SDA_interpretation</span>(</span>
+<span id="cb80-10"><a href="#cb80-10" tabindex="-1"></a>  <span class="at">rulename =</span> <span class="st">&quot;ENG - Septic Tank Absorption Fields&quot;</span>,</span>
+<span id="cb80-11"><a href="#cb80-11" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Condition&quot;</span>,</span>
+<span id="cb80-12"><a href="#cb80-12" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb80-13"><a href="#cb80-13" tabindex="-1"></a>)</span>
+<span id="cb80-14"><a href="#cb80-14" tabindex="-1"></a></span>
+<span id="cb80-15"><a href="#cb80-15" tabindex="-1"></a><span class="co"># Explicitly merge on mukey (and other shared columns to avoid duplication)</span></span>
+<span id="cb80-16"><a href="#cb80-16" tabindex="-1"></a>suitability <span class="ot">&lt;-</span> <span class="fu">merge</span>(drain_hydro, eng_interp, </span>
+<span id="cb80-17"><a href="#cb80-17" tabindex="-1"></a>                     <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;mukey&quot;</span>, <span class="st">&quot;areasymbol&quot;</span>, <span class="st">&quot;musym&quot;</span>, <span class="st">&quot;muname&quot;</span>))</span>
+<span id="cb80-18"><a href="#cb80-18" tabindex="-1"></a></span>
+<span id="cb80-19"><a href="#cb80-19" tabindex="-1"></a><span class="fu">head</span>(suitability)</span></code></pre></div>
+</div>
+<div id="example-3-hydric-status-and-interpretations" class="section level3">
+<h3>Example 3: Hydric Status and Interpretations</h3>
+<p>Combine hydric classifications with wetland-related
+interpretations:</p>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" tabindex="-1"></a><span class="co"># Get a generalized mapunit-level hydric classification</span></span>
+<span id="cb81-2"><a href="#cb81-2" tabindex="-1"></a><span class="co"># see ?get_SDA_hydric for details on method=&quot;mapunit&quot;</span></span>
+<span id="cb81-3"><a href="#cb81-3" tabindex="-1"></a>hydric_stat <span class="ot">&lt;-</span> <span class="fu">get_SDA_hydric</span>(</span>
+<span id="cb81-4"><a href="#cb81-4" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA077&quot;</span>,</span>
+<span id="cb81-5"><a href="#cb81-5" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;MAPUNIT&quot;</span></span>
+<span id="cb81-6"><a href="#cb81-6" tabindex="-1"></a>)</span>
+<span id="cb81-7"><a href="#cb81-7" tabindex="-1"></a></span>
+<span id="cb81-8"><a href="#cb81-8" tabindex="-1"></a>wet_interp <span class="ot">&lt;-</span> <span class="fu">get_SDA_interpretation</span>(</span>
+<span id="cb81-9"><a href="#cb81-9" tabindex="-1"></a>  <span class="at">rulename =</span> <span class="st">&quot;WMS - Excavated Ponds (Aquifer-fed)&quot;</span>,</span>
+<span id="cb81-10"><a href="#cb81-10" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Condition&quot;</span>,</span>
+<span id="cb81-11"><a href="#cb81-11" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA077&quot;</span></span>
+<span id="cb81-12"><a href="#cb81-12" tabindex="-1"></a>)</span>
+<span id="cb81-13"><a href="#cb81-13" tabindex="-1"></a></span>
+<span id="cb81-14"><a href="#cb81-14" tabindex="-1"></a>wetland_assess <span class="ot">&lt;-</span> <span class="fu">merge</span>(hydric_stat, wet_interp,</span>
+<span id="cb81-15"><a href="#cb81-15" tabindex="-1"></a>                        <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;mukey&quot;</span>, <span class="st">&quot;areasymbol&quot;</span>, <span class="st">&quot;musym&quot;</span>, <span class="st">&quot;muname&quot;</span>),</span>
+<span id="cb81-16"><a href="#cb81-16" tabindex="-1"></a>                        <span class="at">all.x =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb81-17"><a href="#cb81-17" tabindex="-1"></a></span>
+<span id="cb81-18"><a href="#cb81-18" tabindex="-1"></a><span class="fu">subset</span>(wetland_assess, rating_WMSExcavatedPondsAquiferfed <span class="sc">&lt;</span> <span class="fl">0.6</span>)</span></code></pre></div>
+</div>
+<div id="example-4-aggregating-across-multiple-areas" class="section level3">
+<h3>Example 4: Aggregating Across Multiple Areas</h3>
+<p>Here we use base R <code>aggregate()</code> (feel free to swap in
+your favorite R aggregation method e.g. <code>dplyr</code>,
+<code>data.table</code>, or <code>collapse</code>) to summarize across
+survey areas:</p>
+<div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" tabindex="-1"></a><span class="co"># Get properties for two areas</span></span>
+<span id="cb82-2"><a href="#cb82-2" tabindex="-1"></a>props_ca630 <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb82-3"><a href="#cb82-3" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;Total Clay - Rep Value&quot;</span>,</span>
+<span id="cb82-4"><a href="#cb82-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Component (Numeric)&quot;</span>,</span>
+<span id="cb82-5"><a href="#cb82-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span></span>
+<span id="cb82-6"><a href="#cb82-6" tabindex="-1"></a>)</span>
+<span id="cb82-7"><a href="#cb82-7" tabindex="-1"></a></span>
+<span id="cb82-8"><a href="#cb82-8" tabindex="-1"></a>props_ca649 <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb82-9"><a href="#cb82-9" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;Total Clay - Rep Value&quot;</span>,</span>
+<span id="cb82-10"><a href="#cb82-10" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Dominant Component (Numeric)&quot;</span>,</span>
+<span id="cb82-11"><a href="#cb82-11" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA649&quot;</span></span>
+<span id="cb82-12"><a href="#cb82-12" tabindex="-1"></a>)</span>
+<span id="cb82-13"><a href="#cb82-13" tabindex="-1"></a></span>
+<span id="cb82-14"><a href="#cb82-14" tabindex="-1"></a><span class="co"># Combine</span></span>
+<span id="cb82-15"><a href="#cb82-15" tabindex="-1"></a>all_props <span class="ot">&lt;-</span> <span class="fu">rbind</span>(props_ca630, props_ca649)</span>
+<span id="cb82-16"><a href="#cb82-16" tabindex="-1"></a></span>
+<span id="cb82-17"><a href="#cb82-17" tabindex="-1"></a><span class="co"># Aggregate by area symbol</span></span>
+<span id="cb82-18"><a href="#cb82-18" tabindex="-1"></a>area_summary <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb82-19"><a href="#cb82-19" tabindex="-1"></a>  claytotal_r <span class="sc">~</span> areasymbol,</span>
+<span id="cb82-20"><a href="#cb82-20" tabindex="-1"></a>  <span class="at">data =</span> all_props,</span>
+<span id="cb82-21"><a href="#cb82-21" tabindex="-1"></a>  <span class="at">FUN =</span> <span class="cf">function</span>(x) {</span>
+<span id="cb82-22"><a href="#cb82-22" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb82-23"><a href="#cb82-23" tabindex="-1"></a>      <span class="at">mean =</span> <span class="fu">mean</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb82-24"><a href="#cb82-24" tabindex="-1"></a>      <span class="at">median =</span> <span class="fu">median</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb82-25"><a href="#cb82-25" tabindex="-1"></a>      <span class="at">sd =</span> <span class="fu">sd</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb82-26"><a href="#cb82-26" tabindex="-1"></a>      <span class="at">n =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(x))</span>
+<span id="cb82-27"><a href="#cb82-27" tabindex="-1"></a>    )</span>
+<span id="cb82-28"><a href="#cb82-28" tabindex="-1"></a>  }</span>
+<span id="cb82-29"><a href="#cb82-29" tabindex="-1"></a>)</span>
+<span id="cb82-30"><a href="#cb82-30" tabindex="-1"></a></span>
+<span id="cb82-31"><a href="#cb82-31" tabindex="-1"></a>area_summary</span></code></pre></div>
+</div>
+<div id="example-5-component-level-analysis" class="section level3">
+<h3>Example 5: Component-Level Analysis</h3>
+<p>Use <code>method = &quot;None&quot;</code> to perform custom component-level
+analysis:</p>
+<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" tabindex="-1"></a><span class="co"># Get all component properties without aggregation</span></span>
+<span id="cb83-2"><a href="#cb83-2" tabindex="-1"></a>clay_by_comp <span class="ot">&lt;-</span> <span class="fu">get_SDA_property</span>(</span>
+<span id="cb83-3"><a href="#cb83-3" tabindex="-1"></a>  <span class="at">property =</span> <span class="st">&quot;Total Clay - Rep Value&quot;</span>,</span>
+<span id="cb83-4"><a href="#cb83-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;None&quot;</span>,</span>
+<span id="cb83-5"><a href="#cb83-5" tabindex="-1"></a>  <span class="at">areasymbols =</span> <span class="st">&quot;CA630&quot;</span>,</span>
+<span id="cb83-6"><a href="#cb83-6" tabindex="-1"></a>  <span class="at">top_depth =</span> <span class="dv">0</span>,</span>
+<span id="cb83-7"><a href="#cb83-7" tabindex="-1"></a>  <span class="at">bottom_depth =</span> <span class="dv">25</span>,</span>
+<span id="cb83-8"><a href="#cb83-8" tabindex="-1"></a>  <span class="at">include_minors =</span> <span class="cn">TRUE</span></span>
+<span id="cb83-9"><a href="#cb83-9" tabindex="-1"></a>)</span>
+<span id="cb83-10"><a href="#cb83-10" tabindex="-1"></a></span>
+<span id="cb83-11"><a href="#cb83-11" tabindex="-1"></a><span class="fu">head</span>(clay_by_comp)</span>
+<span id="cb83-12"><a href="#cb83-12" tabindex="-1"></a></span>
+<span id="cb83-13"><a href="#cb83-13" tabindex="-1"></a><span class="co"># Calculate average clay by major vs. minor components</span></span>
+<span id="cb83-14"><a href="#cb83-14" tabindex="-1"></a>clay_summary <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb83-15"><a href="#cb83-15" tabindex="-1"></a>  claytotal_r <span class="sc">~</span> majcompflag,</span>
+<span id="cb83-16"><a href="#cb83-16" tabindex="-1"></a>  <span class="at">data =</span> clay_by_comp,</span>
+<span id="cb83-17"><a href="#cb83-17" tabindex="-1"></a>  <span class="at">FUN =</span> mean</span>
+<span id="cb83-18"><a href="#cb83-18" tabindex="-1"></a>)</span>
+<span id="cb83-19"><a href="#cb83-19" tabindex="-1"></a></span>
+<span id="cb83-20"><a href="#cb83-20" tabindex="-1"></a>clay_summary</span></code></pre></div>
+<hr />
+</div>
+</div>
+<div id="summary-and-best-practices" class="section level2">
+<h2>Summary and Best Practices</h2>
+<div id="key-takeaways" class="section level3">
+<h3>Key Takeaways</h3>
+<ol style="list-style-type: decimal">
+<li><strong>Use <code>SDA_query()</code></strong> for custom SQL queries
+when predefined functions don’t fit your needs</li>
+<li><strong>T-SQL syntax</strong>: Use <code>TOP</code>,
+<code>ISNULL()</code>, <code>CAST()</code> for SDA queries</li>
+<li><strong>Query limits</strong>: Keep result sets &lt; 100k records
+and &lt; 32 Mb; use chunking for large datasets</li>
+<li><strong>Aggregation methods</strong>: Choose an appropriate method
+(<code>Dominant Component</code>, <code>Weighted Average</code>,
+<code>None</code>, etc.) for your analysis</li>
+<li><strong>Local vs. remote</strong>: Use <code>dsn</code> parameter to
+query local SSURGO databases (see <a href="local-ssurgo.html">Local
+SSURGO vignette</a>)</li>
+<li><strong>Spatial queries</strong>: Combine WKT geometry with
+<code>SDA_query()</code> for location-based searches (or use
+<code>SDA_spatialQuery()</code>)</li>
+</ol>
+</div>
+<div id="recommended-workflow" class="section level3">
+<h3>Recommended Workflow</h3>
+<ol style="list-style-type: decimal">
+<li>Start with small test queries using e.g. <code>TOP 10</code>, or a
+small number of inputs, to verify syntax and result table structure</li>
+<li>Use <code>query_string = TRUE</code> to inspect generated SQL</li>
+<li>Scale up with <code>areasymbols</code> or <code>mukeys</code>
+parameters</li>
+<li>Use chunking for “large” data sets (greater than ~10,000 items, see
+<code>makeChunks()</code> section for suggested chunk sizes)</li>
+<li>Cache results locally if repeating queries</li>
+<li>Refer to official SDA documentation for table/column details</li>
+</ol>
+</div>
+<div id="sda-resources" class="section level3">
+<h3>SDA Resources</h3>
+<ul>
+<li><strong>SDA Table Relationships Diagram:</strong> <a href="https://sdmdataaccess.sc.egov.usda.gov/documents/TableRelationshipsDiagram.pdf">https://sdmdataaccess.sc.egov.usda.gov/documents/TableRelationshipsDiagram.pdf</a></li>
+<li><strong>Column Descriptions:</strong> <a href="https://www.nrcs.usda.gov/sites/default/files/2022-08/SSURGO-Metadata-Table-Column-Descriptions-Report.pdf">https://www.nrcs.usda.gov/sites/default/files/2022-08/SSURGO-Metadata-Table-Column-Descriptions-Report.pdf</a></li>
+<li><a href="https://sdmdataaccess.nrcs.usda.gov/queryhelp.aspx">SDA
+Query Help</a></li>
+<li><a href="https://sdmdataaccess.nrcs.usda.gov/queryhelp.aspx#Samples">SDA
+Query Samples</a></li>
+<li><a href="https://sdmdataaccess.nrcs.usda.gov/documents/TableColumnDescriptionsReport.pdf">SDA
+Table/Column Descriptions</a></li>
+<li><a href="https://ncss-tech.github.io/soilDB/reference/index.html">soilDB
+Reference Index</a></li>
+<li><a href="local-ssurgo.html">Local SSURGO Vignette</a> - For creating
+and querying local SSURGO databases</li>
+<li><a href="dominant-es.html">Dominant Ecological Sites Vignette</a> -
+For a fully worked example of combining spatial data with tabular
+(Ecological Site) data to make thematic maps</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="appendix-common-sda-tables-and-columns" class="section level2">
+<h2>Appendix: Common SDA Tables and Columns</h2>
+<div id="core-tables" class="section level3">
+<h3>Core Tables</h3>
+<table>
+<colgroup>
+<col width="15%" />
+<col width="28%" />
+<col width="28%" />
+<col width="28%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Table</th>
+<th>Primary Key</th>
+<th>Parent Table</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>legend</code></td>
+<td><code>lkey</code></td>
+<td>N/A</td>
+<td>Soil survey area (e.g., CA630)</td>
+</tr>
+<tr class="even">
+<td><code>mapunit</code></td>
+<td><code>mukey</code></td>
+<td><code>legend</code></td>
+<td>Delineated soil mapping unit</td>
+</tr>
+<tr class="odd">
+<td><code>component</code></td>
+<td><code>cokey</code></td>
+<td><code>mapunit</code></td>
+<td>Soil component within a map unit</td>
+</tr>
+<tr class="even">
+<td><code>chorizon</code></td>
+<td><code>chkey</code></td>
+<td><code>component</code></td>
+<td>Soil horizon within a component</td>
+</tr>
+<tr class="odd">
+<td><code>cointerp</code></td>
+<td><code>cointerpkey</code></td>
+<td><code>component</code></td>
+<td>Component-level interpretations</td>
+</tr>
+<tr class="even">
+<td><code>coecoclass</code></td>
+<td><code>coecoclasskey</code></td>
+<td><code>component</code></td>
+<td>Component ecological classes</td>
+</tr>
+<tr class="odd">
+<td><code>copmgrp</code></td>
+<td><code>copmgrpkey</code></td>
+<td><code>component</code></td>
+<td>Component parent material groups</td>
+</tr>
+<tr class="even">
+<td><code>mupolygon</code></td>
+<td><code>mupolygonkey</code></td>
+<td>N/A</td>
+<td>Map unit polygons</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="common-columns" class="section level3">
+<h3>Common Columns</h3>
+<table>
+<colgroup>
+<col width="21%" />
+<col width="18%" />
+<col width="35%" />
+<col width="24%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Table</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>areasymbol</code></td>
+<td>legend</td>
+<td>Soil survey area code</td>
+<td>“CA630”</td>
+</tr>
+<tr class="even">
+<td><code>musym</code></td>
+<td>mapunit</td>
+<td>Map unit symbol</td>
+<td>“7159”</td>
+</tr>
+<tr class="odd">
+<td><code>muname</code></td>
+<td>mapunit</td>
+<td>Map unit name</td>
+<td>“Sierra coarse sandy loam, 3 to 8 percent slopes”</td>
+</tr>
+<tr class="even">
+<td><code>compname</code></td>
+<td>component</td>
+<td>Component/soil series name</td>
+<td>“Sierra”</td>
+</tr>
+<tr class="odd">
+<td><code>comppct_r</code></td>
+<td>component</td>
+<td>Component percentage (representative)</td>
+<td>85</td>
+</tr>
+<tr class="even">
+<td><code>majcompflag</code></td>
+<td>component</td>
+<td>Major component flag</td>
+<td>“Yes”/“No”</td>
+</tr>
+<tr class="odd">
+<td><code>claytotal_r</code></td>
+<td>chorizon</td>
+<td>Total clay percentage</td>
+<td>12.5</td>
+</tr>
+<tr class="even">
+<td><code>hzdept_r</code></td>
+<td>chorizon</td>
+<td>Horizon depth top (cm)</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td><code>hzdepb_r</code></td>
+<td>chorizon</td>
+<td>Horizon depth bottom (cm)</td>
+<td>25</td>
+</tr>
+<tr class="even">
+<td><code>hydricrating</code></td>
+<td>component</td>
+<td>Hydric soil status</td>
+<td>“Yes”/“No”</td>
+</tr>
+<tr class="odd">
+<td><code>mrulename</code></td>
+<td>cointerp</td>
+<td>Interpretation rule name</td>
+<td>“FOR - Mechanical Planting Suitability”</td>
+</tr>
+<tr class="even">
+<td><code>interphr</code></td>
+<td>cointerp</td>
+<td>Interpretation rating/class</td>
+<td>“Somewhat Limited”</td>
+</tr>
+<tr class="odd">
+<td><code>mupolygongeo</code></td>
+<td>mupolygon</td>
+<td>Map unit polygon geometry (WKT; WGS84 geographic coordinates in
+decimal degrees)</td>
+<td>“POLYGON (…)”</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

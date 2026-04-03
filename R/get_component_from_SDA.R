@@ -6,14 +6,8 @@
 #' @export 
 #' @rdname fetchSDA
 get_component_from_SDA <- function(WHERE = NULL, duplicates = FALSE, childs = TRUE,
-                                   droplevels = TRUE, nullFragsAreZero = TRUE,
-                                   stringsAsFactors = NULL) {
+                                   droplevels = TRUE, nullFragsAreZero = TRUE) {
                                      
-  if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
-    .Deprecated(msg = sprintf("stringsAsFactors argument is deprecated.\nSetting package option with `NASISDomainsAsFactor(%s)`", stringsAsFactors))
-    NASISDomainsAsFactor(stringsAsFactors)
-  }
-  
   if (!duplicates & grepl(WHERE, pattern = "mukey")[1])
     warning("duplicates is set to FALSE and 'mukey' is in WHERE clause. Note: 'mukey' omitted from result.", call. = FALSE)
 
@@ -22,7 +16,7 @@ get_component_from_SDA <- function(WHERE = NULL, duplicates = FALSE, childs = TR
   # paste0("mu.nationalmusym + '_' + CAST(comppct_r AS VARCHAR) + '_' + compname + '-' + ISNULL(localphase, 'no_phase') AS derived_cokey")
 
   es.vars <- "ecoclasstypename, ecoclassref, ecoclassid, ecoclassname"
-  co.vars <- "co.cokey, compname, comppct_r, compkind, majcompflag, localphase, drainagecl, hydricrating, erocl, earthcovkind1, earthcovkind2, elev_r, slope_r, aspectrep, map_r, airtempa_r, reannualprecip_r, ffd_r, hydgrp,  nirrcapcl, nirrcapscl, irrcapcl, irrcapscl, tfact, wei, weg, corcon, corsteel, frostact, taxclname, taxorder, taxsuborder, taxgrtgroup, taxsubgrp, taxpartsize, taxpartsizemod, taxceactcl, taxreaction, taxtempcl, taxmoistscl, taxtempregime, soiltaxedition"
+  co.vars <- "co.cokey, compname, comppct_r, compkind, majcompflag, localphase, drainagecl, hydricrating, erocl, earthcovkind1, earthcovkind2, elev_r, slope_r, aspectrep, map_r, airtempa_r, reannualprecip_r, ffd_r, hydgrp,  nirrcapcl, nirrcapscl, irrcapcl, irrcapscl, tfact, wei, weg, corcon, corsteel, frostact, taxclname, taxorder, taxsuborder, taxgrtgroup, taxsubgrp, taxpartsize, taxpartsizemod, taxceactcl, taxreaction, taxtempcl, taxmoistscl, taxtempregime, soiltaxedition, nasiscoiid"
   vars    <- paste(unlist(strsplit(co.vars, "earthcovkind2,")), collapse = paste0("earthcovkind2, ", es.vars, ","))
 
   q.component <- paste(
@@ -469,15 +463,10 @@ get_component_from_SDA <- function(WHERE = NULL, duplicates = FALSE, childs = TR
 #' @export 
 #' @rdname fetchSDA
 #' @param mrulename character. Interpretation rule names 
-get_cointerp_from_SDA <- function(WHERE = NULL, mrulename = NULL, duplicates = FALSE,
-                                  droplevels = TRUE,
-                                  stringsAsFactors = NULL
-                                  ) {
-  
-  if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
-    .Deprecated(msg = sprintf("stringsAsFactors argument is deprecated.\nSetting package option with `NASISDomainsAsFactor(%s)`", stringsAsFactors))
-    NASISDomainsAsFactor(stringsAsFactors)
-  }
+get_cointerp_from_SDA <- function(WHERE = NULL,
+                                  mrulename = NULL,
+                                  duplicates = FALSE,
+                                  droplevels = TRUE) {
   
   d.component <- get_component_from_SDA(WHERE = WHERE, duplicates = duplicates,
                                         childs = FALSE
@@ -522,7 +511,7 @@ get_cointerp_from_SDA <- function(WHERE = NULL, mrulename = NULL, duplicates = F
 
 #' @export 
 #' @rdname fetchSDA
-get_legend_from_SDA <- function(WHERE = NULL, droplevels = TRUE, stringsAsFactors = NULL) {
+get_legend_from_SDA <- function(WHERE = NULL, droplevels = TRUE) {
   q.legend  <- paste("
                      SELECT
                      mlraoffice, areasymbol, areaname, areatypename, CAST(areaacres AS INTEGER) AS areaacres, ssastatus,
@@ -552,7 +541,7 @@ get_legend_from_SDA <- function(WHERE = NULL, droplevels = TRUE, stringsAsFactor
 
 #' @export 
 #' @rdname fetchSDA
-get_lmuaoverlap_from_SDA <- function(WHERE = NULL, droplevels = TRUE, stringsAsFactors = NULL) {
+get_lmuaoverlap_from_SDA <- function(WHERE = NULL, droplevels = TRUE) {
 
   q <- paste("SELECT
              legend.areasymbol, legend.areaname, legend.areaacres,
@@ -597,14 +586,7 @@ get_lmuaoverlap_from_SDA <- function(WHERE = NULL, droplevels = TRUE, stringsAsF
 
 #' @export 
 #' @rdname fetchSDA
-get_mapunit_from_SDA <- function(WHERE = NULL,
-                                 droplevels = TRUE,
-                                 stringsAsFactors = NULL
-                                 ) {
-  if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
-    .Deprecated(msg = sprintf("stringsAsFactors argument is deprecated.\nSetting package option with `NASISDomainsAsFactor(%s)`", stringsAsFactors))
-    NASISDomainsAsFactor(stringsAsFactors)
-  }
+get_mapunit_from_SDA <- function(WHERE = NULL, droplevels = TRUE) {
   
   q.mapunit <- paste("
   SELECT
@@ -657,12 +639,7 @@ get_mapunit_from_SDA <- function(WHERE = NULL,
 get_chorizon_from_SDA <- function(WHERE = NULL, duplicates = FALSE,
                                   childs = TRUE,
                                   nullFragsAreZero = TRUE,
-                                  droplevels = TRUE,
-                                  stringsAsFactors = NULL) {
-  if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
-    .Deprecated(msg = sprintf("stringsAsFactors argument is deprecated.\nSetting package option with `NASISDomainsAsFactor(%s)`", stringsAsFactors))
-    NASISDomainsAsFactor(stringsAsFactors)
-  }
+                                  droplevels = TRUE) {
 
   q.chorizon <- paste("
     SELECT ", ifelse(!duplicates, "DISTINCT", ""),
@@ -678,7 +655,7 @@ get_chorizon_from_SDA <- function(WHERE = NULL, duplicates = FALSE,
        lep_r, sar_r, ec_r, cec7_r, sumbases_r, 
        ph1to1h2o_l, ph1to1h2o_r, ph1to1h2o_h,
        caco3_l, caco3_r, caco3_h, 
-       kwfact, kffact, c.cokey, ch.chkey
+       kwfact, kffact, c.cokey, ch.chkey, ch.nasischiid
     FROM legend l INNER JOIN
     mapunit mu ON mu.lkey = l.lkey",
     
@@ -952,7 +929,6 @@ get_chorizon_from_SDA <- function(WHERE = NULL, duplicates = FALSE,
 #' @param droplevels logical: indicating whether to drop unused levels in
 #' classifying factors. This is useful when a class has large number of unused
 #' classes, which can waste space in tables and figures.
-#' @param stringsAsFactors deprecated
 #' @return A data.frame or SoilProfileCollection object.
 #' @author Stephen Roecker
 #' @seealso \link{SDA_query}
@@ -964,25 +940,21 @@ fetchSDA <- function(WHERE = NULL,
                      childs = TRUE,
                      nullFragsAreZero = TRUE,
                      rmHzErrors = FALSE,
-                     droplevels = TRUE,
-                     stringsAsFactors = NULL) {
-
-  if (!missing(stringsAsFactors) && is.logical(stringsAsFactors)) {
-    .Deprecated(msg = sprintf("stringsAsFactors argument is deprecated.\nSetting package option with `NASISDomainsAsFactor(%s)`", stringsAsFactors))
-    NASISDomainsAsFactor(stringsAsFactors)
-  }
+                     droplevels = TRUE) {
   
   if (!requireNamespace("aqp")) {
     stop("package 'aqp' is required", call. = FALSE)
   }
   
   # load data in pieces
-  f.component <- get_component_from_SDA(WHERE,
-                                        duplicates = duplicates,
-                                        childs = childs,
-                                        droplevels = droplevels,
-                                        nullFragsAreZero = TRUE
-                                        )
+  f.component <- get_component_from_SDA(
+    WHERE,
+    duplicates = duplicates,
+    childs = childs,
+    droplevels = droplevels,
+    nullFragsAreZero = TRUE
+  )
+  
   if (inherits(f.component, 'try-error')) {
     return(invisible(f.component))
   }

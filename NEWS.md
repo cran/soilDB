@@ -1,3 +1,35 @@
+# soilDB 2.9.1 (2026-04-01)
+ - `ROSETTA()` updates thanks to Todd Skaggs (USDA-ARS):
+   - Now using version 2 of the ROSETTA API (<https://www.handbook60.org/rosetta>)
+   - New argument `est.type` for selecting ensemble summary method and resulting units of measure
+   - $Ko$ and $L$ parameters now included in model output
+ - `fetchGDB()` now supports passing path to SSURGO GeoPackage file via `dsn` argument
+ - Breaking change: sample SoilProfileCollection datasets (`loafercreek`, `gopheridge`, `mineralKing`) updated to 2.9.x `fetchNASIS()` schema
+   - Deprecated columns have been removed, following the corresponding changes in 2.9.0
+   
+# soilDB 2.9.0 (2026-01-22)
+
+## Breaking Changes
+ - Deprecated `stringsAsFactors` argument has been removed from many query functions, use `NASISChoiceList()` and/or `NASISDomainsAsFactor()` instead for manual or automatic setting of domain values as factors, respectively
+ - Deprecated NASIS column aliases have been removed, see <https://ncss-tech.github.io/AQP/soilDB/bulletins/2025.01-1-soilDB-NASIS-column-aliases.html> for details
+ - R version >= 4.1.0 is now required
+
+## Documentation
+ - New vignette with details on SoilWeb curated data sources, and related functions in soilDB (#435)
+ - New vignette on Soil Data Access, `SDA_query()` and high-level wrapper functions for SDA queries in soilDB 
+ 
+## Improvements
+ - `fetchOSD(..., extended = TRUE)` gains geomorphon proportions via SoilWeb (#435)
+ - `get_SDA_property(method="weighted average")` resolved efficiency issues and streamlined SQL Common Table Expressions for processing very large sets of map unit keys (#432)
+ - `OSDquery()` gains `remarks` argument for searching the REMARKS section of OSDs
+ 
+# soilDB 2.8.14 (2025-12-04)
+ 
+   - Added family mineralogy class grids 
+   - Added argument `type` for selecting the type of query; replaces deprecated `formativeElement`
+ - `SDA_query()` now includes additional metadata (comment header in SQL) to inform usage metrics of various access points to SDA
+ - `fetchSDA()` and related lower-level child functions now include `nasiscoiid` and `nasischiid` for relating to internal database record IDs
+
 # soilDB 2.8.13 (2025-09-26)
  - Added `get_SDA_NASIS_key()` for obtaining NASIS record IDs for component and component horizon data from Soil Data Access (#409)
  - `SDA_spatialQuery()` fixed a bug with new `addFields` argument and `geomIntersection=TRUE` (#414)
@@ -392,8 +424,6 @@ and in concatenation of reason string when `wide_reason=TRUE`
    * All  `get_SDA_*()` methods (except `get_SDA_metrics()`) now support input of custom `WHERE` clause in lieu of `mukeys`/`areasymbols` arguments and gain a `dsn` argument for specifying a local SQLite database or DBIConnection.
    * Added `downloadSSURGO()` for downloading/extraction of the SSURGO data by survey area from Web Soil Survey. 
    * Added `createSSURGO()` for building of local databases as SQLite/Geopackage from one or more SSURGO exports.
-      * Exports can be obtained via `downloadSSURGO()`, from NASIS or downloaded from other sources such as  <https://datagateway.nrcs.usda.gov/GDGHome_DirectDownLoad.aspx>. 
- 
 
 # soilDB 2.6.15 (2022-04-13) 
  * `fetchNASIS()`

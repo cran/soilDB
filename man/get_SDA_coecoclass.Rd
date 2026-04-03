@@ -57,6 +57,9 @@ summary. Used only for \code{method="all"}.}
 \item{dsn}{Path to local SQLite database or a DBIConnection object. If \code{NULL}
 (default) use Soil Data Access API via \code{SDA_query()}.}
 }
+\value{
+data.frame. \code{NULL} if no results, and a \code{try-error} (invisibly) on error.
+}
 \description{
 \code{get_SDA_coecoclass()} retrieves ecological site information from the Soil
 Data Access (SDA) database for a given set of map unit keys (mukeys). It
@@ -75,7 +78,7 @@ Note that if there are multiple \code{coecoclasskey} per \code{ecoclassid} there
 be more than one record per component.
 }
 \examples{
-\dontshow{if (!as.logical(Sys.getenv("R_SOILDB_SKIP_LONG_EXAMPLES", unset = TRUE)) ) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (!as.logical(Sys.getenv("R_SOILDB_SKIP_LONG_EXAMPLES", unset = TRUE)) ) withAutoprint(\{ # examplesIf}
 # Basic usage with a vector of mukeys
 get_SDA_coecoclass(mukeys = c(463994, 463995))
 

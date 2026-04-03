@@ -47,15 +47,15 @@
 #' `(Q0.95-Q0.05)/Q0.50.` All values are converted from "mapped" to
 #' "conventional" based on above table conversion factors. Point data requests
 #' are made through `"properties/query"` endpoint of the [SoilGrids v2.0 REST
-#' API](https://www.isric.org/explore/soilgrids/faq-soilgrids). Please check
+#' API](https://docs.isric.org/globaldata/soilgrids/SoilGrids_faqs.html). Please check
 #' ISRIC's data policy, disclaimer and citation:
-#' \url{https://www.isric.org/about/data-policy}.
+#' \url{https://isric.org/privacy-and-personal-data/}.
 #'
 #' Find out more information about the SoilGrids and GlobalSoilMap products
 #' here:
 #' 
-#'  - \url{https://www.isric.org/explore/soilgrids/faq-soilgrids}
-#'  - \url{https://www.isric.org/sites/default/files/GlobalSoilMap_specifications_december_2015_2.pdf}
+#'  - \url{https://docs.isric.org/globaldata/soilgrids/SoilGrids_faqs.html}
+#'  - \url{https://files.isric.org/public/documents/GlobalSoilMap_specifications_december_2015_2.pdf}
 #' 
 #' @references
 #'  - **Common soil chemical and physical properties:**
@@ -436,7 +436,7 @@ fetchSoilGrids <- function(x,
     vd <- strsplit(vardepth[i], "_")[[1]]
     v <- vd[1]; d <- vd[2]; s <- vd[3]
     
-    sf::gdal_utils(
+    try(sf::gdal_utils(
       util = "translate",
       source = paste0(sg_url, paste0(v, '/', v, '_', s, '_', d, '.vrt')),
       destination = tfs[i],
@@ -449,10 +449,15 @@ fetchSoilGrids <- function(x,
         )
       ),
       quiet = !verbose
-    )
+    ), silent = FALSE)
   }
   
-  stk <- terra::rast(tfs)
+  stk <- try(terra::rast(tfs), silent = TRUE)
+  
+  if (inherits(stk, 'try-error')) {
+    stop("Failed to initialize SpatRaster with remote SoilGrids GeoTIFF: ", stk[1], call. = FALSE)
+  }
+  
   names(stk) <- vardepth
   
   if (!is.null(filename)) {

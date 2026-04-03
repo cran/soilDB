@@ -8,28 +8,24 @@ test_that("get_SDA_hydric works", {
 
   # by areasymbol
   x <- get_SDA_hydric(areasymbols = c("CA077", "CA630"))
-  skip_if(is.null(x))
+  skip_if(inherits(x, 'try-error'))
   expect_length(unique(x$mukey), nrow(x))
 
   # check classification of mapunits
   x.nonhydric <- subset(x, x$HYDRIC_RATING == "Nonhydric")
-  expect_equivalent(nrow(x.nonhydric), 174)
+  expect_equivalent(nrow(x.nonhydric), 176)
   expect_true(all(x.nonhydric$hydric_majors == 0 & x.nonhydric$hydric_inclusions == 0))
 
   # by mukey
   x <- get_SDA_hydric(mukeys = c(461994, 461995))
-  skip_if(is.null(x))
   expect_equivalent(nrow(x), 2)
   
   x <- get_SDA_hydric(mukeys = c(461994, 461995), method = "none")
-  skip_if(is.null(x))
   expect_equivalent(nrow(x), 11)
   
   x <- get_SDA_hydric(mukeys = c(461994, 461995), method = "dominant component")
-  skip_if(is.null(x))
   expect_equivalent(nrow(x), 2)
   
   x <- get_SDA_hydric(mukeys = c(461994, 461995), method = "dominant condition")
-  skip_if(is.null(x))
   expect_equivalent(nrow(x), 2)
 })

@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Functions and Data Sources that Depend on SoilWeb</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Functions and Data Sources that Depend on
+SoilWeb</h1>
+
+
+
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<p>The soilDB package relies on a number of data sources curated as part
+of the <a href="https://casoilresource.lawr.ucdavis.edu/soilweb-apps">SoilWeb</a>
+ecosystem of web applications, APIs, web coverage services (WCS), and
+internally-used lookup tables. These data are always updated shortly
+after the beginning of each fiscal year (October 1st) as part of the
+SSURGO refresh cycle. Within-cycle updates are typically performed
+quarterly.</p>
+<p>Many of these curated data sources and their evolution through time
+have been documented in:</p>
+<ul>
+<li><p>O’Geen, A., Walkinshaw, M. and Beaudette, D.E. (2017), SoilWeb: A
+Multifaceted Interface to Soil Survey Information. Soil Sci. Soc. Am.
+J., 81: 853-862. <a href="https://doi.org/10.2136/sssaj2016.11.0386n" class="uri">https://doi.org/10.2136/sssaj2016.11.0386n</a></p></li>
+<li><p>Beaudette, D.E. and O’Geen, A.T. (2010), An iPhone Application
+for On-Demand Access to Digital Soil Survey Information. Soil Sci. Soc.
+Am. J., 74: 1682-1684. <a href="https://doi.org/10.2136/sssaj2010.0144N" class="uri">https://doi.org/10.2136/sssaj2010.0144N</a></p></li>
+<li><p>Beaudette, D.E. and O’Geen, A.T. (2009), Soil-Web: An online soil
+survey for California, Arizona, and Nevada, Comp. &amp; Geo. Sci.,
+35:2119-2128, <a href="https://doi.org/10.1016/j.cageo.2008.10.016" class="uri">https://doi.org/10.1016/j.cageo.2008.10.016</a></p></li>
+</ul>
+<p>Note that this vignette as published on CRAN or from a local R
+package installation will not contain output from inline code sections.
+See the Articles tab within the <a href="https://ncss-tech.github.io/soilDB/">soilDB package website</a>
+for a more comprehensive version of this document.</p>
+<div id="primary-data-sources" class="section level2">
+<h2>Primary Data Sources</h2>
+<ul>
+<li><a href="https://www.nrcs.usda.gov/resources/data-and-reports/soil-survey-geographic-database-ssurgo">SSURGO</a>,
+the detailed soil survey of the United States</li>
+<li><a href="https://www.nrcs.usda.gov/resources/data-and-reports/description-of-statsgo2-database">STATSGO2</a>,
+the generalized soil survey of the United States</li>
+<li>Official Series Descriptions (OSD) via <a href="https://github.com/ncss-tech/SoilKnowledgeBase/">SoilKnowledgeBase</a></li>
+<li>Soil Classification (SC) database (no public version)</li>
+<li><a href="https://www.nrcs.usda.gov/resources/data-and-reports/major-land-resource-area-mlra">USDA
+Ag. Handbook 296 – Major Land Resource Area (MLRA)</a></li>
+<li>Climate (<a href="https://prism.oregonstate.edu/">PRISM</a>) data
+and derivatives</li>
+<li>Digital elevation model (DEM) derivatives</li>
+<li><a href="https://ncsslabdatamart.sc.egov.usda.gov/">NCSS Lab Data
+Mart</a> (LDM) snapshot</li>
+<li>NRCS <a href="https://www.nrcs.usda.gov/resources/data-and-reports/rapid-carbon-assessment-raca">Rapid
+Carbon Assessment</a> (RaCA)</li>
+</ul>
+</div>
+<div id="soildb-functions" class="section level2">
+<h2><code>soilDB</code> Functions</h2>
+<p>The following functions interact with SoilWeb APIs or Web Coverage
+Service (WCS) to request and download tabular or spatial data. Some
+functions return <code>SoilProfileCollection</code> objects, as defined
+in the <a href="https://ncss-tech.github.io/aqp/">aqp</a> package.</p>
+<p>Tabular data and/or <code>SoilProfileCollection</code>:</p>
+<ul>
+<li><code>fetchOSD()</code>: get soil morphology and many soil series
+level summaries for one or more soil series names</li>
+<li><code>OSDquery()</code>: search the OSD records using the postgresql
+full text query syntax</li>
+<li><code>siblings()</code>: get names and basic information about soil
+series that co-occurr within soil map units containing a given
+series</li>
+</ul>
+<p>Spatial data:</p>
+<ul>
+<li><code>seriesExtent()</code>: get vector or raster representations of
+were soil series have been used in SSURGO</li>
+<li><code>taxaExtent()</code>: get raster representations of were taxa
+and formative elements (Soil Taxonomy) have been used in SSURGO</li>
+</ul>
+<p>WCS:</p>
+<ul>
+<li><code>mukey.wcs()</code>: get raster data describing map unit keys,
+from a variety of sources, by bounding-box</li>
+<li><code>ISSR800.wcs()</code>: get raster data describing generalized
+patterns in soil property and condition, by bounding-box</li>
+<li><code>soilColor.wcs()</code>: get raster soil color maps by
+bounding-box</li>
+</ul>
+<p>The <code>fetchOSD()</code> function, when specified with the
+<code>extended = TRUE</code> argument, will include the last updated
+date for curated sources.</p>
+<!-- requires conditional evaluation if vignette -->
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># typical invocation</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(soilDB)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(aqp)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">fetchOSD</span>(<span class="fu">c</span>(<span class="st">&#39;lucy&#39;</span>), <span class="at">extended =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co"># access metadata</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>x<span class="sc">$</span>soilweb.metadata</span></code></pre></div>
+<p>An abbreviated example of these metadata will look like this:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">product</th>
+<th align="left">last_update</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ISSR800</td>
+<td align="left">2024-10-30</td>
+</tr>
+<tr class="even">
+<td align="left">KSSL snapshot</td>
+<td align="left">2025-01-21</td>
+</tr>
+<tr class="odd">
+<td align="left">MLRA membership</td>
+<td align="left">2025-10-07</td>
+</tr>
+<tr class="even">
+<td align="left">OSD fulltext</td>
+<td align="left">2026-01-02</td>
+</tr>
+<tr class="odd">
+<td align="left">OSD morphology</td>
+<td align="left">2026-01-02</td>
+</tr>
+<tr class="even">
+<td align="left">SC database</td>
+<td align="left">2026-01-02</td>
+</tr>
+<tr class="odd">
+<td align="left">series climate summary</td>
+<td align="left">2025-10-08</td>
+</tr>
+<tr class="even">
+<td align="left">series-ESID cross-tabulation</td>
+<td align="left">2025-10-07</td>
+</tr>
+<tr class="odd">
+<td align="left">SSURGO geomorphology</td>
+<td align="left">2025-10-06</td>
+</tr>
+<tr class="even">
+<td align="left">SSURGO geomorphon</td>
+<td align="left">2026-01-11</td>
+</tr>
+<tr class="odd">
+<td align="left">SSURGO NCCPI Stats</td>
+<td align="left">2025-10-19</td>
+</tr>
+<tr class="even">
+<td align="left">SSURGO parent material</td>
+<td align="left">2025-10-06</td>
+</tr>
+<tr class="odd">
+<td align="left">series extent</td>
+<td align="left">2025-10-04</td>
+</tr>
+<tr class="even">
+<td align="left">taxa extent</td>
+<td align="left">2025-10-21</td>
+</tr>
+</tbody>
+</table>
+<p>Details about these data sources are provided below.</p>
+<div id="functions-with-questionable-future" class="section level3">
+<h3>Functions with Questionable Future</h3>
+<p>Some functions represent temporary solutions to data delivery
+problems that made sense in the past. <code>fetchKSSL()</code> relies on
+an older snapshot of the NCSS LDM (2020), <code>fetchRaCA()</code>
+relies on a pre-release of the current RaCA database, and
+<code>SoilWeb_spatial_query()</code> has been superseded by soilDB
+functions which interface with Soil Data Access (see <a href="https://ncss-tech.github.io/soilDB/reference/SDA_query.html"><code>SDA_query()</code></a>
+and <a href="https://ncss-tech.github.io/soilDB/reference/SDA_spatialQuery.html"><code>SDA_spatialQuery</code></a>).</p>
+<ul>
+<li><code>fetchKSSL()</code>: get soil characterization and (limited)
+morphology data (soil color, structure, redoximorphic features)</li>
+<li><code>fetchRaCA()</code>: get records associated with the RaCA
+collection</li>
+<li><code>SoilWeb_spatial_query()</code>: simple interface to spatial
+intersection between SSURGO polygons and user supplied bounding-box</li>
+</ul>
+<p>There are currently no replacements for full functionality provided
+by <code>fetchKSSL()</code> and <code>fetchRaCA()</code>. See <a href="https://ncss-tech.github.io/soilDB/reference/fetchLDM.html"><code>fetchLDM()</code></a>
+for a modern approach to downloading NCSS LDM snapshot data.</p>
+</div>
+</div>
+<div id="related-web-applications" class="section level2">
+<h2>Related Web Applications</h2>
+<p>The <a href="https://ncss-tech.github.io/soilDB/reference/OSDquery.html"><code>OSDquery()</code></a>
+function provides a convenient interface to the API behind the SoilWeb
+OSD Search applications:</p>
+<ul>
+<li><a href="https://soilmap4-1.lawr.ucdavis.edu/osd-search/index.php" class="uri">https://soilmap4-1.lawr.ucdavis.edu/osd-search/index.php</a></li>
+<li><a href="https://casoilresource.lawr.ucdavis.edu/osd-search/search-entire-osd.php" class="uri">https://casoilresource.lawr.ucdavis.edu/osd-search/search-entire-osd.php</a></li>
+</ul>
+<p>The web-based version of this search is limited to 100 records but
+<code>OSDquery()</code> has no record limit.</p>
+<p>The <a href="https://ncss-tech.github.io/soilDB/reference/seriesExtent.html"><code>seriesExtent()</code></a>
+function provides an interface to the data behind the <a href="https://casoilresource.lawr.ucdavis.edu/see/">SoilWeb Series
+Extent Explorer</a> (SEE) application. The SEE website includes a short
+description of how the source data were created.</p>
+<p>The <a href="https://ncss-tech.github.io/soilDB/reference/taxaExtent.html"><code>taxaExtent()</code></a>
+function provides an interface to the data behind the <a href="https://casoilresource.lawr.ucdavis.edu/ste/">SoilWeb Soil
+Taxonomy Explorer</a> (STE) application. the STE website includes a
+short description of how the source data were created.</p>
+</div>
+<div id="relevant-tutorials" class="section level2">
+<h2>Relevant Tutorials</h2>
+<ul>
+<li><a href="https://ncss-tech.github.io/AQP/soilDB/soil-series-query-functions.html">Querying
+Soil Series Data</a></li>
+<li><a href="https://ncss-tech.github.io/AQP/soilDB/siblings.html">Soil
+Series Co-Occurrence Data</a></li>
+<li><a href="https://ncss-tech.github.io/AQP/soilDB/competing-series.html">Competing
+Soil Series</a></li>
+<li><a href="https://ncss-tech.github.io/AQP/soilDB/exploring-geomorph-summary.html">Exploring
+Geomorphic Summaries</a></li>
+<li><a href="https://ncss-tech.github.io/AQP/soilDB/subgroup-series.html">What
+does a subgroup look like?</a></li>
+<li><a href="https://ncss-tech.github.io/AQP/soilDB/WCS-demonstration-01.html">Map
+Unit Key Web Coverage Service</a></li>
+<li><a href="https://ncss-tech.github.io/AQP/soilDB/series-extent.html">Investigating
+Soil Series Extent</a></li>
+<li><a href="https://ncss-tech.github.io/AQP/soilDB/taxa-extent.html">Geographic
+Extent of Soil Taxa</a></li>
+</ul>
+</div>
+</div>
+<div id="soilweb-curated-data-sources" class="section level1">
+<h1>SoilWeb Curated Data Sources</h1>
+<div id="sc-and-osd-derivatives" class="section level2">
+<h2>SC and OSD Derivatives</h2>
+<p>Competing (same family classification) soil series information are
+derived from the Soil Classification database. Geographically associated
+soils are derived from the OSD records. These data are available via
+<code>fetchOSD()</code>.</p>
+<p>Competing soil series.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># series names listed in &quot;competing&quot; have the family classification as &quot;series&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>competing)</span></code></pre></div>
+<p>Geographically associated series. Series in the same region may have
+several geographically associated series in common, and can be modeled
+using <a href="https://en.wikipedia.org/wiki/Directed_graph">directed
+graphs</a>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># series names listed in &quot;gas&quot; are geographically associated with &quot;series&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>geog_assoc_soils)</span></code></pre></div>
+</div>
+<div id="ssurgo-derivatives" class="section level2">
+<h2>SSURGO Derivatives</h2>
+<p>SSURGO components are often named for soil series. Soil series
+summaries derived from SSURGO are coordinated using a normalized form of
+component name and soil series:</p>
+<ul>
+<li>names are converted to upper case</li>
+<li>component names are stripped of modifiers such as “variant” and
+“family”</li>
+</ul>
+<p>See the <a href="https://www.nrcs.usda.gov/resources/guides-and-instructions/soil-survey-manual">Soil
+Survey Manual</a> for more complete definitions of “map unit”,
+“component”, and “soil series”.</p>
+<p>The <a href="https://ncss-tech.github.io/AQP/soilDB/soil-series-query-functions.html">Querying
+Soil Series Data</a> tutorial contains additional, relevant
+examples.</p>
+<div id="mlra" class="section level3">
+<h3>MLRA</h3>
+<p>Derived from the spatial intersection between MLRA and SSURGO
+polygons, with area computed on the ellipsoid from geographic
+coordinates. Membership values are area proportions by soil series.</p>
+<p>MLRA “membership” for the <a href="https://casoilresource.lawr.ucdavis.edu/sde/?series=lucy#osd">LUCY</a>
+soil series.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>.mlra <span class="ot">&lt;-</span> x<span class="sc">$</span>mlra[x<span class="sc">$</span>mlra<span class="sc">$</span>series <span class="sc">==</span> <span class="st">&#39;LUCY&#39;</span>, ]</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>.mlra[<span class="fu">order</span>(.mlra<span class="sc">$</span>membership, <span class="at">decreasing =</span> <span class="cn">TRUE</span>), ]</span></code></pre></div>
+<p>Soil series can be found in multiple MLRA, therefore MLRA membership
+can be modeled using <a href="https://en.wikipedia.org/wiki/Directed_graph">directed
+graphs</a>.</p>
+</div>
+<div id="geomorphic-summaries" class="section level3">
+<h3>Geomorphic Summaries</h3>
+<p>Geomorphic summaries are computed from SSURGO component
+“geomorphology” tables. These represent a cross-tabulation of soil
+series name x geomorphic position in several landform and surface shape
+description systems. These systems are defined in the <a href="https://www.nrcs.usda.gov/resources/guides-and-instructions/field-book-for-describing-and-sampling-soils">Field
+Book for Describing and Sampling Soils</a>.</p>
+<p>There are several associated functions in the <a href="https://github.com/ncss-tech/sharpshootR/">sharpshootR</a> package
+for visualizing these summaries (e.g. <a href="http://ncss-tech.github.io/sharpshootR/reference/vizHillslopePosition.html"><code>vizHillslopePosition()</code></a>).</p>
+<ul>
+<li>hillslope position (2D)</li>
+<li>geomorphic component: hills (3D)</li>
+<li>geomorphic component: mountains (3D)</li>
+<li>geomorphic component: terrace (3D)</li>
+<li>geomorphic component: flats (3D)</li>
+<li>surface curvature across-slope</li>
+<li>surface curvature down-slope</li>
+</ul>
+<p>Note that the <code>n</code> column in each table is the number of
+component geomorphic data records associated with each soil series. It
+is possible for a single component to have multiple geomorphic positions
+defined.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># hillslope position</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>hillpos)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># geomorphic component: hills</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>geomcomp)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># geomorphic component: mountains</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>mtnpos)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co"># geomorphic component: terraces</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>terrace)</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co"># geomorphic component: flats</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>flats)</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co"># surface curvature across slope</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>shape_across)</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co"># surface curvature down slope</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>shape_down)</span></code></pre></div>
+</div>
+<div id="siblings" class="section level3">
+<h3>Siblings</h3>
+<p>SoilWeb defines the term “siblings” as those components or soil
+series that co-occur within map units. The <code>siblings()</code>
+function returns siblings for a single soil series, with a tabulation of
+how many times each sibling shares a common map unit.</p>
+<p>Siblings of the PIERRE soil series, limited to just major components.
+The <code>n</code> column describes how many map units are shared
+between a sibling and the PIERRE series.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>sib <span class="ot">&lt;-</span> <span class="fu">siblings</span>(<span class="st">&#39;PIERRE&#39;</span>, <span class="at">only.major =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">head</span>(sib<span class="sc">$</span>sib)</span></code></pre></div>
+</div>
+<div id="other" class="section level3">
+<h3>Other</h3>
+<p>Percentiles of the <a href="https://www.nrcs.usda.gov/sites/default/files/2023-01/NCCPI-User-Guide.pdf">National
+Commodity Crop Productivity Index</a> are computed from SSURGO component
+records, by soil series name. These include both irrigated and
+non-irrigated versions of the NCCPI.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>NCCPI)</span></code></pre></div>
+<p>Ecological classification membership are computed from map unit
+polygon area and component percentages.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>ecoclassid)</span></code></pre></div>
+</div>
+<div id="parent-material-summaries" class="section level3">
+<h3>Parent Material Summaries</h3>
+<p>Parent material kind and origin, tabulated by soil series name. The
+<code>n</code> column is the number of component parent material records
+associated with a specific parent material kind or origin. The
+<code>total</code> column is the total number of component parent
+material records by soil series. The final column, <code>P</code>, is
+the associated proportion.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>pmkind)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>pmorigin)</span></code></pre></div>
+</div>
+</div>
+<div id="series-and-taxa-extent" class="section level2">
+<h2>Series and Taxa Extent</h2>
+<p>Soil series extent vector data are available for all areas where
+SSURGO has been completed. Vector extents are described as polygons
+which generalize the underlying SSURGO map unit polygons (EPSG:4326).
+Soil series extent raster data are available as 800m grids (EPSG:5070)
+within CONUS only. Taxonomic classes and formative elements are
+available as 800m grids (EPSG:5070) within CONUS only. Grids are</p>
+</div>
+<div id="web-coverage-services" class="section level2">
+<h2>Web Coverage Services</h2>
+<p>Web Coverage Services (WCS) provided by SoilWeb are still an
+experimental interface to snapshots of authoritative soil survey and
+derived data sources. The update cycle is slower than the typical SSURGO
+refresh. All WCS requests return data as compressed GeoTIFF
+(EPSG:5070).</p>
+</div>
+<div id="climate-data-and-derivatives" class="section level2">
+<h2>Climate Data and Derivatives</h2>
+<p>These maps are derived from the daily, 800m resolution, PRISM data
+spanning 1981–2010.</p>
+<ul>
+<li>Mean annual air temperature (deg. C), derived from daily minimum and
+maximum temperatures.</li>
+<li>Mean accumulated annual precipitation (mm), derived from daily
+totals.</li>
+<li>Mean monthly temperature (deg. C), derived from daily minimum and
+maximum temperatures.</li>
+<li>Mean accumulated monthly precipitation (mm), derived from daily
+totals.</li>
+<li>Estimated monthly potential evapotranspiration, <a href="https://en.wikipedia.org/wiki/Potential_evapotranspiration#Thornthwaite_equation_(1948)">Thornthwaite,
+1948</a></li>
+</ul>
+<p>Percentiles of each variable are computed by soil series, from a
+sampling of one point per SSURGO map unit polygon.</p>
+<p>An example of annual and monthly climate percentiles.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>climate.annual)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>climate.monthly)</span></code></pre></div>
+<div id="frost-free-period" class="section level3">
+<h3>Frost-Free Period</h3>
+<p>Number of days in the 50%, 80%, and 90% probability frost-free
+period, derived from daily minimum temperatures greater than 0 degrees
+C.</p>
+<p>These maps are based on 50/80/90 percent probability estimates for
+the last spring frost and first fall frost (day of year). See the
+related <a href="http://ncss-tech.github.io/AQP/sharpshootR/FFD-estimates.html">algorithm
+documentation</a> for details.</p>
+<p>Values have been cross-checked with 300+ weather stations in CA.</p>
+<div align="center">
+<strong>Linear Regression Model</strong>
+</div>
+<pre>
+ ols(formula = ffd.50 ~ prism_ffd, data = z)
+ </pre>
+<table class="gmisc_table" style="border-collapse: collapse; margin-top: 1em; margin-bottom: 1em;">
+<thead>
+<tr>
+<th style="border-bottom: 1px solid grey; border-top: 2px solid grey; border-left: 1px solid black; border-right: 1px solid black; text-align: center;">
+</th>
+<th style="border-bottom: 1px solid grey; border-top: 2px solid grey; border-right: 1px solid black; text-align: center;">
+Model Likelihood<br>Ratio Test
+</th>
+<th style="border-bottom: 1px solid grey; border-top: 2px solid grey; border-right: 1px solid black; text-align: center;">
+Discrimination<br>Indexes
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="min-width: 9em; border-left: 1px solid black; border-right: 1px solid black; text-align: center;">
+Obs 328
+</td>
+<td style="min-width: 9em; border-right: 1px solid black; text-align: center;">
+LR χ<sup>2</sup> 526.00
+</td>
+<td style="min-width: 9em; border-right: 1px solid black; text-align: center;">
+<i>R</i><sup>2</sup> 0.799
+</td>
+</tr>
+<tr>
+<td style="min-width: 9em; border-left: 1px solid black; border-right: 1px solid black; text-align: center;">
+Ïƒ 42.2446
+</td>
+<td style="min-width: 9em; border-right: 1px solid black; text-align: center;">
+d.f. 1
+</td>
+<td style="min-width: 9em; border-right: 1px solid black; text-align: center;">
+<i>R</i><sup><span style="font-size: 70%;">2</span></sup><sub style="position: relative; left: -.47em; bottom: -.4em;"><span style="font-size: 70%;">adj</span></sub> 0.798
+</td>
+</tr>
+<tr>
+<td style="min-width: 9em; border-bottom: 2px solid grey; border-left: 1px solid black; border-right: 1px solid black; text-align: center;">
+d.f. 326
+</td>
+<td style="min-width: 9em; border-bottom: 2px solid grey; border-right: 1px solid black; text-align: center;">
+Pr(&gt;χ<sup>2</sup>) 0.0000
+</td>
+<td style="min-width: 9em; border-bottom: 2px solid grey; border-right: 1px solid black; text-align: center;">
+<i>g</i> 95.935
+</td>
+</tr>
+</tbody>
+</table>
+<div align="center">
+Residuals
+</div>
+<pre>
+      Min       1Q   Median       3Q      Max 
+ -278.344  -16.875    2.436   14.323  274.604 
+ </pre>
+<table class="gmisc_table" style="border-collapse: collapse; margin-top: 1em; margin-bottom: 1em;">
+<thead>
+<tr>
+<th style="font-weight: 900; border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;">
+</th>
+<th style="border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: right;">
+β
+</th>
+<th style="border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: right;">
+S.E.
+</th>
+<th style="border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: right;">
+<i>t</i>
+</th>
+<th style="border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: right;">
+Pr(&gt;|<i>t</i>|)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">
+Intercept
+</td>
+<td style="min-width: 7em; text-align: right;">
+15.1397
+</td>
+<td style="min-width: 7em; text-align: right;">
+5.3455
+</td>
+<td style="min-width: 7em; text-align: right;">
+2.83
+</td>
+<td style="min-width: 7em; text-align: right;">
+0.0049
+</td>
+</tr>
+<tr>
+<td style="border-bottom: 2px solid grey; text-align: left;">
+prism_ffd
+</td>
+<td style="min-width: 7em; border-bottom: 2px solid grey; text-align: right;">
+0.9407
+</td>
+<td style="min-width: 7em; border-bottom: 2px solid grey; text-align: right;">
+0.0261
+</td>
+<td style="min-width: 7em; border-bottom: 2px solid grey; text-align: right;">
+35.98
+</td>
+<td style="min-width: 7em; border-bottom: 2px solid grey; text-align: right;">
+&lt;0.0001
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="frost-free-days" class="section level3">
+<h3>Frost-Free Days</h3>
+<p>Percentiles of frost-free days (FFD) at the 50% probability
+threshold.</p>
+</div>
+<div id="design-freeze-index" class="section level3">
+<h3>Design Freeze Index</h3>
+<ul>
+<li>number of degree days below 0 deg C, 90th percentile</li>
+</ul>
+<p>From <em>NSSH Part 618.33 Frost Action, Potential</em>:</p>
+<blockquote>
+<p>Part 618, Subpart B, Exhibits, Section 618.85 is a map that shows the
+design freezing index values in the continental United States. The
+values <strong>are the number of degree days below 0 deg C for the
+coldest year in a period of 10 years</strong> . The values indicate
+duration and intensity of freezing temperatures. The 250 isoline is the
+approximate boundary below which frost action ceases to be a
+problem.</p>
+</blockquote>
+<p>Methods:</p>
+<ul>
+<li>using units of degrees Celsius, and daily average air temperature
+(<span class="math inline">\(Tavg\)</span>)</li>
+<li>freezing degree days for a single year: <span class="math inline">\(FI = sum( abs( min(0, Tavg) ) )\)</span></li>
+<li>design freezing index, over 30 year record: <span class="math inline">\(DFI = Q90( FI )\)</span> where <strong>FI</strong>
+is the stack of annual FI</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>There is a fairly large difference in where the 250 DFI isoline
+falls, depending on the temperature units.</li>
+<li>The 90th percentile of <strong>FI</strong> seems to track the notion
+of “coldest year in 10 years”.</li>
+<li>The “average of 3 coldest years in 30” method gives different
+results, but spatial patterns are the same.</li>
+<li>Related <a href="https://github.com/ncss-tech/soilReports/issues/84">conversation</a>
+on the calculation and interpretation.</li>
+</ul>
+</div>
+<div id="growing-degree-days-c" class="section level3">
+<h3>Growing Degree Days (C)</h3>
+<p>Mean (Celsius) growing degree days, derived from the 800m PRISM daily
+minimum/maximum temperature data over the interval of 1981–2010.</p>
+<p>Calculation reference: <a href="https://web.archive.org/web/20211018034119/http://agron-www.agron.iastate.edu/courses/Agron541/classes/541/lesson02b/2b.1.1.html">http://agron-www.agron.iastate.edu/courses/Agron541/classes/541/lesson02b/2b.1.1.html</a></p>
+<p><span class="math display">\[GDD_i = [ min(T_{max},
+upper_{threshold}) + max(Tmin, lower_{threshold}) / 2 ] -
+T_{base}\]</span></p>
+<p><span class="math display">\[GDD_i = max(GDD_i, 0)\]</span></p>
+</div>
+<div id="effective-precipitation" class="section level3">
+<h3>Effective Precipitation</h3>
+<p>Annual sum of monthly (total) precipitation - monthly (estimated)
+evapotranspiration, averaged over the interval of 1981–2010. Potential
+evapotranspiration (PET) estimated via <a href="https://en.wikipedia.org/wiki/Potential_evaporation">Thornthwaite’s
+method of 1948</a>. Input sources included:</p>
+<ul>
+<li>800m resolution, monthly, total precipitation (PRISM group)</li>
+<li>800m resolution, monthly, mean air temperature (PRISM group)</li>
+</ul>
+<p>Processing in GRASS GIS.</p>
+</div>
+<div id="fraction-of-precipitation-as-rain" class="section level3">
+<h3>Fraction of Precipitation as Rain</h3>
+<p>This map contains estimates of the fraction of total (annual)
+precipitation as rain, derived from 800m daily PRISM Tmax and PPT grids
+(1981–2010). Calculations were performed using GRASS GIS, with methods
+and estimated parameters of the conditional snow probability function
+from Rajagopal and Harpold (2016).</p>
+<p>Partition PPT into snow/rain:</p>
+<p><span class="math display">\[rain = PPT - snow\]</span></p>
+<p><span class="math display">\[snow = PPT * Pr(snow)\]</span></p>
+<p>compute <span class="math inline">\(Pr(snow)\)</span> as a function
+of <span class="math inline">\(Tmax\)</span> using <a href="https://en.wikipedia.org/wiki/Hyperbolic_function#Standard_analytic_expressions">exponential
+identity for hyperbolic tangent function</a>:</p>
+<p>Evaluate conditional probability (fraction) of snow on a daily
+basis:</p>
+<p><span class="math display">\[Pr(snow) = a * ( tanh(b * (Tmax - c) ) -
+d )\]</span></p>
+<p>a:-0.5, b:0.21, c:0.5, d:1</p>
+<p><span class="math display">\[tanh(x) = (1 - exp(-2*x)) / (1 +
+exp(-2*x))\]</span></p>
+<p><span class="math display">\[Pr(snow) = -0.5 * ( (1 - exp(-2 * (0.21
+* (Tmax - 0.5) ))) / (1 + exp(-2 * (0.21 * (Tmax - 0.5) ))) - 1
+)\]</span></p>
+<p><span class="math display">\[rain = PPT - (PPT *
+Pr(snow))\]</span></p>
+<p>For each year(<span class="math inline">\(i\)</span>):</p>
+<p><span class="math display">\[rain fraction_i = sum(rain_i) /
+sum(PPT_i)\]</span></p>
+<p>Percentages have been converted to integers ranging from 0 to
+100.</p>
+<p>Rajagopal, S. and A.A. Harpold. 2016. Testing and Improving
+Temperature Thresholds for Snow and Rain Prediction in the Western
+United States. Journal of the American Water Resources Association, 52:
+1142-1154.</p>
+</div>
+</div>
+<div id="dem-derivatives" class="section level2">
+<h2>DEM Derivatives</h2>
+<div id="geomorphons" class="section level3">
+<h3>Geomorphons</h3>
+<p>A cross-tabulation of geomorphon by soil series name was computed
+from the current gSSURGO (30m) grid and a 30m grid of geomorphons.
+Currently, these data are only available within CONUS.</p>
+<p>These maps were generated using the <a href="https://grass.osgeo.org/grass-stable/manuals/r.geomorphon.html">r.geomorphon
+GRASS GIS module</a>, with the following parameters:</p>
+<p><code>r.geomorphon --o dem=elev30_int forms=forms30 search=75 skip=5 flat=1.718</code></p>
+<p>The source DEM was a 10m / 30m resolution compilation of USGS NED
+data, rounded to integers. The “flat” threshold (1.718 deg) is based on
+a 3% slope break.</p>
+<p>Jasiewicz, J., Stepinski, T., 2013, Geomorphons - a pattern
+recognition approach to classification and mapping of landforms,
+Geomorphology, vol. 182, 147-156. (<a href="https://doi.org/10.1016/j.geomorph.2012.11.005" class="uri">https://doi.org/10.1016/j.geomorph.2012.11.005</a>)</p>
+<p>Proportions are weighted by total soil series area (within CONUS) as
+informed by the component name and associated component percentage.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">head</span>(x<span class="sc">$</span>geomorphons)</span></code></pre></div>
+<!-- # Examples -->
+<!-- ```{r eval=FALSE} -->
+<!-- library(soilDB) -->
+<!-- library(aqp) -->
+<!-- x <- fetchOSD(c('miami', 'pierre', 'tristan', 'lucy', 'musick'), extended = TRUE) -->
+<!-- ``` -->
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

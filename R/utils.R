@@ -15,6 +15,45 @@
   }, simplify = FALSE)))
 }
 
+#' Generate SDA SQL Comment Header
+#'
+#' This function generates a standardized SQL comment header string to be
+#' prepended to SDA queries.
+#'
+#' @param function_name Character. The name of the high-level `soilDB` function
+#'   generating the query.
+#' @param package_version Character. The current version of the `soilDB`
+#'   package.
+#'
+#' @return A character string containing the SQL comment header.
+#' @noRd
+#' @keywords internal
+#'
+#' @examples
+#' generate_SDA_comment_header("soilDB::get_SDA_property")
+.SDA_comment_header <- function(function_name,
+                                package_version = as.character(packageVersion('soilDB'))) {
+  
+  if (!is.character(function_name) ||
+      length(function_name) != 1 ||
+      nchar(function_name) == 0) {
+    stop("`function_name` must be a non-empty character string.")
+  }
+  
+  if (!is.character(package_version) ||
+      length(package_version) != 1 ||
+      nchar(package_version) == 0) {
+    stop("`package_version` must be a non-empty character string.")
+  }
+  
+  # Construct the SQL comment header
+  sprintf(
+    "/** SDA Query application='soilDB' rule='%s' version='%s' **/",
+    function_name,
+    package_version
+  )
+}
+
 # convert diagnostic horizon info into wide-formatted, boolean table
 .diagHzLongtoWide <- function(d, feature = 'featkind', id = 'peiid') {
 
@@ -141,8 +180,6 @@
 	return(d[best.record, ])
 }
 
-## https://github.com/ncss-tech/soilDB/issues/84
-## TODO: https://github.com/ncss-tech/soilDB/issues/47
 ## 2015-11-30: short-circuits could use some work, consider pre-marking mistakes in calling function
 # attempt to format "landform" records into a single string
 # note: there are several assumptions made about the data,
@@ -557,50 +594,6 @@
   return(data.frame(coiid=u.coiid, landform_string=ft.string, stringsAsFactors=FALSE))
 }
 
-
-## https://github.com/ncss-tech/soilDB/issues/84
-# attempt to flatten component parent material data into 2 strings
-.formatcoParentMaterialString <- function(i.pm, name.sep='|') {
-
-  .Deprecated(".formatParentMaterialString")
-
-  # get the current site
-  u.coiid <- unique(i.pm$coiid)
-
-  if(length(u.coiid) == 0)
-    return(data.frame(coiid=NA_integer_, pmkind=NA, pmorigin=NA, stringsAsFactors=FALSE)[0,])
-
-  # sanity check: this function can only be applied to data from a single site
-  if(length(u.coiid) > 1)
-    stop('data are from multiple site records')
-
-  # subset sitepm data to remove any with NA for pm_kind
-  i.pm <- i.pm[which(!is.na(i.pm$pmkind)), ]
-
-  # if there is no data, then return a DF formatted as if there were data
-  if(nrow(i.pm) == 0)
-    return(data.frame(coiid=u.coiid, pmkind=NA, pmorigin=NA, stringsAsFactors=FALSE))
-
-  # short-circuit: if any pmorder are NA, then we don't know the order
-  # string together as-is, in row-order
-  if(anyNA(i.pm$pmorder)) {
-    # optional information on which sites have issues
-    if(getOption('soilDB.verbose', default=FALSE))
-      warning('Using row-order. NA in pmorder:', u.coiid)
-  }
-  else{
-    # there are no NAs in pmorder --> sort according to pmorder
-    i.pm <- i.pm[order(i.pm$pmorder), ]
-  }
-
-  # composite strings and return
-  str.kind <- paste(i.pm$pmkind, collapse=name.sep)
-  str.origin <- paste(unique(i.pm$pmorigin), collapse=name.sep)
-
-  return(data.frame(coiid=u.coiid, pmkind=str.kind, pmorigin=str.origin, stringsAsFactors=FALSE))
-}
-
-
 # attempt to flatten multiple ecosite entries into 1 string
 .formatEcositeString <- function(i.esd, name.sep='|') {
   # get the current site
@@ -717,7 +710,7 @@
 
 
 # impute "not populated" into freqcl and "201" into dept_r & depb_r if !is.na(freqcl)
-.cosoilmoist_prep <- function(df, impute, stringsAsFactors = NULL) {
+.cosoilmoist_prep <- function(df, impute) {
 
   # cache original column names
   orig_names <- names(df)
@@ -879,24 +872,29 @@
       nodups   <- df[!dups_idx, ]
 
       dups_clean <- {
-        .<- split(dups, dups$cokey, drop = TRUE)
-        .<- lapply(., function(x) { data.frame(
-          cokey = x$cokey[1],
-          landscape     = paste(unique(x$landscape),           collapse = " and "),
-          landform      = paste(unique(x$landform),            collapse = " on  "),
-          mntn          = paste(sort(unique(x$mntn)),          collapse = ", "   ),
-          hill          = paste(sort(unique(x$hill)),          collapse = ", "   ),
-          trce          = paste(sort(unique(x$trce)),          collapse = ", "   ),
-          flats         = paste(sort(unique(x$flats)),         collapse = ", "   ),
-          shapeacross   = paste(sort(unique(x$shapeacross)),   collapse = ", "   ),
-          shapedown     = paste(sort(unique(x$shapedown)),     collapse = ", "   ),
-          hillslopeprof = paste(sort(unique(x$hillslopeprof)), collapse = ", "),
-          stringsAsFactors = TRUE
-        )})
-        .<- do.call("rbind", .)
+        . <- split(dups, dups$cokey, drop = TRUE)
+        . <- lapply(., function(x) {
+          data.frame(
+            cokey = x$cokey[1],
+            landscape     = paste(unique(x$landscape), collapse = " and "),
+            landform      = paste(unique(x$landform), collapse = " on  "),
+            mntn          = paste(sort(unique(x$mntn)), collapse = ", "),
+            hill          = paste(sort(unique(x$hill)), collapse = ", "),
+            trce          = paste(sort(unique(x$trce)), collapse = ", "),
+            flats         = paste(sort(unique(x$flats)), collapse = ", "),
+            shapeacross   = paste(sort(unique(x$shapeacross)), collapse = ", "),
+            shapedown     = paste(sort(unique(x$shapedown)), collapse = ", "),
+            hillslopeprof = paste(sort(unique(
+              x$hillslopeprof
+            )), collapse = ", ")
+            # stringsAsFactors = TRUE # 2025-12-05: confirmed this has no effect on result
+          )
+        })
+        . <- do.call("rbind", .)
       }
       nodups <- nodups[! names(nodups) %in% c("geomfeatid", "existsonfeat")]
-
+      
+      # NOTE: this rbind wipes out factors
       df <- rbind(nodups, dups_clean)
       df <- df[order(df$cokey), ]
       row.names(df) <- seq_len(nrow(df))
@@ -908,9 +906,10 @@
   idx <- names(df) %in% vars & idx
   df[, idx] <- lapply(df[, idx], function(x) ifelse(x %in% c("", "NA"), NA, x))
 
-  # hack to make CRAN check happy
   mntn <- NA; hill <- NA; trce <- NA; flats <- NA; shapeacross <- NA; shapedown <- NA;
 
+  ## construct factor levels
+  
   # combine geompos and shapes
   if (nrow(df) > 0) {
     df <- within(df, {
@@ -937,42 +936,43 @@
       slopeshape[slopeshape %in% c("NANA", "")] = NA
       })
     df[c("ssa", "ssd")] <- NULL
-  } else df <- cbind(df, geompos = as.character(NULL))
-
+  } else {
+    df <- cbind(df, geompos = as.character(NULL))
+  }
+  
+  # custom combined slope shape variable (no corresponding single domain in NASIS)
   ss_vars <- c("CC", "CV", "CL", "LC", "LL", "LV", "VL", "VC", "VV")
   if (all(df$slopeshape[!is.na(df$slopeshape)] %in% ss_vars)) {
     df$slopeshape <- factor(df$slopeshape, levels = ss_vars)
     df$slopeshape <- droplevels(df$slopeshape)
   }
 
-  hs_vars <- c("Toeslope", "Footslope", "Backslope", "Shoulder", "Summit")
+  hs_vars <- levels(NASISChoiceList(data.frame(hillslopeprof = ""), choice = "ChoiceLabel"))
   if (all(df$hillslopeprof[!is.na(df$hillslopeprof)] %in% hs_vars)) {
     df$hillslopeprof <- factor(df$hillslopeprof, levels = hs_vars)
     df$hillslopeprof <- droplevels(df$hillslopeprof)
   }
 
-  hill_vars <- c("Base Slope", "Head Slope", "Side Slope", "Free Face", "Nose Slope", "Crest", "Interfluve")
+  hill_vars <- levels(NASISChoiceList(data.frame(geomposhill = ""), choice = "ChoiceLabel"))
   if (all(df$hill[!is.na(df$hill)] %in% hill_vars)) {
     df$hill <- factor(df$hill, levels = hill_vars)
     df$hill <- droplevels(df$hill)
   }
 
-  flats_vars <- c("Dip", "Talf", "Rise")
+  flats_vars <- levels(NASISChoiceList(data.frame(geomposflats = ""), choice = "ChoiceLabel"))
   if (all(df$flats[!is.na(df$flats)] %in% flats_vars)) {
     df$flats <- factor(df$flats, levels = flats_vars)
     df$flats <- droplevels(df$flats)
   }
 
-  trce_vars <- c("Tread", "Riser")
+  trce_vars <- levels(NASISChoiceList(data.frame(geompostrce = ""), choice = "ChoiceLabel"))
   if (all(df$trce[!is.na(df$trce)] %in% trce_vars)) {
     df$trce <- factor(df$trce, levels = trce_vars)
     df$trce <- droplevels(df$trce)
   }
-
+  
   return(df)
-  }
-
-
+}
 
 
 .copm_prep2 <- function(x, key = NULL) {
@@ -1046,6 +1046,9 @@
   
   idx_key   <- grep(key, names(data))
   names(data)[c(idx_key)] <- c("key")
+  
+  key_dt <- class(data$key)
+  if (!is.character(data$key)) data$key <- as.character(data$key) 
   
   
   # find sites with overlapping landforms ----
@@ -1236,6 +1239,7 @@
   } else data_comb <- data_comb[, vars, with = FALSE]
   
   data <- as.data.frame(rbind(data_simp, data_mis, data_comb))
+  if (key_dt %in% c("numeric", "integer")) data$key <- as.integer(data$key)
   names(data)[names(data) == "key"] <- key
   
   
