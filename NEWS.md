@@ -1,10 +1,16 @@
+# soilDB 2.9.2 (2026-07-10)
+ - EDIT base URL (for `get_EDIT_ecoclass_by_geoUnit()` and `make_EDIT_service_URL()`) updated to new USDA-managed server: <https://edit.sc.egov.usda.gov/>
+ - SoilWeb-based Web Coverage Services (`soilColor.wcs()`, `ISSR800.wcs()`, `mukey.wcs()`) have been updated with FY26 maps, now including most OCONUS soil surveys (AK, HI, PR, PW, GU, AS, MP)
+ - `downloadSSURGO()` gains arguments `include_spatial` and `include_tabular` that are analogous to arguments of the same name from `createSSURGO()`. Also, added `LAPPLY.FUN` to support arbitrary parallel or progress reporting backends. Thanks to feature request from @dylanbeaudette (#470).
+ - `createSSURGO()` improved performance of reading and writing of tabular data and type conversion
+ 
 # soilDB 2.9.1 (2026-04-01)
  - `ROSETTA()` updates thanks to Todd Skaggs (USDA-ARS):
    - Now using version 2 of the ROSETTA API (<https://www.handbook60.org/rosetta>)
    - New argument `est.type` for selecting ensemble summary method and resulting units of measure
    - $Ko$ and $L$ parameters now included in model output
  - `fetchGDB()` now supports passing path to SSURGO GeoPackage file via `dsn` argument
- - Breaking change: sample SoilProfileCollection datasets (`loafercreek`, `gopheridge`, `mineralKing`) updated to 2.9.x `fetchNASIS()` schema
+ - Breaking change: sample `SoilProfileCollection` datasets (`loafercreek`, `gopheridge`, `mineralKing`) updated to 2.9.x `fetchNASIS()` schema
    - Deprecated columns have been removed, following the corresponding changes in 2.9.0
    
 # soilDB 2.9.0 (2026-01-22)

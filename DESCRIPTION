@@ -1,7 +1,7 @@
 Package: soilDB
 Type: Package
 Title: Soil Database Interface
-Version: 2.9.1
+Version: 2.9.2
 Authors@R: c(person(given="Dylan", family="Beaudette", role = c("aut"), email = "dylan.beaudette@usda.gov", comment=c(ORCID="0009-0008-2780-4785")),
              person(given="Jay", family="Skovlin", role = c("aut")), 
              person(given="Stephen", family="Roecker", role = c("aut")), 
@@ -20,16 +20,16 @@ URL: https://github.com/ncss-tech/soilDB/,
         https://ncss-tech.github.io/soilDB/,
         https://ncss-tech.github.io/AQP/
 BugReports: https://github.com/ncss-tech/soilDB/issues
-RoxygenNote: 7.3.3
 Encoding: UTF-8
 Language: en-US
 LazyData: false
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2026-04-02 02:50:32 UTC; andrew
+Config/roxygen2/version: 8.0.0
+Packaged: 2026-07-11 01:48:49 UTC; Andrew.G.Brown
 Author: Dylan Beaudette [aut] (ORCID: <https://orcid.org/0009-0008-2780-4785>),
   Jay Skovlin [aut],
   Stephen Roecker [aut],
   Andrew Brown [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-4565-533X>)
-Date/Publication: 2026-04-03 06:50:09 UTC
+Date/Publication: 2026-07-11 08:10:02 UTC

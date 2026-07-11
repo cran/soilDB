@@ -16,23 +16,26 @@ createSSURGO(
   overwrite = FALSE,
   append = FALSE,
   header = FALSE,
+  sep = "|",
+  na.strings = c("", "NA"),
+  quote = "",
   quiet = TRUE,
   ...
 )
 }
 \arguments{
-\item{filename}{\emph{character}. Output file name (e.g. \code{'db.sqlite'} or \code{'db.gpkg'}). Only used when \code{con} is not
-specified by the user.}
+\item{filename}{\emph{character}. Output file name (e.g. \code{'db.sqlite'} or \code{'db.gpkg'}). Only used when
+\code{con} is not specified by the user.}
 
-\item{exdir}{\emph{character}. Path containing containing input SSURGO spatial (.shp) and tabular (.txt) files,
-downloaded and extracted by \code{downloadSSURGO()} or similar.}
+\item{exdir}{\emph{character}. Path containing containing input SSURGO spatial (.shp) and tabular
+(.txt) files, downloaded and extracted by \code{downloadSSURGO()} or similar.}
 
 \item{conn}{A \emph{DBIConnection} object. Default is a \code{SQLiteConnection} used for writing .sqlite or
 .gpkg files. Alternate options are any DBI connection types. When \code{include_spatial=TRUE}, the
 sf package is used to write spatial data to the database.}
 
-\item{pattern}{\emph{character}. Optional regular expression to use to filter subdirectories of \code{exdir}.
-Default: \code{NULL} will search all subdirectories for SSURGO export files.}
+\item{pattern}{\emph{character}. Optional regular expression to use to filter subdirectories of
+\code{exdir}. Default: \code{NULL} will search all subdirectories for SSURGO export files.}
 
 \item{include_spatial}{\emph{logical} or \emph{character}. Include spatial data layers in database?
 Default: \code{TRUE} inserts all spatial tables. If \code{include_spatial} is a \emph{character} vector
@@ -45,27 +48,31 @@ descriptions are stored in table \code{"featdesc"} and metadata for each soil su
 in \code{"soil_metadata"} tables.}
 
 \item{dissolve_field}{\emph{character}. Dissolve geometries to create MULTIPOLYGON features? Column
-name
-specified is the grouping variable. Default: \code{NULL} does no aggregation, giving 1 \code{POLYGON}
-feature per delineation. \code{"mukey"} aggregates all related delineations within a soil survey
-area.}
+name specified is the grouping variable. Default: \code{NULL} does no aggregation, giving 1
+\code{POLYGON} feature per delineation. \code{"mukey"} aggregates all related delineations within a soil
+survey area.}
 
-\item{maxruledepth}{\emph{integer}. Maximum rule depth for \code{"cointerp"} table. Default \code{0} includes only
-shallowest ratings for smaller database size.}
+\item{maxruledepth}{\emph{integer}. Maximum rule depth for \code{"cointerp"} table. Default \code{0} includes
+only shallowest ratings for smaller database size.}
 
 \item{overwrite}{\emph{logical}. Overwrite existing layers? Default: \code{FALSE}}
 
 \item{append}{\emph{logical}. Append to existing layers? Default: \code{FALSE}}
 
-\item{header}{\emph{logical}. Passed to \code{read.delim()} for reading pipe-delimited (\code{|}) text files
-containing tabular data.}
+\item{header}{\emph{logical}. Passed to \code{data.table::fread()} for reading delimited tabular text files. Default: \code{FALSE}}
+
+\item{sep}{\emph{character}. Passed to \code{data.table::fread()}. Default: \code{"|"}}
+
+\item{na.strings}{\emph{character}. Passed to \code{data.table::fread()}. Default: \code{c("", "NA")}}
+
+\item{quote}{\emph{character}. Passed to \code{data.table::fread()}. Default: \code{""}}
 
 \item{quiet}{\emph{logical}. Suppress messages and other output from database read/write operations?}
 
-\item{...}{Additional arguments passed to \code{write_sf()} for writing spatial layers.}
+\item{...}{Additional arguments passed to \code{sf::write_sf()} for writing spatial layers.}
 }
 \value{
-Character. Vector of layer/table names in \code{filename}.
+\emph{character}. Vector of layer/table names in \code{filename}.
 }
 \description{
 The following database types are tested and fully supported:

@@ -33,11 +33,14 @@ options(width = 100, stringsAsFactors = FALSE)
 # # select gNATSGO grid, 30m resolution
 # x <- mukey.wcs(aoi = aoi, db = 'gnatsgo', ...)
 # 
-# # select RSS grid, 10m resolution
+# # select STATSGO2 grid, 30m resolution
+# x <- mukey.wcs(aoi = aoi, db = 'statsgo', ...)
+# 
+# # select RSS grid, 30m resolution
 # x <- mukey.wcs(aoi = aoi, db = 'RSS', ...)
 # 
-# # select STATSGO2 grid, 300m resolution
-# x <- mukey.wcs(aoi = aoi, db = 'statsgo', ...)
+# # select SSURGO/STATSGO2 hybrid, 30m resolution
+# x <- mukey.wcs(aoi = aoi, db = 'fSSURGO', ...)
 
 ## ----eval = FALSE---------------------------------------------------------------------------------
 # # select various ISSR-800 grids, details below
@@ -65,7 +68,7 @@ options(width = 100, stringsAsFactors = FALSE)
 # mu <- mukey.wcs(b, db = 'gSSURGO')
 # 
 # # inspect
-# plot(
+# terra::plot(
 #   mu,
 #   legend = FALSE,
 #   axes = FALSE,
@@ -73,10 +76,10 @@ options(width = 100, stringsAsFactors = FALSE)
 # )
 # 
 # # add buffer, after transforming to mukey grid CRS
-# plot(project(b, "EPSG:5070"), add = TRUE)
+# terra::lines(project(b, "EPSG:5070"))
 # 
 # # add original point, after transforming to mukey grid CRS
-# plot(project(p, "EPSG:5070"), add = TRUE, pch = 16)
+# terra::points(project(p, "EPSG:5070"), pch = 16, cex = 2)
 
 ## ----fig.width = 8, fig.height = 7----------------------------------------------------------------
 # library(sf)
@@ -89,15 +92,16 @@ options(width = 100, stringsAsFactors = FALSE)
 # # convert WKT string -> sfc geometry
 # wkt <- sprintf('POLYGON((%s))', bb)
 # x <- st_as_sfc(wkt)
-# 
-# # set coordinate reference system as GCS/WGS84
 # st_crs(x) <- 4326
+# 
+# # WKT -> SpatVect
+# x <- vect(wkt, crs = 'epsg:4326')
 # 
 # # query WCS
 # mu <- mukey.wcs(x, db = 'gSSURGO')
 # 
 # # inspect
-# plot(
+# terra::plot(
 #   mu,
 #   legend = FALSE,
 #   axes = FALSE,
@@ -105,7 +109,7 @@ options(width = 100, stringsAsFactors = FALSE)
 # )
 # 
 # # add original BBOX, after transforming to mukey grid CRS
-# plot(st_transform(x, 5070), add = TRUE)
+# terra::lines(project(x, 'epsg:5070'))
 
 ## -------------------------------------------------------------------------------------------------
 # # make a bounding box and assign a CRS (4326: GCS, WGS84)
@@ -120,9 +124,9 @@ options(width = 100, stringsAsFactors = FALSE)
 # # check:
 # print(mu)
 # 
-# plot(
+# terra::plot(
 #   mu,
-#   main = 'gSSURGO map unit keys',
+#   main = paste0(metags(mu)$value, collapse = " - "),
 #   sub = 'Albers Equal Area Projection',
 #   axes = FALSE,
 #   legend = FALSE
@@ -136,11 +140,11 @@ options(width = 100, stringsAsFactors = FALSE)
 # p <- project(p, crs(mu))
 
 ## ----fig.width = 8, fig.height = 7----------------------------------------------------------------
-# plot(mu,
+# terra::plot(mu,
 #      main = 'gSSURGO Grid (WCS)\nSSURGO Polygons (SDA)',
 #      axes = FALSE,
 #      legend = FALSE)
-# plot(p, add = TRUE, border = 'white')
+# lines(p, col = 'white')
 # mtext('CONUS Albers Equal Area Projection (EPSG:5070)', side = 1, line = 1)
 
 ## -------------------------------------------------------------------------------------------------
@@ -157,7 +161,10 @@ options(width = 100, stringsAsFactors = FALSE)
 # # result is a SpatRaster object
 # x.800 <- mukey.wcs(aoi = a.CA, db = 'gssurgo', res = 800)
 # 
-# plot(
+# # approximately 800m
+# res(x.800)
+# 
+# terra::plot(
 #   x.800,
 #   main = 'A Preview of gSSURGO Map Unit Keys',
 #   sub = 'Albers Equal Area Projection (800m)\nnearest-neighbor resampling',
@@ -167,63 +174,57 @@ options(width = 100, stringsAsFactors = FALSE)
 
 ## ----fig.width=8, fig.height=6--------------------------------------------------------------------
 # # Coweeta Hydrologic Laboratory extent; specified in EPSG:5070
-# a <- st_bbox(
-#   c(xmin = 1129000, xmax = 1135000, ymin = 1403000, ymax = 1411000),
-#   crs = st_crs(5070)
-# )
-# 
-# # convert boundary sf polygon
-# a <- st_as_sfc(a)
+# a <- ext(c(xmin = 1129000, xmax = 1135000, ymin = 1403000, ymax = 1411000))
+# a <- vect(a, crs = 'epsg:5070')
 # 
 # # gSSURGO grid: 30m resolution
-# (x <- mukey.wcs(a, db = 'gSSURGO', res = 30))
+# (x <- mukey.wcs(a, db = 'gSSURGO'))
 # 
 # # gNATSGO grid: 30m resolution
-# (y <- mukey.wcs(a, db = 'gNATSGO', res = 30))
+# (y <- mukey.wcs(a, db = 'gNATSGO'))
 # 
-# # RSS grid: 10m resolution
-# (z <- mukey.wcs(a, db = 'RSS', res = 10))
+# # RSS grid: 30m resolution
+# (z <- mukey.wcs(a, db = 'RSS'))
 # 
 # # graphical comparison
 # par(mfcol = c(1, 3))
 # 
 # 
 # # gSSURGO
-# plot(
+# terra::plot(
 #   x,
 #   axes = FALSE,
 #   legend = FALSE,
 #   main = paste0(metags(x)$value, collapse = " - ")
 # )
-# plot(a, add = TRUE)
+# lines(a)
 # 
 # # gNATSGO
-# plot(
+# terra::plot(
 #   y,
 #   axes = FALSE,
 #   legend = FALSE,
 #   main = paste0(metags(y)$value, collapse = " - ")
 # )
-# plot(a, add = TRUE)
+# lines(a)
 # 
 # # RSS
-# plot(
+# terra::plot(
 #   z,
 #   axes = FALSE,
 #   legend = FALSE,
-#   main = paste0(metags(z)$value, collapse = " - "),
-#   ext = x
+#   main = paste0(metags(z)$value, collapse = " - ")
 # )
-# plot(a, add = TRUE)
+# lines(a)
 
 ## ----fig.width=8, fig.height=6--------------------------------------------------------------------
-# (statsgo <- mukey.wcs(a, db = 'statsgo', res = 300))
+# (statsgo <- mukey.wcs(a, db = 'statsgo'))
 # 
 # # graphical comparison
 # par(mfcol = c(1, 2))
 # 
 # # gSSURGO
-# plot(
+# terra::plot(
 #   x,
 #   axes = FALSE,
 #   legend = FALSE,
@@ -231,7 +232,7 @@ options(width = 100, stringsAsFactors = FALSE)
 # )
 # 
 # # STATSGO
-# plot(
+# terra::plot(
 #   statsgo,
 #   axes = FALSE,
 #   legend = FALSE,
@@ -242,15 +243,15 @@ options(width = 100, stringsAsFactors = FALSE)
 # # paste your BBOX text here
 # bb <- '-159.7426 21.9059,-159.7426 22.0457,-159.4913 22.0457,-159.4913 21.9059,-159.7426 21.9059'
 # 
-# # convert WKT string -> sfc geometry
+# # convert WKT -> SpatVect
 # wkt <- sprintf('POLYGON((%s))', bb)
-# x <- st_as_sfc(wkt, crs = 4326)
+# x <- vect(wkt, crs = 'epsg:4326')
 # 
 # # query WCS
 # mu <- mukey.wcs(x, db = 'hi_ssurgo')
 # 
 # # make NA (the ocean) blue
-# plot(
+# terra::plot(
 #   mu,
 #   legend = FALSE,
 #   axes = FALSE,
@@ -258,30 +259,23 @@ options(width = 100, stringsAsFactors = FALSE)
 #   colNA = 'royalblue'
 # )
 
-## ----eval=FALSE, include=FALSE--------------------------------------------------------------------
-# # # check mu names
-# # .is <- format_SQL_in_statement(cats(mu)[[1]]$mukey)
-# # .sql <- sprintf("SELECT mukey, muname FROM mapunit WHERE mukey IN %s", .is)
-# # knitr::kable(SDA_query(.sql))
-
 ## ----fig.width = 6.5, fig.height=5----------------------------------------------------------------
 # # paste your BBOX text here
 # bb <- '-65.7741 18.1711,-65.7741 18.3143,-65.5228 18.3143,-65.5228 18.1711,-65.7741 18.1711'
 # 
-# # convert WKT string -> sfc geometry
+# # convert WKT -> SpatVect
 # wkt <- sprintf('POLYGON((%s))', bb)
-# x <- st_as_sfc(wkt, crs = 4326)
+# x <- vect(wkt, crs = 'epsg:4326')
 # 
 # # query WCS
 # mu <- mukey.wcs(x, db = 'pr_ssurgo')
 # 
-# # make missing data (NA; the ocean) blue
-# plot(
+# # note WATER polygons extend well beyond shores
+# terra::plot(
 #   mu,
 #   legend = FALSE,
 #   axes = FALSE,
-#   main = paste0(metags(mu)$value, collapse = " - "),
-#   colNA = 'royalblue'
+#   main = paste0(metags(mu)$value, collapse = " - ")
 # )
 
 ## ----eval=FALSE, include=FALSE--------------------------------------------------------------------
@@ -333,7 +327,7 @@ options(width = 100, stringsAsFactors = FALSE)
 # aws <- catalyze(mu2)
 # 
 # # plot, set a common range [0, 20] for both layers
-# plot(
+# terra::plot(
 #   aws,
 #   axes = FALSE,
 #   cex.main = 0.7,
@@ -400,7 +394,7 @@ options(width = 100, stringsAsFactors = FALSE)
 # rating <- catalyze(mu2)
 # 
 # # inspect
-# plot(
+# terra::plot(
 #   rating,
 #   axes = FALSE,
 #   cex.main = 0.7,
@@ -432,11 +426,10 @@ options(width = 100, stringsAsFactors = FALSE)
 # activeCat(mu2) <- 'corsteel'
 # 
 # # plot
-# plot(
+# terra::plot(
 #   mu2,
 #   col = cols$hex[na.omit(match(unique(tab$corsteel), cols$label))],
-#   axes = FALSE,
-#   legend = "topleft"
+#   axes = FALSE
 # )
 
 ## -------------------------------------------------------------------------------------------------
@@ -451,7 +444,7 @@ options(width = 100, stringsAsFactors = FALSE)
 # # fetch gSSURGO map unit keys at native resolution (~30m)
 # mu <- mukey.wcs(aoi = a, db = 'gssurgo')
 # 
-# plot(
+# terra::plot(
 #   mu,
 #   legend = FALSE,
 #   axes = FALSE,
@@ -476,7 +469,7 @@ options(width = 100, stringsAsFactors = FALSE)
 # # set active category
 # activeCat(mu2) <- 'pmgroupname'
 # 
-# plot(mu2, legend = "topleft", axes = FALSE)
+# terra::plot(mu2, axes = FALSE, mar = c(0.5, 0.5, 1, 10))
 
 ## ----fig.width = 8, fig.height = 6----------------------------------------------------------------
 # # copy example grid
@@ -492,7 +485,7 @@ options(width = 100, stringsAsFactors = FALSE)
 # 
 # # set active category
 # activeCat(mu2) <- 'HYDRIC_RATING'
-# plot(mu2, legend = "topleft", axes = FALSE)
+# terra::plot(mu2, axes = FALSE, mar = c(0.5, 0.5, 1, 10))
 
 ## -------------------------------------------------------------------------------------------------
 # # extract RAT for thematic mapping
@@ -526,16 +519,16 @@ options(width = 100, stringsAsFactors = FALSE)
 # mu2 <- catalyze(mu)
 
 ## ----fig.width = 6, fig.height = 4----------------------------------------------------------------
-# plot(mu2$awc_r)
+# terra::plot(mu2$awc_r, axes = FALSE)
 
 ## -------------------------------------------------------------------------------------------------
-# plot(mu2[['dbthirdbar_r']], cex.main = 0.7,
+# terra::plot(mu2[['dbthirdbar_r']], cex.main = 0.7,
 #      main = '1/3 Bar Bulk Density (g/cm^3)\nDominant Component\n0-25cm')
 # 
-# plot(mu2[['awc_r']], cex.main = 0.7,
+# terra::plot(mu2[['awc_r']], cex.main = 0.7,
 #      main = 'AWC (cm/cm)\nDominant Component\n0-25cm')
 # 
-# plot(mu2[['ph1to1h2o_r']], cex.main = 0.7,
+# terra::plot(mu2[['ph1to1h2o_r']], cex.main = 0.7,
 #      main = 'pH 1:1 H2O\nDominant Component\n0-25cm')
 
 ## -------------------------------------------------------------------------------------------------
@@ -550,7 +543,7 @@ options(width = 100, stringsAsFactors = FALSE)
 # mu <- mukey.wcs(aoi = x, db = 'gssurgo')
 # 
 # # note SSA boundary
-# plot(mu, legend = FALSE, axes = FALSE)
+# terra::plot(mu, legend = FALSE, axes = FALSE)
 
 ## ----fig.width = 8, fig.height = 6----------------------------------------------------------------
 # # extract RAT for thematic mapping
@@ -593,7 +586,7 @@ options(width = 100, stringsAsFactors = FALSE)
 # r <- c(ssc, texture.class)
 # 
 # # graphical check
-# plot(
+# terra::plot(
 #   r,
 #   cex.main = 0.7,
 #   main = paste0(names(r), " - 25-50cm\nDominant Component")

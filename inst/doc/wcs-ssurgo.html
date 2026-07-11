@@ -368,11 +368,16 @@ areas that were updated during the last fiscal year.</p>
 <p>In addition to the standard CONUS gSSURGO and gNATSGO grids, these
 web coverage services are also provided:</p>
 <ul>
-<li><p>Raster Soil Survey (RSS) products at 10m resolution
+<li><p>Raster Soil Survey (RSS) products at 30m resolution
 (EPSG:5070).</p></li>
-<li><p>STATSGO2 (2016) at 300m resolution (EPSG:5070).</p></li>
+<li><p>STATSGO2 (2016) at 30m resolution (EPSG:5070).</p></li>
 <li><p>SSURGO in HI (EPSG:6628) and PR (EPSG:32161) at 30m
 resolution.</p></li>
+<li><p>SSURGO in AK (EPSG:3338) at 30m resolution.</p></li>
+<li><p>SSURGO in PW, GU, AS, MP (EPSG:4326) at approximately 30m
+resolution.</p></li>
+<li><p>SSURGO back-filled with STATSGO2 within map units named “NOTCOM”
+and “ANS”, at 30m resolution (EPSG:5070).</p></li>
 <li><p><a href="https://casoilresource.lawr.ucdavis.edu/soil-properties/">ISSR-800
 soil property grids</a>.</p></li>
 </ul>
@@ -408,11 +413,14 @@ manual pages for details.</p>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># select gNATSGO grid, 30m resolution</span></span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(<span class="at">aoi =</span> aoi, <span class="at">db =</span> <span class="st">&#39;gnatsgo&#39;</span>, ...)</span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co"># select RSS grid, 10m resolution</span></span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(<span class="at">aoi =</span> aoi, <span class="at">db =</span> <span class="st">&#39;RSS&#39;</span>, ...)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co"># select STATSGO2 grid, 30m resolution</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(<span class="at">aoi =</span> aoi, <span class="at">db =</span> <span class="st">&#39;statsgo&#39;</span>, ...)</span>
 <span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co"># select STATSGO2 grid, 300m resolution</span></span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(<span class="at">aoi =</span> aoi, <span class="at">db =</span> <span class="st">&#39;statsgo&#39;</span>, ...)</span></code></pre></div>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co"># select RSS grid, 30m resolution</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(<span class="at">aoi =</span> aoi, <span class="at">db =</span> <span class="st">&#39;RSS&#39;</span>, ...)</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co"># select SSURGO/STATSGO2 hybrid, 30m resolution</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(<span class="at">aoi =</span> aoi, <span class="at">db =</span> <span class="st">&#39;fSSURGO&#39;</span>, ...)</span></code></pre></div>
 <p><a href="http://ncss-tech.github.io/soilDB/reference/ISSR800.wcs.html"><code>ISSR800.wcs</code></a>
 is a similar function that makes available a variety of pre-aggregated
 800m resolution properties derived from gNATSGO.</p>
@@ -485,12 +493,12 @@ approach and the approximate relationships of the environmental
 information to spatially represent where the divisions are
 represented.</p>
 </div>
-<p>An experimental, 300m gridded representation of STATSGO 2 is provided
-by the SoilWeb web coverage service. This is not an official USDA-NRCS
-product.</p>
 </div>
 <div id="statsgo" class="section level3">
 <h3>STATSGO</h3>
+<p>An experimental, 30m gridded representation of STATSGO 2 is provided
+by the SoilWeb web coverage service. This is not an official USDA-NRCS
+product.</p>
 <p>Excerpt from <a href="https://www.nrcs.usda.gov/resources/data-and-reports/description-of-statsgo2-database">STATSGO2
 Documentation</a>.</p>
 <div style="padding: 10px; font-size:90%;">
@@ -525,8 +533,8 @@ approximately 1 degree x 1 degree (longitude, latitude) at 30m.</li>
 <h2>Web Coverage Service Requests Using Bounding Boxes</h2>
 <p>A buffer applied to a <a href="https://casoilresource.lawr.ucdavis.edu/gmap/?loc=36.52578,-118.55639,z13">single
 WGS84 coordinate</a> can be used to create a bounding box (BBOX):</p>
-<p>We can create a terra SpatVector containing the single point, then
-create a 1000m radius circular polygon around the point with
+<p>We can create a terra <code>SpatVector</code> containing the single
+point, then create a 1000m radius circular polygon around the point with
 <code>buffer()</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">library</span>(soilDB)</span>
@@ -549,7 +557,7 @@ create a 1000m radius circular polygon around the point with
 <span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(b, <span class="at">db =</span> <span class="st">&#39;gSSURGO&#39;</span>)</span>
 <span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a></span>
 <span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co"># inspect</span></span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>  mu,</span>
 <span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
@@ -557,10 +565,10 @@ create a 1000m radius circular polygon around the point with
 <span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>)</span>
 <span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a></span>
 <span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="co"># add buffer, after transforming to mukey grid CRS</span></span>
-<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">project</span>(b, <span class="st">&quot;EPSG:5070&quot;</span>), <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">lines</span>(<span class="fu">project</span>(b, <span class="st">&quot;EPSG:5070&quot;</span>))</span>
 <span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a></span>
 <span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a><span class="co"># add original point, after transforming to mukey grid CRS</span></span>
-<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">project</span>(p, <span class="st">&quot;EPSG:5070&quot;</span>), <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">pch =</span> <span class="dv">16</span>)</span></code></pre></div>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">points</span>(<span class="fu">project</span>(p, <span class="st">&quot;EPSG:5070&quot;</span>), <span class="at">pch =</span> <span class="dv">16</span>, <span class="at">cex =</span> <span class="dv">2</span>)</span></code></pre></div>
 <div id="manual-creation-of-bounding-boxes" class="section level3">
 <h3>Manual Creation of Bounding Boxes</h3>
 <p>Sometimes it is convenient to specify a BBOX created from a website
@@ -590,23 +598,24 @@ link to those coordinates and zoom level.</p>
 <span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co"># convert WKT string -&gt; sfc geometry</span></span>
 <span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>wkt <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">&#39;POLYGON((%s))&#39;</span>, bb)</span>
 <span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">st_as_sfc</span>(wkt)</span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co"># set coordinate reference system as GCS/WGS84</span></span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="fu">st_crs</span>(x) <span class="ot">&lt;-</span> <span class="dv">4326</span></span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a></span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co"># query WCS</span></span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(x, <span class="at">db =</span> <span class="st">&#39;gSSURGO&#39;</span>)</span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a></span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co"># inspect</span></span>
-<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="fu">plot</span>(</span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>  mu, </span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(mu)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>)</span>
-<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>)</span>
-<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a></span>
-<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a><span class="co"># add original BBOX, after transforming to mukey grid CRS</span></span>
-<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_transform</span>(x, <span class="dv">5070</span>), <span class="at">add =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="fu">st_crs</span>(x) <span class="ot">&lt;-</span> <span class="dv">4326</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co"># WKT -&gt; SpatVect</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">vect</span>(wkt, <span class="at">crs =</span> <span class="st">&#39;epsg:4326&#39;</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co"># query WCS</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(x, <span class="at">db =</span> <span class="st">&#39;gSSURGO&#39;</span>)</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co"># inspect</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>  mu, </span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(mu)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>)</span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>)</span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a></span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a><span class="co"># add original BBOX, after transforming to mukey grid CRS</span></span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">lines</span>(<span class="fu">project</span>(x, <span class="st">&#39;epsg:5070&#39;</span>))</span></code></pre></div>
 </div>
 </div>
 </div>
@@ -639,9 +648,9 @@ the map.</p>
 <span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co"># check:</span></span>
 <span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="fu">print</span>(mu)</span>
 <span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  mu, </span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">&#39;gSSURGO map unit keys&#39;</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(mu)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>),</span>
 <span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>  <span class="at">sub =</span> <span class="st">&#39;Albers Equal Area Projection&#39;</span>,</span>
 <span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>, </span>
 <span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span></span>
@@ -666,11 +675,11 @@ gSSURGO / gNATSGO (<code>&quot;EPSG:5070&quot;</code>).</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">project</span>(p, <span class="fu">crs</span>(mu))</span></code></pre></div>
 <p>Inspect the result by overlaying SSURGO polygons on the 30m map unit
 key grid.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">plot</span>(mu,</span>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(mu,</span>
 <span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&#39;gSSURGO Grid (WCS)</span><span class="sc">\n</span><span class="st">SSURGO Polygons (SDA)&#39;</span>,</span>
 <span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>     <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>     <span class="at">legend =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="fu">plot</span>(p, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">border =</span> <span class="st">&#39;white&#39;</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="fu">lines</span>(p, <span class="at">col =</span> <span class="st">&#39;white&#39;</span>)</span>
 <span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="fu">mtext</span>(<span class="st">&#39;CONUS Albers Equal Area Projection (EPSG:5070)&#39;</span>, <span class="at">side =</span> <span class="dv">1</span>, <span class="at">line =</span> <span class="dv">1</span>)</span></code></pre></div>
 </div>
 <div id="grid-resolution-specification" class="section level2">
@@ -698,13 +707,16 @@ aggregated up from 30m results.</p>
 <span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co"># result is a SpatRaster object</span></span>
 <span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>x<span class="fl">.800</span> <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(<span class="at">aoi =</span> a.CA, <span class="at">db =</span> <span class="st">&#39;gssurgo&#39;</span>, <span class="at">res =</span> <span class="dv">800</span>)</span>
 <span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a></span>
-<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="fu">plot</span>(</span>
-<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>  x<span class="fl">.800</span>,</span>
-<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">&#39;A Preview of gSSURGO Map Unit Keys&#39;</span>,</span>
-<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>  <span class="at">sub =</span> <span class="st">&#39;Albers Equal Area Projection (800m)</span><span class="sc">\n</span><span class="st">nearest-neighbor resampling&#39;</span>,</span>
-<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span></span>
-<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co"># approximately 800m</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="fu">res</span>(x<span class="fl">.800</span>)</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a></span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>  x<span class="fl">.800</span>,</span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">&#39;A Preview of gSSURGO Map Unit Keys&#39;</span>,</span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>  <span class="at">sub =</span> <span class="st">&#39;Albers Equal Area Projection (800m)</span><span class="sc">\n</span><span class="st">nearest-neighbor resampling&#39;</span>,</span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span></span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="raster-soil-survey-data" class="section level2">
 <h2>Raster Soil Survey Data</h2>
@@ -714,69 +726,63 @@ key grids, tabular data) on Box:
 data for Raster Soil Surveys are not yet available via Soil Data
 Access.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Coweeta Hydrologic Laboratory extent; specified in EPSG:5070</span></span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>a <span class="ot">&lt;-</span> <span class="fu">st_bbox</span>(</span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">c</span>(<span class="at">xmin =</span> <span class="dv">1129000</span>, <span class="at">xmax =</span> <span class="dv">1135000</span>, <span class="at">ymin =</span> <span class="dv">1403000</span>, <span class="at">ymax =</span> <span class="dv">1411000</span>), </span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">crs =</span> <span class="fu">st_crs</span>(<span class="dv">5070</span>)</span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>)</span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a></span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co"># convert boundary sf polygon</span></span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>a <span class="ot">&lt;-</span> <span class="fu">st_as_sfc</span>(a)</span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a></span>
-<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co"># gSSURGO grid: 30m resolution</span></span>
-<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>(x <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(a, <span class="at">db =</span> <span class="st">&#39;gSSURGO&#39;</span>, <span class="at">res =</span> <span class="dv">30</span>))</span>
-<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a></span>
-<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co"># gNATSGO grid: 30m resolution</span></span>
-<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>(y <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(a, <span class="at">db =</span> <span class="st">&#39;gNATSGO&#39;</span>, <span class="at">res =</span> <span class="dv">30</span>))</span>
-<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a></span>
-<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co"># RSS grid: 10m resolution</span></span>
-<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>(z <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(a, <span class="at">db =</span> <span class="st">&#39;RSS&#39;</span>, <span class="at">res =</span> <span class="dv">10</span>))</span>
-<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a></span>
-<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="co"># graphical comparison</span></span>
-<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfcol =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
-<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a></span>
-<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a></span>
-<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a><span class="co"># gSSURGO</span></span>
-<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a><span class="fu">plot</span>(</span>
-<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>  x,</span>
-<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(x)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>)</span>
-<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>)</span>
-<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a><span class="fu">plot</span>(a, <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a></span>
-<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a><span class="co"># gNATSGO</span></span>
-<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a><span class="fu">plot</span>(</span>
-<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a>  y,</span>
-<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(y)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>)</span>
-<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a>)</span>
-<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a><span class="fu">plot</span>(a, <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a></span>
-<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a><span class="co"># RSS</span></span>
-<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a><span class="fu">plot</span>(</span>
-<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a>  z,</span>
-<span id="cb12-44"><a href="#cb12-44" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb12-45"><a href="#cb12-45" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb12-46"><a href="#cb12-46" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(z)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>),</span>
-<span id="cb12-47"><a href="#cb12-47" tabindex="-1"></a>  <span class="at">ext =</span> x</span>
-<span id="cb12-48"><a href="#cb12-48" tabindex="-1"></a>)</span>
-<span id="cb12-49"><a href="#cb12-49" tabindex="-1"></a><span class="fu">plot</span>(a, <span class="at">add =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>a <span class="ot">&lt;-</span> <span class="fu">ext</span>(<span class="fu">c</span>(<span class="at">xmin =</span> <span class="dv">1129000</span>, <span class="at">xmax =</span> <span class="dv">1135000</span>, <span class="at">ymin =</span> <span class="dv">1403000</span>, <span class="at">ymax =</span> <span class="dv">1411000</span>))</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>a <span class="ot">&lt;-</span> <span class="fu">vect</span>(a, <span class="at">crs =</span> <span class="st">&#39;epsg:5070&#39;</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co"># gSSURGO grid: 30m resolution</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>(x <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(a, <span class="at">db =</span> <span class="st">&#39;gSSURGO&#39;</span>))</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co"># gNATSGO grid: 30m resolution</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>(y <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(a, <span class="at">db =</span> <span class="st">&#39;gNATSGO&#39;</span>))</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co"># RSS grid: 30m resolution</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>(z <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(a, <span class="at">db =</span> <span class="st">&#39;RSS&#39;</span>))</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co"># graphical comparison</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfcol =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co"># gSSURGO</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>  x,</span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(x)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>)</span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a>)</span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a><span class="fu">lines</span>(a)</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a></span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a><span class="co"># gNATSGO</span></span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>  y,</span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(y)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>)</span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>)</span>
+<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a><span class="fu">lines</span>(a)</span>
+<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a></span>
+<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a><span class="co"># RSS</span></span>
+<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
+<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a>  z,</span>
+<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(z)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>)</span>
+<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a>)</span>
+<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a><span class="fu">lines</span>(a)</span></code></pre></div>
 </div>
 <div id="statsgo-1" class="section level2">
 <h2>STATSGO</h2>
 <p>Continuing from the example above, we can use
 <code>db=&#39;statsgo&#39;</code> to compare gSSURGO product with the Digital
 General Soil Map of the United States (STATSGO2). STATSGO data are
-provided at 10x the nominal resolution of gSSURGO (300m v.s. 30m) to
-reflect the relative generality of this product.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>(statsgo <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(a, <span class="at">db =</span> <span class="st">&#39;statsgo&#39;</span>, <span class="at">res =</span> <span class="dv">300</span>))</span>
+provided in the same grid system (extent and resolution) as SSURGO
+products.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>(statsgo <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(a, <span class="at">db =</span> <span class="st">&#39;statsgo&#39;</span>))</span>
 <span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a></span>
 <span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co"># graphical comparison</span></span>
 <span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfcol =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
 <span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a></span>
 <span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co"># gSSURGO</span></span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  x,</span>
 <span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
@@ -784,7 +790,7 @@ reflect the relative generality of this product.</p>
 <span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>)</span>
 <span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a></span>
 <span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="co"># STATSGO</span></span>
-<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a>  statsgo,</span>
 <span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
@@ -801,15 +807,15 @@ coast of Kauai</a>.</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co"># paste your BBOX text here</span></span>
 <span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>bb <span class="ot">&lt;-</span> <span class="st">&#39;-159.7426 21.9059,-159.7426 22.0457,-159.4913 22.0457,-159.4913 21.9059,-159.7426 21.9059&#39;</span></span>
 <span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a></span>
-<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="co"># convert WKT string -&gt; sfc geometry</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="co"># convert WKT -&gt; SpatVect</span></span>
 <span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>wkt <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">&#39;POLYGON((%s))&#39;</span>, bb)</span>
-<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">st_as_sfc</span>(wkt, <span class="at">crs =</span> <span class="dv">4326</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">vect</span>(wkt, <span class="at">crs =</span> <span class="st">&#39;epsg:4326&#39;</span>)</span>
 <span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a></span>
 <span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="co"># query WCS</span></span>
 <span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(x, <span class="at">db =</span> <span class="st">&#39;hi_ssurgo&#39;</span>)</span>
 <span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a></span>
 <span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a><span class="co"># make NA (the ocean) blue</span></span>
-<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>  mu,</span>
 <span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
@@ -827,21 +833,20 @@ coast of Puerto Rico</a>.</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># paste your BBOX text here</span></span>
 <span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>bb <span class="ot">&lt;-</span> <span class="st">&#39;-65.7741 18.1711,-65.7741 18.3143,-65.5228 18.3143,-65.5228 18.1711,-65.7741 18.1711&#39;</span></span>
 <span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="co"># convert WKT string -&gt; sfc geometry</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="co"># convert WKT -&gt; SpatVect</span></span>
 <span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>wkt <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">&#39;POLYGON((%s))&#39;</span>, bb)</span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">st_as_sfc</span>(wkt, <span class="at">crs =</span> <span class="dv">4326</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">vect</span>(wkt, <span class="at">crs =</span> <span class="st">&#39;epsg:4326&#39;</span>)</span>
 <span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a></span>
 <span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="co"># query WCS</span></span>
 <span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(x, <span class="at">db =</span> <span class="st">&#39;pr_ssurgo&#39;</span>)</span>
 <span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a></span>
-<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="co"># make missing data (NA; the ocean) blue</span></span>
-<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="co"># note WATER polygons extend well beyond shores</span></span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>  mu,</span>
 <span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(mu)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>),</span>
-<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a>  <span class="at">colNA =</span> <span class="st">&#39;royalblue&#39;</span></span>
-<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">metags</span>(mu)<span class="sc">$</span>value, <span class="at">collapse =</span> <span class="st">&quot; - &quot;</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 </div>
 <div id="thematic-mapping-1" class="section level1">
@@ -897,7 +902,7 @@ SQL and submit via <code>SDA_query()</code>.</p>
 <span id="cb17-27"><a href="#cb17-27" tabindex="-1"></a>aws <span class="ot">&lt;-</span> <span class="fu">catalyze</span>(mu2)</span>
 <span id="cb17-28"><a href="#cb17-28" tabindex="-1"></a></span>
 <span id="cb17-29"><a href="#cb17-29" tabindex="-1"></a><span class="co"># plot, set a common range [0, 20] for both layers</span></span>
-<span id="cb17-30"><a href="#cb17-30" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb17-30"><a href="#cb17-30" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb17-31"><a href="#cb17-31" tabindex="-1"></a>  aws,</span>
 <span id="cb17-32"><a href="#cb17-32" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb17-33"><a href="#cb17-33" tabindex="-1"></a>  <span class="at">cex.main =</span> <span class="fl">0.7</span>,</span>
@@ -973,7 +978,7 @@ correspond to a range of fuzzy values
 <span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a>rating <span class="ot">&lt;-</span> <span class="fu">catalyze</span>(mu2)</span>
 <span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a></span>
 <span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a><span class="co"># inspect</span></span>
-<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a>  rating,</span>
 <span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb19-15"><a href="#cb19-15" tabindex="-1"></a>  <span class="at">cex.main =</span> <span class="fl">0.7</span>,</span>
@@ -1012,12 +1017,11 @@ Soil Data Viewer colors for the selected property/interpretation.</p>
 <span id="cb20-19"><a href="#cb20-19" tabindex="-1"></a><span class="fu">activeCat</span>(mu2) <span class="ot">&lt;-</span> <span class="st">&#39;corsteel&#39;</span></span>
 <span id="cb20-20"><a href="#cb20-20" tabindex="-1"></a></span>
 <span id="cb20-21"><a href="#cb20-21" tabindex="-1"></a><span class="co"># plot</span></span>
-<span id="cb20-22"><a href="#cb20-22" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb20-22"><a href="#cb20-22" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb20-23"><a href="#cb20-23" tabindex="-1"></a>  mu2,</span>
 <span id="cb20-24"><a href="#cb20-24" tabindex="-1"></a>  <span class="at">col =</span> cols<span class="sc">$</span>hex[<span class="fu">na.omit</span>(<span class="fu">match</span>(<span class="fu">unique</span>(tab<span class="sc">$</span>corsteel), cols<span class="sc">$</span>label))],</span>
-<span id="cb20-25"><a href="#cb20-25" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb20-26"><a href="#cb20-26" tabindex="-1"></a>  <span class="at">legend =</span> <span class="st">&quot;topleft&quot;</span></span>
-<span id="cb20-27"><a href="#cb20-27" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb20-25"><a href="#cb20-25" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span></span>
+<span id="cb20-26"><a href="#cb20-26" tabindex="-1"></a>)</span></code></pre></div>
 <p>Another example is thematic mapping of the “simplified component
 parent material group”. First, set up a new AOI for the following
 examples:</p>
@@ -1032,7 +1036,7 @@ examples:</p>
 <span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a><span class="co"># fetch gSSURGO map unit keys at native resolution (~30m)</span></span>
 <span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(<span class="at">aoi =</span> a, <span class="at">db =</span> <span class="st">&#39;gssurgo&#39;</span>)</span>
 <span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a></span>
-<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a>  mu, </span>
 <span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a>  <span class="at">legend =</span> <span class="cn">FALSE</span>, </span>
 <span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a>  <span class="at">axes =</span> <span class="cn">FALSE</span>, </span>
@@ -1057,7 +1061,7 @@ parent material information to relate to map unit keys:</p>
 <span id="cb22-14"><a href="#cb22-14" tabindex="-1"></a><span class="co"># set active category</span></span>
 <span id="cb22-15"><a href="#cb22-15" tabindex="-1"></a><span class="fu">activeCat</span>(mu2) <span class="ot">&lt;-</span> <span class="st">&#39;pmgroupname&#39;</span></span>
 <span id="cb22-16"><a href="#cb22-16" tabindex="-1"></a></span>
-<span id="cb22-17"><a href="#cb22-17" tabindex="-1"></a><span class="fu">plot</span>(mu2, <span class="at">legend =</span> <span class="st">&quot;topleft&quot;</span>, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<span id="cb22-17"><a href="#cb22-17" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(mu2, <span class="at">axes =</span> <span class="cn">FALSE</span>, <span class="at">mar =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">10</span>))</span></code></pre></div>
 <p>We can also inspect a mapunit-level hydric rating derived from the
 default aggregation method in <code>get_SDA_hydric()</code>.</p>
 <div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="co"># copy example grid</span></span>
@@ -1073,7 +1077,7 @@ default aggregation method in <code>get_SDA_hydric()</code>.</p>
 <span id="cb23-11"><a href="#cb23-11" tabindex="-1"></a></span>
 <span id="cb23-12"><a href="#cb23-12" tabindex="-1"></a><span class="co"># set active category </span></span>
 <span id="cb23-13"><a href="#cb23-13" tabindex="-1"></a><span class="fu">activeCat</span>(mu2) <span class="ot">&lt;-</span> <span class="st">&#39;HYDRIC_RATING&#39;</span></span>
-<span id="cb23-14"><a href="#cb23-14" tabindex="-1"></a><span class="fu">plot</span>(mu2, <span class="at">legend =</span> <span class="st">&quot;topleft&quot;</span>, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<span id="cb23-14"><a href="#cb23-14" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(mu2, <span class="at">axes =</span> <span class="cn">FALSE</span>, <span class="at">mar =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">10</span>))</span></code></pre></div>
 </div>
 <div id="several-horizon-level-soil-properties" class="section level2">
 <h2>Several Horizon-level Soil Properties</h2>
@@ -1115,15 +1119,15 @@ depth interval.</p>
 <span id="cb24-28"><a href="#cb24-28" tabindex="-1"></a><span class="co"># convert categories associated with keys to values</span></span>
 <span id="cb24-29"><a href="#cb24-29" tabindex="-1"></a>mu2 <span class="ot">&lt;-</span> <span class="fu">catalyze</span>(mu)</span></code></pre></div>
 <p>Inspect just the plant available water 0-25cm.</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="fu">plot</span>(mu2<span class="sc">$</span>awc_r)</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(mu2<span class="sc">$</span>awc_r, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 <p>Plot aggregate soil properties.</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="fu">plot</span>(mu2[[<span class="st">&#39;dbthirdbar_r&#39;</span>]], <span class="at">cex.main =</span> <span class="fl">0.7</span>,</span>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(mu2[[<span class="st">&#39;dbthirdbar_r&#39;</span>]], <span class="at">cex.main =</span> <span class="fl">0.7</span>,</span>
 <span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&#39;1/3 Bar Bulk Density (g/cm^3)</span><span class="sc">\n</span><span class="st">Dominant Component</span><span class="sc">\n</span><span class="st">0-25cm&#39;</span>)</span>
 <span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a></span>
-<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a><span class="fu">plot</span>(mu2[[<span class="st">&#39;awc_r&#39;</span>]], <span class="at">cex.main =</span> <span class="fl">0.7</span>,</span>
+<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(mu2[[<span class="st">&#39;awc_r&#39;</span>]], <span class="at">cex.main =</span> <span class="fl">0.7</span>,</span>
 <span id="cb26-5"><a href="#cb26-5" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&#39;AWC (cm/cm)</span><span class="sc">\n</span><span class="st">Dominant Component</span><span class="sc">\n</span><span class="st">0-25cm&#39;</span>)</span>
 <span id="cb26-6"><a href="#cb26-6" tabindex="-1"></a></span>
-<span id="cb26-7"><a href="#cb26-7" tabindex="-1"></a><span class="fu">plot</span>(mu2[[<span class="st">&#39;ph1to1h2o_r&#39;</span>]], <span class="at">cex.main =</span> <span class="fl">0.7</span>,</span>
+<span id="cb26-7"><a href="#cb26-7" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(mu2[[<span class="st">&#39;ph1to1h2o_r&#39;</span>]], <span class="at">cex.main =</span> <span class="fl">0.7</span>,</span>
 <span id="cb26-8"><a href="#cb26-8" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&#39;pH 1:1 H2O</span><span class="sc">\n</span><span class="st">Dominant Component</span><span class="sc">\n</span><span class="st">0-25cm&#39;</span>)</span></code></pre></div>
 </div>
 <div id="sand-silt-and-clay-at-a-soil-survey-area-boundary" class="section level2">
@@ -1143,7 +1147,7 @@ other in 2004.</p>
 <span id="cb27-9"><a href="#cb27-9" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mukey.wcs</span>(<span class="at">aoi =</span> x, <span class="at">db =</span> <span class="st">&#39;gssurgo&#39;</span>)</span>
 <span id="cb27-10"><a href="#cb27-10" tabindex="-1"></a></span>
 <span id="cb27-11"><a href="#cb27-11" tabindex="-1"></a><span class="co"># note SSA boundary</span></span>
-<span id="cb27-12"><a href="#cb27-12" tabindex="-1"></a><span class="fu">plot</span>(mu, <span class="at">legend =</span> <span class="cn">FALSE</span>, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<span id="cb27-12"><a href="#cb27-12" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(mu, <span class="at">legend =</span> <span class="cn">FALSE</span>, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 <p>Then we derive aggregate sand, silt, clay (RV) values from the
 largest component, taking the weighted mean over 25-50cm depth interval.
 We also will take the sand and clay values to calculate the surface
@@ -1188,7 +1192,7 @@ texture class for comparison.</p>
 <span id="cb28-38"><a href="#cb28-38" tabindex="-1"></a>r <span class="ot">&lt;-</span> <span class="fu">c</span>(ssc, texture.class)</span>
 <span id="cb28-39"><a href="#cb28-39" tabindex="-1"></a></span>
 <span id="cb28-40"><a href="#cb28-40" tabindex="-1"></a><span class="co"># graphical check</span></span>
-<span id="cb28-41"><a href="#cb28-41" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb28-41"><a href="#cb28-41" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(</span>
 <span id="cb28-42"><a href="#cb28-42" tabindex="-1"></a>  r,</span>
 <span id="cb28-43"><a href="#cb28-43" tabindex="-1"></a>  <span class="at">cex.main =</span> <span class="fl">0.7</span>,</span>
 <span id="cb28-44"><a href="#cb28-44" tabindex="-1"></a>  <span class="at">main =</span> <span class="fu">paste0</span>(<span class="fu">names</span>(r), <span class="st">&quot; - 25-50cm</span><span class="sc">\n</span><span class="st">Dominant Component&quot;</span>)</span>

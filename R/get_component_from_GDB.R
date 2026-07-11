@@ -148,6 +148,11 @@ get_mapunit_from_GDB <- function(dsn = "gNATSGO_CONUS.gdb",
                                  droplevels = TRUE,
                                  stats = FALSE) {
   
+  vars_le <- sf::read_sf(dsn = dsn, query = "SELECT * FROM legend LIMIT 0", as_tibble = FALSE, fid_column_name = "lkey") |>
+    names()
+  vars_mu <- sf::read_sf(dsn = dsn, query = "SELECT * FROM mapunit LIMIT 0", as_tibble = FALSE, fid_column_name = "mukey") |>
+    names()
+  
   # tests
   if (!is.null(WHERE)) {
     
@@ -320,7 +325,7 @@ get_mapunit_from_GDB <- function(dsn = "gNATSGO_CONUS.gdb",
     }
   )
   pmg <- sf::read_sf(dsn = dsn, query = qry, as_tibble = FALSE, fid_column_name = "copmgrpkey")
-  
+  pmg$copmgrpkey.1 <- NULL
   
   # remove duplicate rvindicators
   dat <- as.data.frame.matrix(table(pmg$cokey, pmg$rvindicator))
@@ -598,8 +603,8 @@ get_mapunit_from_GDB <- function(dsn = "gNATSGO_CONUS.gdb",
 #' specified (except for fetchGDB() which currently can only target one table 
 #' (e.g. legend, mapunit or component) at a time with the WHERE clause).
 #' 
-#' @aliases fetchGDB get_legend_from_GDB get_mapunit_from_GDB
-#' get_component_from_GDB
+#' @aliases fetchGDB get_legend_from_GDB get_mapunit_from_GDB get_component_from_GDB
+#' 
 #' @param dsn data source name (interpretation varies by driver - for some
 #' drivers, dsn is a file name, but may also be a folder, or contain the name
 #' and access credentials of a database); in case of GeoJSON, dsn may be the
@@ -640,6 +645,12 @@ fetchGDB <- function(dsn = "gNATSGO_CONUS.gdb",
   
   if (!requireNamespace("aqp")) {
     stop("package 'aqp' is required", call. = FALSE)
+  }
+  
+  stopifnot(length(WHERE) <= 1)
+  whr <- WHERE
+  if (is.null(whr)) {
+    whr <- basename(dsn)
   }
   
   # checks
@@ -698,7 +709,7 @@ fetchGDB <- function(dsn = "gNATSGO_CONUS.gdb",
       if (idx_le) {
         message("getting components and horizons from areasymbol = '", unique(x$idx), "'")
       } else{
-        message("getting components and horizons from ", WHERE)
+        message("getting components and horizons from ", whr)
       }
       
       # components
@@ -739,7 +750,7 @@ fetchGDB <- function(dsn = "gNATSGO_CONUS.gdb",
   
   if (idx_co || is.null(WHERE)) {
 
-    message("getting components and horizons from ", WHERE)
+    message("getting components and horizons from ", whr)
 
     # target component table ----
     co <- get_component_from_GDB(
@@ -761,8 +772,14 @@ fetchGDB <- function(dsn = "gNATSGO_CONUS.gdb",
                                 childs = childs)
   }
   
-  le$lkey.1  <- NULL
-  mu$mukey.1 <- NULL
+  if (idx_le) {
+    le$lkey.1  <- NULL
+  }
+  
+  if (idx_mu) {
+    mu$mukey.1 <- NULL
+  }
+  
   co$cokey.1 <- NULL
   h$chkey.1  <- NULL
   
